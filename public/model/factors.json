@@ -1,0 +1,68 @@
+{
+ "note": "Every number below was retrieved tonight through literature search tools (SciSpace and Consensus) and checked by a second, independent search. We did not open the PDFs by hand. The Flower & Sanjayan factors are for Australian concrete and include transport to the batching plant. Other published factors differ, some by a lot, so treat the CO2 totals as a consistent way to compare mixes, not as exact footprints.",
+ "ingredients": {
+  "cement": {
+   "label": "Portland cement",
+   "kgCO2e_per_kg": 0.82,
+   "co2_source": "Flower & Sanjayan (2007), Int. J. Life Cycle Assessment. Confirmed by a second search.",
+   "co2_source_url": "https://doi.org/10.1007/s11367-007-0327-3",
+   "density_kg_m3": 3150,
+   "density_source": "Specific gravity 3.15, Chandrakar & Singh (2017). Confirmed by a second search.",
+   "density_source_url": "https://scispace.com/papers/an-experimental-study-on-high-performance-concrete-using-24q3e"
+  },
+  "slag": {
+   "label": "Blast furnace slag",
+   "kgCO2e_per_kg": 0.143,
+   "co2_source": "Flower & Sanjayan (2007), as tabulated in Kubissa et al. (2019). Seen only in that secondary table.",
+   "co2_source_url": "https://doi.org/10.1007/s11367-007-0327-3",
+   "density_kg_m3": 2880,
+   "density_source": "Specific gravity 2.88, Sudharsan et al. (2022). Not confirmed by a second search.",
+   "density_source_url": "https://doi.org/10.22214/ijraset.2022.41047"
+  },
+  "flyash": {
+   "label": "Fly ash",
+   "kgCO2e_per_kg": 0.027,
+   "co2_source": "Flower & Sanjayan (2007), as tabulated in Kubissa et al. (2019). Seen only in secondary tables.",
+   "co2_source_url": "https://doi.org/10.1007/s11367-007-0327-3",
+   "density_kg_m3": 2200,
+   "density_source": "Specific gravity 2.2, Sudharsan et al. (2022). Not confirmed by a second search.",
+   "density_source_url": "https://doi.org/10.22214/ijraset.2022.41047"
+  },
+  "water": {
+   "label": "Water",
+   "kgCO2e_per_kg": 0,
+   "co2_source": "Assumption: not counted. No sourced factor was found. Flower & Sanjayan describe water's emissions as minimal.",
+   "co2_source_url": "",
+   "density_kg_m3": 1000,
+   "density_source": "By definition of specific gravity",
+   "density_source_url": ""
+  },
+  "superplasticizer": {
+   "label": "Superplasticizer",
+   "kgCO2e_per_kg": 2.98,
+   "co2_source": "Schiefer & Plank (2023), J. Cleaner Production. Confirmed by a second search. CO2 only; the highest of three polymer types (2.40 to 2.98). May overstate: the paper does not say if it is per kg of dry polymer or liquid product, and the 1998 mixes may have used another chemistry.",
+   "co2_source_url": "https://doi.org/10.1016/j.jclepro.2023.138785",
+   "density_kg_m3": 1080,
+   "density_source": "Specific gravity 1.08 for one commercial product, Sudharsan et al. (2022). Not confirmed by a second search.",
+   "density_source_url": "https://doi.org/10.22214/ijraset.2022.41047"
+  },
+  "coarse": {
+   "label": "Coarse aggregate",
+   "kgCO2e_per_kg": 0.0459,
+   "co2_source": "Flower & Sanjayan (2007), granite/hornfels value (basalt is 0.0357). Confirmed by a second search.",
+   "co2_source_url": "https://doi.org/10.1007/s11367-007-0327-3",
+   "density_kg_m3": 2680,
+   "density_source": "Specific gravity 2.68, Sudharsan et al. (2022). A second search confirmed the usual 2.6 to 2.7 range.",
+   "density_source_url": "https://doi.org/10.22214/ijraset.2022.41047"
+  },
+  "fine": {
+   "label": "Fine aggregate (sand)",
+   "kgCO2e_per_kg": 0.0139,
+   "co2_source": "Flower & Sanjayan (2007). Confirmed by a second search.",
+   "co2_source_url": "https://doi.org/10.1007/s11367-007-0327-3",
+   "density_kg_m3": 2650,
+   "density_source": "Specific gravity 2.65, Sudharsan et al. (2022). Confirmed by a second search.",
+   "density_source_url": "https://doi.org/10.22214/ijraset.2022.41047"
+  }
+ }
+}

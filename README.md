@@ -1,80 +1,131 @@
-# Superconductor Candidate Generator
+# Low-Carbon Concrete Mix Designer
 
-A one-page web app that predicts the superconducting critical temperature (Tc) of a chemical
-formula and proposes new, untested compositions ranked by predicted Tc. Built from scratch at
-TRIANGULATE, an AI hackathon at NC State.
+A one-page web app that proposes new concrete mixes for a strength you choose and ranks them by
+embodied CO2. Built from scratch at TRIANGULATE, an AI hackathon at NC State.
 
 - **Grand Challenge:** Engineer the Tools of Scientific Discovery.
-- **User:** a materials science grad student deciding which superconductor compositions deserve
-  weeks of synthesis or simulation time.
-- **Problem:** screening candidates by hand or by simulation is slow, so most compositions never
-  get looked at.
+- **User:** a civil or materials engineering researcher choosing which trial mixes to cast.
+- **Problem:** every strength test means casting a mix and waiting up to 28 days for it to cure, so
+  only a handful of the possible mixes ever get tried.
 
 ## What it does
 
-Type a formula such as `YBa2Cu3O7`. In the browser, with no server, the app:
+Enter a target strength in MPa and a curing age. In the browser, with no server, the app:
 
-1. predicts its Tc in kelvin with a model trained for this project;
-2. generates candidates by swapping one element at a time for a chemically similar one (same
-   periodic group, and lanthanide for lanthanide), keeping every number unchanged;
-3. removes every candidate whose composition is already in the dataset;
-4. ranks the rest by predicted Tc and shows each one's nearest known material and a confidence flag.
+1. generates about 14,000 new mixes by varying each of the 355 lab-tested mixes in the dataset
+   (binder amount, share of slag and fly ash, water/binder ratio, superplasticizer dose), rescaling
+   the aggregates so each mix keeps its parent's volume;
+2. removes any mix that is already in the dataset;
+3. predicts each mix's strength with two models trained for this project: the expected strength,
+   and a cautious lower estimate;
+4. keeps the mixes whose cautious estimate reaches the target (or the expected strength, if you turn
+   caution off);
+5. ranks them by embodied CO2 per cubic metre;
+6. checks each against its three nearest lab-tested mixes and marks it "lab-supported" only when at
+   least two of them are close to it and reached the target in the lab.
+
+It also shows the lowest-CO2 mix that a lab has already tested for that target, so you can see
+whether a new candidate is worth a trial at all.
 
 ## What is live
 
-Everything on the page is real and computed in your browser. Nothing is mocked. There is no
-backend, no API and no API key. The model is a set of JSON files downloaded once with the page.
+Everything on the page is computed in your browser from the JSON files in `public/model/`. Nothing
+is mocked. There is no backend, no API and no API key.
 
-## How the model was trained
+Two kinds of numbers are not measured by us and are labelled on the page:
 
-`train/train.py` reads `unique_m.csv` from the UCI Superconductivty Data set (21,263 materials).
+- **CO2 factors and densities** come from published papers (table on the page, with links). Water is
+  not counted because we found no sourced factor.
+- **The three preset strengths** are illustrative, not values from a building code.
 
-- **Features (87):** the fraction of each of 86 elements (H to Rn) in the formula, plus the number
-  of distinct elements.
-- **Model:** scikit-learn `RandomForestRegressor`, 100 trees, maximum depth 8.
-- **Split:** random 80% train, 20% test, fixed seed.
+## How the models were trained
 
-| Test metric | Value |
+`train/train.py` reads the UCI Concrete Compressive Strength dataset: 1,030 lab results, of which
+25 are exact repeats and are dropped.
+
+- **Features (9):** kg per m3 of cement, blast furnace slag, fly ash, water, superplasticizer,
+  coarse aggregate and fine aggregate; age in days; and water divided by total binder.
+- **Expected-strength model:** scikit-learn `GradientBoostingRegressor`, 300 trees, depth 4,
+  learning rate 0.05.
+- **Cautious model:** the same settings with quantile loss at the 10th percentile, so about 9 lab
+  results in 10 should beat it.
+- **Split:** 80/20 **by mix**. The dataset holds the same mix at several ages, and the same mix
+  twice with different rounding, so mixes are identified by amounts rounded to 1 kg and every
+  result of a test mix is held out.
+
+| Test metric (71 held-out mixes, 179 lab results) | Value |
 | --- | --- |
-| Mean absolute error | 8.49 K |
-| R² | 0.857 |
-| Training rows | 17,010 |
-| Test rows | 4,253 |
-| Distinct known compositions | 15,139 |
+| Mean absolute error | 4.46 MPa |
+| Root mean squared error | 6.60 MPa |
+| R² | 0.839 |
+| Share of test results at or above the cautious estimate | 83.8% (the aim was 90%) |
+| Mean absolute error with a plain random split, for comparison only | 2.94 MPa |
 
-The live numbers are in `public/model/metrics.json`, and the page reads them from there.
+The random-split number is the one most papers report on this dataset. It looks better because the
+same mixes sit on both sides of the split. The live numbers are in `public/model/metrics.json`, and
+the page reads them from there.
 
 ## Known failure modes
 
-- **The test error is optimistic.** The split is random, so near-duplicates of test materials
-  (the same compound at a slightly different doping) were in training. Error on new chemistry is larger.
-- **Candidates are predictions, not discoveries.** Nothing checks that a candidate can be
-  synthesized, is stable, or superconducts at all.
-- **The dataset holds only superconductors**, so the model cannot say "this is not a superconductor".
-- **Composition only.** The model knows nothing about crystal structure, pressure or processing.
-- **Ties.** A depth-8 forest gives many similar swaps the same predicted Tc, so the ranking
-  between them is arbitrary.
-- **"New" means "not in this one dataset".** A candidate may exist in the literature or in other databases.
-- **Low-confidence flag.** A candidate is flagged when its distance to the nearest known material
-  is above 0.0707, the 90th percentile of test-to-train nearest distances.
-- **Swap targets** exclude noble gases and elements with no stable isotope (Tc, Pm, Po, At, Rn).
+- **The search rewards model error.** Ranking by lowest CO2 pulls toward mixes where the model is
+  too optimistic. Our first version proposed a mix predicted at 43 MPa whose nearest tested mix,
+  with more cement at the same water/binder ratio, measured 29 MPa. The cautious model and the
+  lab-support check were added because of that. They reduce the problem; they do not remove it.
+- **With caution on, candidates rarely beat the best tested mix.** That is an honest result, not a
+  bug: the best tested mix has a real measurement, and a candidate must clear a stricter bar.
+- **With caution off, candidates are experiments, not answers.** Their cautious estimates fall
+  short of the target.
+- **The cautious estimate is less cautious than intended** (83.8% coverage, not 90%).
+- **Strength only.** Nothing here models workability, setting time, durability, shrinkage or cost.
+- **One dataset.** Published work reports large accuracy drops when a model trained on this dataset
+  is tested on mixes from other sources.
+- **Materials are not uniform.** The data records kilograms, not the chemistry or source of the
+  slag, fly ash or aggregate.
+- **CO2 totals are comparative, not exact.** Factors are from Australian data and include transport
+  to the batching plant. Slag and fly ash factors were seen only in secondary tables. The
+  superplasticizer factor is probably too high. Densities for slag, fly ash and superplasticizer
+  come from a single paper and were not confirmed by a second search.
+- **"New" means "not in this dataset".** A candidate may exist in the literature.
+
+## How we used MCP servers
+
+All sourced numbers on the page were found and cross-checked tonight through MCP servers connected
+to the coding agent. Six agents ran in parallel: two searched, two independently re-checked every
+number with a different search, one gathered expert objections, and one looked for more servers.
+
+| MCP server | What it was used for |
+| --- | --- |
+| SciSpace | Found the CO2 factors and densities, and the published accuracy figures. |
+| Consensus | Confirmed the superplasticizer factor from a second source; expert objections. |
+| FastTrack Literature Open | Confirmed the dataset paper and resolved the DOI of the CO2 source. |
+| alphaXiv | Searched preprints; nothing from it is on the page. |
+| Elicit | Tried; the account's plan has no API access, so nothing came back. |
+| Claude Market and the connector registry | Searched for concrete, cement, life cycle and deployment servers. None exist for concrete. |
+| Tenjin router | Installed. No paid call was made and no number on the page comes from it. |
+
+What the checks changed: water has no CO2 factor because none could be sourced; slag and fly ash
+are labelled as secondary; three densities are labelled as unconfirmed.
 
 ## Files
 
 | File | What it does |
 | --- | --- |
-| `train/train.py` | Trains the model, measures test error, and writes the JSON files below. |
-| `public/model/elements.json` | The element order. Python and JavaScript both read it, so the features cannot drift apart. |
-| `public/model/model.json` | The 100 trees: feature index, threshold, left child, right child and leaf value per node. |
-| `public/model/known.json` | Every distinct composition in the dataset with its formula and mean measured Tc. |
-| `public/model/metrics.json` | Test MAE, R², row counts, training date and the low-confidence distance. |
-| `public/model/parity.json` | 20 test formulas with their features and Python predictions. |
-| `src/lib/parseFormula.js` | Parses a formula string (decimals and brackets allowed) and returns readable errors. |
-| `src/lib/featurize.js` | Turns a parsed formula into the same 87 features Python used. |
-| `src/lib/predict.js` | Walks each tree and averages the leaves. |
-| `src/lib/generate.js` | Makes one-swap candidates, drops known ones, ranks by predicted Tc. |
-| `src/lib/nearest.js` | Finds the nearest known material and the "already known" match. |
-| `src/lib/analyze.js` | Runs the whole pipeline for one typed formula. |
+| `train/train.py` | Trains both models, measures test error, and writes the JSON files below. |
+| `train/data/concrete.csv` | The UCI dataset with short column names. |
+| `public/model/features.json` | Ingredient and feature order. Python and JavaScript both follow it. |
+| `public/model/model.json` | Expected-strength trees: feature, threshold, children and leaf value per node. |
+| `public/model/model_low.json` | The cautious model, in the same format. |
+| `public/model/known.json` | Every distinct tested mix with its measured strength at each age. |
+| `public/model/space.json` | The ranges the labs covered. Generated mixes must stay inside them. |
+| `public/model/metrics.json` | Test metrics, row counts, training date and the lab-support distance. |
+| `public/model/parity.json` | 20 test rows with Python predictions from both models. |
+| `public/model/test_points.json` | Measured and predicted strength for the test set (the chart). |
+| `public/model/factors.json` | CO2 factors and densities with their sources. Written by hand from the literature search. |
+| `src/lib/featurize.js` | Builds the same 9 features as Python. |
+| `src/lib/predict.js` | Walks the trees and adds up the leaves. |
+| `src/lib/co2.js` | Embodied CO2 and solid volume of a mix. |
+| `src/lib/nearest.js` | Distances to tested mixes and their lab results. |
+| `src/lib/design.js` | Generates, filters, ranks and checks the candidates. |
 | `src/lib/loadModel.js` | Downloads the JSON files when the page opens. |
 | `src/App.jsx` | The page. |
 | `scripts/parity.mjs` | Checks that JavaScript predictions match Python. |
@@ -84,11 +135,11 @@ The live numbers are in `public/model/metrics.json`, and the page reads them fro
 ```sh
 npm install
 npm run dev      # local page
-npm run parity   # JavaScript vs Python on 20 formulas, must match within 0.01 K
+npm run parity   # JavaScript vs Python on 20 rows and both models, must match within 0.01 MPa
 npm run build    # static site in dist/
 ```
 
-Retrain (optional, overwrites `public/model/`):
+Retrain (optional, overwrites the model files in `public/model/` but not `factors.json`):
 
 ```sh
 pip install -r train/requirements.txt
@@ -96,10 +147,29 @@ python train/train.py
 npm run parity
 ```
 
-## Dataset
+## Project history
 
-Hamidieh, K. (2018). Superconductivty Data [Dataset]. UCI Machine Learning Repository.
-https://doi.org/10.24432/C53P47
+The first commits tonight built a superconductor screening app. The team then switched the demo to
+concrete, and those files were replaced. All code in this repository was written during the
+hackathon.
 
-Hamidieh, K. (2018). A data-driven statistical model for predicting the critical temperature of a
-superconductor. *Computational Materials Science*, 154, 346–354.
+## Sources
+
+Dataset: Yeh, I-C. (1998). Concrete Compressive Strength [Dataset]. UCI Machine Learning
+Repository. https://doi.org/10.24432/C5PK67
+
+Yeh, I-C. (1998). Modeling of strength of high-performance concrete using artificial neural
+networks. *Cement and Concrete Research*, 28(12), 1797–1808.
+https://doi.org/10.1016/S0008-8846(98)00165-3
+
+CO2 factors: Flower, D. J. M. & Sanjayan, J. G. (2007). Green house gas emissions due to concrete
+manufacture. *International Journal of Life Cycle Assessment*.
+https://doi.org/10.1007/s11367-007-0327-3
+
+Schiefer, C. & Plank, J. (2023). CO2 emission of polycarboxylate superplasticizers (PCEs) used in
+concrete. *Journal of Cleaner Production*. https://doi.org/10.1016/j.jclepro.2023.138785
+
+Kubissa, W., Jaskulski, R. et al. (2019). *Architecture Civil Engineering Environment*: the
+secondary table for the slag and fly ash factors.
+
+Densities: Sudharsan, C. P., Gosh, S. & Sood, H. (2022). https://doi.org/10.22214/ijraset.2022.41047

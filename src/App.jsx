@@ -1,17 +1,56 @@
 import { useEffect, useState } from 'react'
 import { loadModel } from './lib/loadModel.js'
-import { analyze } from './lib/analyze.js'
+import { design } from './lib/design.js'
 
-const EXAMPLES = ['YBa2Cu3O7', 'MgB2', 'La1.85Sr0.15CuO4']
+const PRESETS = [
+  { label: 'General use', mpa: 20 },
+  { label: 'Structural', mpa: 35 },
+  { label: 'High strength', mpa: 50 },
+]
+const AGES = [3, 7, 14, 28, 56, 90]
 const REPO = 'https://github.com/benjamin12495990-sketch/NCSU-Hackathon'
-const K = (v) => `${v.toFixed(1)} K`
+const kg = (v) => Math.round(v).toLocaleString()
+const pct = (v) => {
+  const n = Math.round(v * 100)
+  return n === 0 ? '0%' : `${n > 0 ? '+' : '−'}${Math.abs(n)}%`
+}
 
-// The single page: loads the model once, then runs every prediction in the
-// browser each time the user submits a formula.
+// Scatter of the held-out test set: lab-measured strength against the model's
+// prediction. Dots on the dashed line are perfect predictions.
+function TestChart({ points }) {
+  const size = 300, pad = 38, max = 90
+  const s = (v) => pad + (v / max) * (size - pad - 8)
+  const y = (v) => size - s(v)
+  return (
+    <svg viewBox={`0 0 ${size} ${size}`} className="chart" role="img"
+      aria-label="Predicted against measured strength for the held-out test mixes">
+      {[0, 30, 60, 90].map((t) => (
+        <g key={t}>
+          <line x1={s(t)} y1={y(0)} x2={s(t)} y2={y(max)} className="grid" />
+          <line x1={s(0)} y1={y(t)} x2={s(max)} y2={y(t)} className="grid" />
+          <text x={s(t)} y={size - pad + 14} textAnchor="middle">{t}</text>
+          <text x={pad - 6} y={y(t) + 4} textAnchor="end">{t}</text>
+        </g>
+      ))}
+      <line x1={s(0)} y1={y(0)} x2={s(max)} y2={y(max)} className="diag" />
+      {points.map(([m, p], i) => <circle key={i} cx={s(m)} cy={y(p)} r="2.4" />)}
+      <text x={(size + pad) / 2} y={size - 4} textAnchor="middle">Measured (MPa)</text>
+      <text x={12} y={size / 2 - 10} textAnchor="middle" transform={`rotate(-90 12 ${size / 2 - 10})`}>Predicted (MPa)</text>
+    </svg>
+  )
+}
+
+// The single page: loads the model once, then designs mixes in the browser
+// each time the user submits a target.
 export default function App() {
   const [data, setData] = useState(null)
   const [loadError, setLoadError] = useState('')
-  const [text, setText] = useState('YBa2Cu3O7')
+  const [target, setTarget] = useState('35')
+  const [age, setAge] = useState(28)
+  const [allowSlag, setAllowSlag] = useState(true)
+  const [allowFlyAsh, setAllowFlyAsh] = useState(true)
+  const [cautious, setCautious] = useState(true)
+  const [onlySupported, setOnlySupported] = useState(true)
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
 
@@ -19,58 +58,81 @@ export default function App() {
     loadModel().then(setData, (e) => setLoadError(e.message))
   }, [])
 
-  const run = (formula) => {
-    setText(formula)
+  const run = (targetText = target) => {
+    setTarget(targetText)
+    const text = String(targetText).trim()
+    const mpa = Number(text)
+    if (text === '' || !Number.isFinite(mpa)) {
+      setResult(null)
+      return setError('Type the strength you need in MPa as a number, for example 35.')
+    }
+    if (mpa < 5 || mpa > 80) {
+      setResult(null)
+      return setError('Choose a strength between 5 and 80 MPa. The lab data behind the model only covers that range.')
+    }
     try {
-      setResult(analyze(formula, data))
+      setResult({ ...design({ targetMPa: mpa, ageDays: age, allowSlag, allowFlyAsh, cautious, onlySupported }, data), cautious, onlySupported })
       setError('')
     } catch (e) {
       setResult(null)
-      setError(e.message)
+      setError(`Something went wrong while designing mixes: ${e.message}`)
     }
   }
 
   const m = data?.metrics
+  const best = result?.top[0]
+  const bar = result?.cautious ? 'cautious strength estimate' : 'expected strength'
   return (
     <main>
       <header>
         <p className="eyebrow">Engineer the Tools of Scientific Discovery</p>
-        <h1>Superconductor Candidate Generator</h1>
+        <h1>Low-Carbon Concrete Mix Designer</h1>
         <p className="lede">
-          Type a formula to predict its superconducting critical temperature (T<sub>c</sub>) and get
-          new, untested compositions ranked by predicted T<sub>c</sub>. For materials science grad
-          students deciding which compositions deserve weeks of synthesis or simulation time.
+          Say how strong the concrete must be. The app proposes new mixes predicted to reach that
+          strength and ranks them by embodied CO<sub>2</sub>. For civil and materials engineering
+          researchers choosing which trial mixes to cast, when every lab test means waiting 28 days
+          for the concrete to cure.
         </p>
       </header>
 
       <form
         onSubmit={(e) => {
           e.preventDefault()
-          if (data) run(text)
+          if (data) run()
         }}
       >
-        <label htmlFor="formula">Chemical formula</label>
-        <div className="row">
-          <input
-            id="formula"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="e.g. YBa2Cu3O7"
-            autoComplete="off"
-            spellCheck="false"
-          />
-          <button type="submit" disabled={!data}>
-            {data ? 'Predict' : 'Loading model…'}
-          </button>
+        <div className="fields">
+          <div>
+            <label htmlFor="target">Strength needed (MPa)</label>
+            <input id="target" value={target} onChange={(e) => setTarget(e.target.value)}
+              inputMode="decimal" autoComplete="off" placeholder="e.g. 35" />
+          </div>
+          <div>
+            <label htmlFor="age">Reached by (days of curing)</label>
+            <select id="age" value={age} onChange={(e) => setAge(Number(e.target.value))}>
+              {AGES.map((a) => <option key={a} value={a}>{a} days</option>)}
+            </select>
+          </div>
+          <button type="submit" disabled={!data}>{data ? 'Design mixes' : 'Loading model…'}</button>
         </div>
         <div className="examples">
           <span>Try:</span>
-          {EXAMPLES.map((ex) => (
-            <button type="button" key={ex} className="chip" disabled={!data} onClick={() => run(ex)}>
-              {ex}
+          {PRESETS.map((p) => (
+            <button type="button" key={p.mpa} className="chip" disabled={!data} onClick={() => run(String(p.mpa))}>
+              {p.label} · {p.mpa} MPa
             </button>
           ))}
         </div>
+        <div className="options">
+          <label><input type="checkbox" checked={allowSlag} onChange={(e) => setAllowSlag(e.target.checked)} /> Blast furnace slag available</label>
+          <label><input type="checkbox" checked={allowFlyAsh} onChange={(e) => setAllowFlyAsh(e.target.checked)} /> Fly ash available</label>
+          <label><input type="checkbox" checked={cautious} onChange={(e) => setCautious(e.target.checked)} /> Cautious: the lower strength estimate must reach the target</label>
+          <label><input type="checkbox" checked={onlySupported} onChange={(e) => setOnlySupported(e.target.checked)} /> Only mixes backed by nearby lab results</label>
+        </div>
+        <p className="note small">
+          Change an option, then press Design mixes again. The three presets are illustrative
+          strength levels, not values from a building code.
+        </p>
       </form>
 
       {loadError && <p className="error" role="alert">The model files did not load: {loadError}</p>}
@@ -79,60 +141,89 @@ export default function App() {
       {result && (
         <>
           <section className="card">
-            <h2>{result.formula}</h2>
+            <h2>{result.targetMPa} MPa at {result.ageDays} days</h2>
             <div className="stats">
               <div>
-                <span className="label">Predicted T<sub>c</sub></span>
-                <span className="big">{K(result.tc)}</span>
+                <span className="label">Best new candidate (untested)</span>
+                <span className="big">{best ? kg(best.co2) : '–'} <small>kg CO<sub>2</sub>e per m³</small></span>
+                <span className="label">
+                  {best ? `expected ${best.strength.toFixed(1)} MPa, cautious estimate ${best.low.toFixed(1)} MPa` : 'none found with these settings'}
+                </span>
               </div>
               <div>
-                <span className="label">Measured T<sub>c</sub> in dataset</span>
-                <span className="big">{result.known ? K(result.known.tc) : 'not in dataset'}</span>
+                <span className="label">Best mix a lab already tested</span>
+                <span className="big">{result.baseline ? kg(result.baseline.co2) : '–'} <small>kg CO<sub>2</sub>e per m³</small></span>
+                <span className="label">{result.baseline ? `measured ${result.baseline.strength.toFixed(1)} MPa at ${result.baseline.age} days` : 'none in the dataset reaches this target'}</span>
+              </div>
+              <div>
+                <span className="label">Best tested mix using cement only</span>
+                <span className="big">{result.cementOnly ? kg(result.cementOnly.co2) : '–'} <small>kg CO<sub>2</sub>e per m³</small></span>
+                <span className="label">{result.cementOnly ? `measured ${result.cementOnly.strength.toFixed(1)} MPa at ${result.cementOnly.age} days` : 'none in the dataset reaches this target'}</span>
               </div>
             </div>
-            <p className="note">
-              {result.known
-                ? `This composition is in the dataset as ${result.known.formula}, so the model may have seen it in training.`
-                : `Not in the dataset. Nearest known material: ${result.nearestFormula} (measured ${K(result.nearestTc)}).`}
-              {result.lowConfidence && ' It is far from the training data, so treat the prediction as low confidence.'}
-            </p>
+            {best ? (
+              <p className="note">
+                {result.baseline && `Against the best tested mix, the top candidate changes embodied CO₂ by ${pct(best.vsBaseline)}. `}
+                {result.cementOnly && `Against the best tested cement-only mix, it changes it by ${pct(best.co2 / result.cementOnly.co2 - 1)}. `}
+                The tested mixes have measured strengths. The candidate has only a prediction and has never been made.
+              </p>
+            ) : (
+              <p className="note">
+                No new mix has a {bar} of {result.targetMPa} MPa at {result.ageDays} days
+                {result.stats.hiddenUnsupported > 0 && ` and enough nearby lab results to back it (${result.stats.hiddenUnsupported} were hidden for that reason)`}.
+                Lower the target, allow more curing time, or change the options above.
+              </p>
+            )}
+            {!result.cautious && best && (
+              <p className="warn">
+                Caution is off. These mixes only reach the target on the model's expected strength, and their
+                cautious estimates fall short. Read them as experiments worth running, not as mixes to use.
+              </p>
+            )}
           </section>
 
-          <section>
-            <h2>New candidates</h2>
-            <p className="note">
-              {result.generated} one-element swaps generated; {result.removedKnown} removed because
-              they are already in the dataset. Top {result.top.length} of the rest by predicted T
-              <sub>c</sub>:
-            </p>
-            {result.top.length === 0 ? (
-              <p className="note">No new candidates: every swap is already in the dataset or no similar element exists.</p>
-            ) : (
+          {best && (
+            <section>
+              <h2>New candidate mixes</h2>
+              <p className="note">
+                {result.stats.generated.toLocaleString()} new mixes were generated in your browser by varying
+                the {data.known.entries.length} tested mixes in the dataset. {result.stats.removedKnown} matched a
+                tested mix and were removed. {result.stats.meetTarget.toLocaleString()} have a {bar} of at
+                least {result.targetMPa} MPa.
+                {result.stats.hiddenUnsupported > 0 && ` ${result.stats.hiddenUnsupported} lower-CO₂ mixes are hidden because nearby lab results do not back them.`}{' '}
+                Lowest CO<sub>2</sub> first. Amounts are kg per m³ of concrete.
+              </p>
               <div className="tablewrap">
                 <table>
                   <thead>
                     <tr>
                       <th>#</th>
-                      <th>Candidate</th>
-                      <th>Swap</th>
-                      <th className="num">Predicted T<sub>c</sub></th>
-                      <th>Nearest known material</th>
-                      <th className="num">Its measured T<sub>c</sub></th>
-                      <th>Confidence</th>
+                      <th className="num">Cement</th><th className="num">Slag</th><th className="num">Fly ash</th>
+                      <th className="num">Water</th><th className="num">Super&shy;plasticizer</th>
+                      <th className="num">Coarse agg.</th><th className="num">Fine agg.</th>
+                      <th className="num">Water / binder</th>
+                      <th className="num">Expected strength</th>
+                      <th className="num">Cautious estimate</th>
+                      <th className="num">CO<sub>2</sub>e per m³</th>
+                      <th className="num">vs best tested</th>
+                      <th>3 nearest tested mixes measured</th>
+                      <th>Evidence</th>
                     </tr>
                   </thead>
                   <tbody>
                     {result.top.map((c, i) => (
-                      <tr key={c.formula}>
+                      <tr key={c.mix.join('|')}>
                         <td>{i + 1}</td>
-                        <td className="formula">{c.formula}</td>
-                        <td>{c.swap}</td>
-                        <td className="num">{K(c.tc)}</td>
-                        <td className="formula">{c.nearestFormula}</td>
-                        <td className="num">{K(c.nearestTc)}</td>
+                        {c.mix.map((v, k) => <td key={k} className="num">{v}</td>)}
+                        <td className="num">{c.waterBinder.toFixed(2)}</td>
+                        <td className="num">{c.strength.toFixed(1)} MPa</td>
+                        <td className="num">{c.low.toFixed(1)} MPa</td>
+                        <td className="num strong">{kg(c.co2)} kg</td>
+                        <td className="num">{c.vsBaseline == null ? '–' : pct(c.vsBaseline)}</td>
+                        <td>{c.neighbours.map((n) => n.strength.toFixed(0)).join(', ')} MPa</td>
                         <td>
-                          <span className={c.lowConfidence ? 'flag low' : 'flag ok'}>
-                            {c.lowConfidence ? 'Low confidence' : 'Near known data'}
+                          <span className={c.supported ? 'flag ok' : 'flag low'}>
+                            {c.supported ? 'Lab-supported' : 'Not backed'}
                           </span>
                         </td>
                       </tr>
@@ -140,50 +231,97 @@ export default function App() {
                   </tbody>
                 </table>
               </div>
-            )}
-          </section>
+              <p className="note small">
+                Lab-supported means at least two of the three nearest tested mixes are close to the candidate
+                and reached {result.targetMPa} MPa in the lab by {result.ageDays} days.
+              </p>
+            </section>
+          )}
         </>
       )}
 
       <section className="caveat">
         <h2>How this can be wrong</h2>
         {m ? (
-          <ul>
-            <li>
-              On {m.test_rows.toLocaleString()} held-out materials the model is off by{' '}
-              <strong>{m.test_mae_K.toFixed(1)} K on average</strong> (mean absolute error; R²{' '}
-              {m.test_r2.toFixed(2)}). The split is random, so close relatives of test materials
-              were in training and the real error on new chemistry is larger.
-            </li>
-            <li>
-              Candidates are <strong>untested predictions, not discoveries</strong>. Nothing here
-              checks whether a candidate can be made, is stable, or superconducts at all.
-            </li>
-            <li>
-              The dataset contains only superconductors, so the model cannot predict “not a
-              superconductor”. It is weakest on compositions unlike its training data; those rows
-              are flagged low confidence.
-            </li>
-            <li>
-              The model sees only element fractions. It knows nothing about crystal structure,
-              pressure or doping order.
-            </li>
-          </ul>
+          <div className="split">
+            <ul>
+              <li>
+                On {m.test_rows} lab results from {m.test_mixes} mixes the model never saw, the expected strength is
+                off by <strong>{m.test_mae_MPa.toFixed(1)} MPa on average</strong> (R² {m.test_r2.toFixed(2)}).
+                A random split that lets the same mix appear in training and testing would have reported{' '}
+                {m.random_split_mae_MPa.toFixed(1)} MPa, so we do not use it.
+              </li>
+              <li>
+                The cautious estimate is built to be beaten by 9 lab results in 10. On the held-out mixes it was
+                beaten by <strong>{(m.lower_estimate_coverage * 100).toFixed(0)} in 100</strong>, so it is less
+                cautious than intended.
+              </li>
+              <li>
+                Candidates are <strong>untested predictions, not proven mixes</strong>. Searching for the lowest
+                CO<sub>2</sub> pulls toward mixes where the model is too optimistic, so the best-looking
+                candidates are the most likely to disappoint. Cast and test before relying on any of them.
+              </li>
+              <li>
+                The model predicts compressive strength only. It knows nothing about workability, setting
+                time, durability, shrinkage or cost, and it cannot tell one source of slag, fly ash or
+                aggregate from another.
+              </li>
+              <li>
+                CO<sub>2</sub> totals use one fixed factor per ingredient and typical densities (table below).
+                Real values vary by plant, region and transport distance.
+              </li>
+            </ul>
+            <figure>
+              <TestChart points={data.testPoints} />
+              <figcaption>Each dot is a held-out lab result. On the dashed line means a perfect prediction.</figcaption>
+            </figure>
+          </div>
         ) : (
           <p className="note">Loading test metrics…</p>
         )}
       </section>
 
+      {data && (
+        <section>
+          <h2>Where the CO<sub>2</sub> numbers come from</h2>
+          <p className="note">{data.factorFile.note}</p>
+          <div className="tablewrap">
+            <table className="wrap">
+              <thead>
+                <tr>
+                  <th>Ingredient</th><th className="num">kg CO<sub>2</sub>e per kg</th><th>Source</th>
+                  <th className="num">Density (kg/m³)</th><th>Source</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.spec.ingredients.map((name) => {
+                  const f = data.factors[name]
+                  return (
+                    <tr key={name}>
+                      <td>{f.label}</td>
+                      <td className="num">{f.kgCO2e_per_kg}</td>
+                      <td>{f.co2_source}{f.co2_source_url && <> <a href={f.co2_source_url}>Link</a></>}</td>
+                      <td className="num">{f.density_kg_m3}</td>
+                      <td>{f.density_source}{f.density_source_url && <> <a href={f.density_source_url}>Link</a></>}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
       <footer>
         {m && (
           <p>
-            Model: {m.model}, trained {m.trained_at.slice(0, 10)} on {m.train_rows.toLocaleString()} rows.
-            Runs entirely in your browser.
+            Model: {m.model}, trained {m.trained_at.slice(0, 10)} on {m.train_rows} lab results from{' '}
+            {m.train_mixes} mixes. Everything on this page is computed in your browser.
           </p>
         )}
         <p>
-          Data: Hamidieh, K. (2018). Superconductivty Data. UCI Machine Learning Repository.{' '}
-          <a href="https://doi.org/10.24432/C53P47">doi.org/10.24432/C53P47</a> ·{' '}
+          Data: Yeh, I-C. (1998). Concrete Compressive Strength. UCI Machine Learning Repository.{' '}
+          <a href="https://doi.org/10.24432/C5PK67">doi.org/10.24432/C5PK67</a> ·{' '}
           <a href={REPO}>Source code on GitHub</a>
         </p>
       </footer>

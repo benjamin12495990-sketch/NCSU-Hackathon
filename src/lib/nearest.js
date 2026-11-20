@@ -1,39 +1,42 @@
-import { compositionKey } from './featurize.js'
+// "Known" mixes are the 428 distinct mixes in the dataset. Distances compare
+// the seven ingredient amounts, each divided by its range in the dataset, so
+// no single ingredient dominates.
+export function prepareKnown(knownRaw, space, ingredients) {
+  const scale = ingredients.map((n) => space.ranges[n][1] - space.ranges[n][0])
+  const entries = knownRaw.map((k) => ({ mix: k.m, results: k.s, scaled: k.m.map((v, i) => v / scale[i]) }))
+  const keys = new Set(entries.map((e) => mixKey(e.mix)))
+  return { entries, scale, keys }
+}
 
-// Prepares known.json for fast lookups: a key -> entry map for the
-// "already known" check, and each entry's squared length for distances.
-export function prepareKnown(knownRaw) {
-  const entries = knownRaw.map(([formula, tc, c]) => {
-    const idx = [], val = []
-    let norm2 = 0
-    for (let k = 0; k < c.length; k += 2) {
-      idx.push(c[k]); val.push(c[k + 1]); norm2 += c[k + 1] * c[k + 1]
+// Two mixes count as the same when every amount matches to the nearest kg.
+export const mixKey = (mix) => mix.map((v) => Math.round(v)).join('|')
+
+export function scaledDistance(a, b, scale) {
+  let d2 = 0
+  for (let i = 0; i < a.length; i++) d2 += ((a[i] - b[i]) / scale[i]) ** 2
+  return Math.sqrt(d2)
+}
+
+// The latest lab result of a mix at or before the given age, or null.
+export function resultUpTo(entry, age) {
+  let best = null
+  for (const r of entry.results) if (r[0] <= age && (!best || r[0] > best[0])) best = r
+  return best
+}
+
+// The k closest tested mixes among `pool` (entries paired with one lab
+// result each), nearest first, with their distance to the candidate.
+export function nearestTested(known, pool, mix, k = 3) {
+  const s = mix.map((v, i) => v / known.scale[i])
+  const out = []
+  for (const item of pool) {
+    let d2 = 0
+    for (let i = 0; i < s.length; i++) d2 += (s[i] - item.entry.scaled[i]) ** 2
+    if (out.length < k || d2 < out[out.length - 1].d2) {
+      out.push({ d2, item })
+      out.sort((x, y) => x.d2 - y.d2)
+      if (out.length > k) out.pop()
     }
-    return { formula, tc, idx, val, norm2 }
-  })
-  const byKey = new Map()
-  for (const e of entries) {
-    byKey.set(e.idx.map((j, k) => j + ':' + e.val[k].toFixed(4)).join('|'), e)
   }
-  return { entries, byKey }
-}
-
-// Returns the dataset entry with exactly this composition, or null.
-export function findKnown(known, x, nElements) {
-  return known.byKey.get(compositionKey(x, nElements)) ?? null
-}
-
-// Finds the closest known material by straight-line distance between
-// element-fraction vectors. A large distance means the model is extrapolating.
-export function nearest(known, x, nElements) {
-  let xNorm2 = 0
-  for (let k = 0; k < nElements; k++) xNorm2 += x[k] * x[k]
-  let best = null, bestD2 = Infinity
-  for (const e of known.entries) {
-    let dot = 0
-    for (let k = 0; k < e.idx.length; k++) dot += x[e.idx[k]] * e.val[k]
-    const d2 = xNorm2 + e.norm2 - 2 * dot
-    if (d2 < bestD2) { bestD2 = d2; best = e }
-  }
-  return { entry: best, distance: Math.sqrt(Math.max(0, bestD2)) }
+  return out.map(({ d2, item }) => ({ mix: item.entry.mix, age: item.result[0], strength: item.result[1], distance: Math.sqrt(d2) }))
 }

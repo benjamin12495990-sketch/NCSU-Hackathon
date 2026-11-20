@@ -1,23 +1,9 @@
-// Builds the model's feature vector: the fraction of each element in the
-// order given by elements.json, followed by the number of distinct elements.
-// This must stay identical to the features in train/train.py.
-export function featurize(pairs, elements) {
-  const index = new Map(elements.map((el, k) => [el, k]))
-  const x = new Float64Array(elements.length + 1)
-  let total = 0
-  for (const [, n] of pairs) total += n
-  let distinct = 0
-  for (const [el, n] of pairs) {
-    x[index.get(el)] += n / total
-    distinct++
-  }
-  x[elements.length] = distinct
-  return x
-}
-
-// Text key for a composition, used to test "is this already in the dataset".
-export function compositionKey(x, nElements) {
-  const parts = []
-  for (let k = 0; k < nElements; k++) if (x[k] > 0) parts.push(k + ':' + x[k].toFixed(4))
-  return parts.join('|')
+// Builds the model's inputs for one mix at one age, in the order listed in
+// features.json. The only derived feature is water divided by total binder
+// (cement + slag + fly ash); this must match featurize() in train/train.py.
+export function featurize(mix, age, spec) {
+  const v = { age }
+  spec.ingredients.forEach((name, i) => (v[name] = mix[i]))
+  v.water_binder_ratio = v.water / (v.cement + v.slag + v.flyash)
+  return spec.features.map((name) => v[name])
 }

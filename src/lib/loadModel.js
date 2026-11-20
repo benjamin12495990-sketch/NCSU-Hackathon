@@ -1,6 +1,6 @@
 import { prepareKnown } from './nearest.js'
 
-// Downloads the JSON files that train/train.py wrote into public/model/.
+// Downloads the JSON files in public/model/ once, when the page opens.
 // Everything after this runs in the browser with no network calls.
 export async function loadModel() {
   const base = import.meta.env.BASE_URL + 'model/'
@@ -9,8 +9,11 @@ export async function loadModel() {
     if (!res.ok) throw new Error(`Could not load ${name} (HTTP ${res.status}).`)
     return res.json()
   }
-  const [elements, model, metrics, knownRaw] = await Promise.all(
-    ['elements.json', 'model.json', 'metrics.json', 'known.json'].map(get),
-  )
-  return { elements, model, metrics, known: prepareKnown(knownRaw) }
+  const names = ['features', 'model', 'model_low', 'metrics', 'known', 'space', 'factors', 'test_points']
+  const [spec, model, modelLow, metrics, knownRaw, space, factorFile, testPoints] = await Promise.all(names.map((n) => get(n + '.json')))
+  return {
+    spec, model, modelLow, metrics, space, testPoints, factorFile,
+    factors: factorFile.ingredients,
+    known: prepareKnown(knownRaw, space, spec.ingredients),
+  }
 }

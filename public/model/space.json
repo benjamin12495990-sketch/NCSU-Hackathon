@@ -1,0 +1,46 @@
+{
+ "ranges": {
+  "cement": [
+   102.0,
+   540.0
+  ],
+  "slag": [
+   0.0,
+   359.4
+  ],
+  "flyash": [
+   0.0,
+   200.05
+  ],
+  "water": [
+   121.75,
+   247.0
+  ],
+  "superplasticizer": [
+   0.0,
+   32.2
+  ],
+  "coarse": [
+   801.0,
+   1145.0
+  ],
+  "fine": [
+   594.0,
+   992.6
+  ]
+ },
+ "limits": {
+  "binder": [
+   200.0,
+   640.0
+  ],
+  "water_binder_ratio": [
+   0.26859820782175736,
+   0.7916323461457672
+  ],
+  "slag_fraction_max": 0.6121106932524094,
+  "flyash_fraction_max": 0.5512522909724326,
+  "scm_fraction_max": 0.7002550831792975,
+  "superplasticizer_per_binder_max": 0.05136950933026012
+ }
+}
