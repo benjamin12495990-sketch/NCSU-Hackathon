@@ -1,0 +1,12 @@
+{
+ "test_mae_K": 8.488,
+ "test_r2": 0.8571,
+ "train_rows": 17010,
+ "test_rows": 4253,
+ "distinct_known_compositions": 15139,
+ "low_confidence_distance": 0.07071067811865478,
+ "model": "RandomForestRegressor(100 trees, max_depth 8)",
+ "split": "random 80/20; near-duplicate compositions can sit on both sides, so the MAE is optimistic",
+ "trained_at": "2026-11-20T23:35:22+00:00",
+ "dataset": "UCI Superconductivty Data (Hamidieh, 2018), unique_m.csv"
+}
