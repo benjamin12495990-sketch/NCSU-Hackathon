@@ -132,7 +132,7 @@ export default function App() {
                         <td className="num">{K(c.nearestTc)}</td>
                         <td>
                           <span className={c.lowConfidence ? 'flag low' : 'flag ok'}>
-                            {c.lowConfidence ? 'Low: far from known data' : 'Near known data'}
+                            {c.lowConfidence ? 'Low confidence' : 'Near known data'}
                           </span>
                         </td>
                       </tr>
