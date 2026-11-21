@@ -1,0 +1,3 @@
+ok   {} (page default): 1005 rows, largest |nn.js - net.mjs| = 0, after save/load 0; page test MAE 3.9022 MPa (nn.js history 3.9022); 3.9 s
+ok   { features: 'rich' }: 1005 rows, largest |nn.js - net.mjs| = 0, after save/load 0; page test MAE 4.1580 MPa (nn.js history 4.1580); 4.2 s
+ok   PANEL_DESIGN: 1005 rows, largest |nn.js - net.mjs| = 0, after save/load 0; page test MAE 3.9545 MPa (nn.js history 3.9545); 4.1 s
