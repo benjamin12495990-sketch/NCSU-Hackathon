@@ -23,3 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 __pycache__/
+
+# GPU kit: local runs and downloaded data stay out of git
+gpu/runs/
+gpu/data_cache/
