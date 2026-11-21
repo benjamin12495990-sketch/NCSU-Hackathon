@@ -9,7 +9,8 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "parity": "node scripts/parity.mjs",
-    "sweep": "node scripts/sweep.mjs"
+    "sweep": "node scripts/sweep.mjs",
+    "alloy-check": "node scripts/alloy_check.mjs"
   },
   "dependencies": {
     "react": "^19.3.1",
