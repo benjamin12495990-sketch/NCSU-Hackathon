@@ -1,0 +1,6 @@
+{
+ "rule": "sha256('split-v1:' + reduced formula) % 100: <80 train, <90 val, else test",
+ "sha256_of_list": "f964df8877a24782a519d2c7d6b41484c7bfd98273dca1f4565e6de237c314d6",
+ "n": 3000,
+ "note": "full jid list is in the run folder split.json; rebuilt deterministically"
+}

@@ -1,0 +1,167 @@
+{
+ "created": "2026-11-21T21:27:29+00:00",
+ "git": {
+  "commit": "11960a301ce9de153aad8b1ad5357d6d22859f4b",
+  "branch": "gpu-kit",
+  "dirty": true
+ },
+ "device": "cpu",
+ "dtype": "float32",
+ "hardware": {
+  "python": "3.13.18",
+  "platform": "Linux-6.18.44-fc-v726-x86_64-with-glibc2.39",
+  "machine": "x86_64",
+  "processor": "x86_64",
+  "cpu_count": 4,
+  "torch": "2.15.0+cu132",
+  "torch_cuda_build": "13.2",
+  "cuda_available": false
+ },
+ "threads": 2,
+ "argv": [
+  "gpu/train_tabular.py",
+  "--family",
+  "electrolytes",
+  "--mode",
+  "cv",
+  "--device",
+  "cpu",
+  "--threads",
+  "2",
+  "--compare-reference",
+  "--tag",
+  "cpu_ref_v2"
+ ],
+ "data": {
+  "family": "electrolytes",
+  "target": "log10 room-temperature ionic conductivity, log10(S/cm); OBELiX training partition only",
+  "features": 54,
+  "train_rows": 478,
+  "train_groups": 124,
+  "test_rows": null,
+  "cv_folds": 5,
+  "folds_source": "GroupKFold(5) on connected components of a shared Composition string or DOI token (rule of domains/electrolytes/work/baseline.py)",
+  "extra_sets": {},
+  "data_sha256": "c3edfee5c9ea823c1059c40cf005888938db66fdfe537d79258975a02fbc734b",
+  "sources": {
+   "domains/electrolytes/work/data/processed.csv": "2a57b4b4287bd56e774402c8aec313f44c33df74d26a32e4bc3196e40b051474",
+   "domains/electrolytes/work/data/train_idx.csv": "6bd506b34d431ff233880147f934369e3d7c7f739299e10284e32927f502775a"
+  },
+  "notes": [
+   "formula-only element fractions; the official 121-row holdout is not loaded (labels are public, so it is not blind)"
+  ]
+ },
+ "configs": [
+  {
+   "hidden": [
+    32,
+    16
+   ],
+   "epochs": 300,
+   "batch": 32,
+   "lr": 0.004,
+   "decay": 0.01,
+   "loss": "huber",
+   "inputClip": 3,
+   "clampOutput": false,
+   "logTarget": false,
+   "log1pAuto": false
+  }
+ ],
+ "seeds": [
+  11,
+  112,
+  213,
+  314,
+  415
+ ],
+ "parity_note": "PyTorch mirror of nnFamily.js; exact bit parity with the JavaScript trainer is not expected",
+ "modes": {
+  "cv": {
+   "train_seconds": 19.386829657000817,
+   "naive_train_mean": {
+    "val": {
+     "n": 478,
+     "mae": 2.5541581812111556,
+     "rmse": 3.484456110460635,
+     "r2": -0.048261618455044175
+    }
+   },
+   "configs": [
+    {
+     "config": {
+      "hidden": [
+       32,
+       16
+      ],
+      "epochs": 300,
+      "batch": 32,
+      "lr": 0.004,
+      "decay": 0.01,
+      "loss": "huber",
+      "inputClip": 3,
+      "clampOutput": false,
+      "logTarget": false,
+      "log1pAuto": false
+     },
+     "sets": {
+      "val": {
+       "members": [
+        {
+         "n": 478,
+         "mae": 2.0500618512454687,
+         "rmse": 2.9747963131725172,
+         "r2": 0.23596341181991143
+        },
+        {
+         "n": 478,
+         "mae": 1.8843884708618945,
+         "rmse": 2.805077722084934,
+         "r2": 0.32065640444062615
+        },
+        {
+         "n": 478,
+         "mae": 1.929994928074558,
+         "rmse": 2.8095434925669576,
+         "r2": 0.31849161057548825
+        },
+        {
+         "n": 478,
+         "mae": 1.9745378260523303,
+         "rmse": 2.8359400432851247,
+         "r2": 0.3056254782653042
+        },
+        {
+         "n": 478,
+         "mae": 1.9456558546111982,
+         "rmse": 2.8362534741440717,
+         "r2": 0.30547198388512664
+        }
+       ],
+       "member_mae_mean": 1.95692778616909,
+       "member_mae_sd": 0.054951715412283844,
+       "seed_mean_ensemble": {
+        "n": 478,
+        "mae": 1.9343413734964245,
+        "rmse": 2.8150413051664818,
+        "r2": 0.31582180221717626
+       },
+       "per_fold_mae_ensemble": [
+        1.0799234173854624,
+        1.775851593526669,
+        2.572867898389355,
+        2.190511074683159,
+        2.1719876515559995
+       ]
+      }
+     }
+    }
+   ]
+  }
+ },
+ "wall_seconds": 19.566496189999953,
+ "peak_memory_mb": 874.4453125,
+ "reference": {
+  "note": "domains/electrolytes/work/reproductions/obelix_group_cv.json not in this checkout (it is on main after 1d1b90b); nothing to compare"
+ }
+}

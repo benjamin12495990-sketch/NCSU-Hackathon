@@ -31,3 +31,7 @@ domains/chemistry/work/all_rows.json
 domains/chemistry/work/splits.json
 domains/chemistry/work/prepare_info.json
 domains/corrosives/work/cache/
+
+# GPU kit: local runs and downloaded data stay out of git
+gpu/runs/
+gpu/data_cache/

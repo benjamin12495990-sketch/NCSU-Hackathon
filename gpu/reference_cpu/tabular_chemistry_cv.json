@@ -1,0 +1,176 @@
+{
+ "created": "2026-11-21T21:20:57+00:00",
+ "git": {
+  "commit": "a1826692448c56f318246bcff6c1c2d441b10e01",
+  "branch": "gpu-kit",
+  "dirty": false
+ },
+ "device": "cpu",
+ "dtype": "float32",
+ "hardware": {
+  "python": "3.13.18",
+  "platform": "Linux-6.18.44-fc-v726-x86_64-with-glibc2.39",
+  "machine": "x86_64",
+  "processor": "x86_64",
+  "cpu_count": 4,
+  "torch": "2.15.0+cu132",
+  "torch_cuda_build": "13.2",
+  "cuda_available": false
+ },
+ "threads": 2,
+ "argv": [
+  "gpu/train_tabular.py",
+  "--family",
+  "chemistry",
+  "--mode",
+  "cv",
+  "--device",
+  "cpu",
+  "--threads",
+  "2",
+  "--compare-reference",
+  "--tag",
+  "cpu_ref"
+ ],
+ "data": {
+  "family": "chemistry",
+  "target": "aqueous solubility LogS, log10 mol/L",
+  "features": 17,
+  "train_rows": 7982,
+  "train_groups": 7736,
+  "test_rows": 2000,
+  "cv_folds": 3,
+  "folds_source": "prepare.py cv_fold (GroupKFold(3) by InChIKey first block)",
+  "extra_sets": {},
+  "data_sha256": "e89db0d1dda9ba3b5340f2b0f383ba1cfa8223145226aa51cc9cd10f358a7bbb",
+  "sources": {
+   "domains/chemistry/work/data/data_curated.csv": "363a42a4e4ea8e6039758146d34efdd95cde2da81c665316cacc1869e0a805ed",
+   "domains/chemistry/work/prepare.py": "5b4afe9cbe07b0bd59c9c43d4cd37b988cb08b836251aaede02c847f8f206bbe",
+   "gpu/data_cache/chemistry/nn_data.json": "7426a5c0466ec12e6c0d5b4c6caa86a135fd1a1777bae72d56f3388175e6a54f"
+  },
+  "notes": []
+ },
+ "configs": [
+  {
+   "hidden": [
+    96,
+    48
+   ],
+   "epochs": 30,
+   "batch": 32,
+   "lr": 0.004,
+   "decay": 0.0001,
+   "loss": "huber",
+   "inputClip": 5,
+   "clampOutput": false,
+   "logTarget": false,
+   "log1pAuto": true
+  }
+ ],
+ "seeds": [
+  11,
+  112,
+  213,
+  314,
+  415
+ ],
+ "parity_note": "PyTorch mirror of nnFamily.js; exact bit parity with the JavaScript trainer is not expected",
+ "modes": {
+  "cv": {
+   "train_seconds": 13.698663552999733,
+   "naive_train_mean": {
+    "val": {
+     "n": 7982,
+     "mae": 1.8838669572882116,
+     "rmse": 2.3650076973227123,
+     "r2": -0.0003350429820778711
+    }
+   },
+   "configs": [
+    {
+     "config": {
+      "hidden": [
+       96,
+       48
+      ],
+      "epochs": 30,
+      "batch": 32,
+      "lr": 0.004,
+      "decay": 0.0001,
+      "loss": "huber",
+      "inputClip": 5,
+      "clampOutput": false,
+      "logTarget": false,
+      "log1pAuto": true
+     },
+     "sets": {
+      "val": {
+       "members": [
+        {
+         "n": 7982,
+         "mae": 0.7966413016813926,
+         "rmse": 1.147870098255372,
+         "r2": 0.7643508642284761
+        },
+        {
+         "n": 7982,
+         "mae": 0.7943229715851163,
+         "rmse": 1.1516882135640558,
+         "r2": 0.7627805960392113
+        },
+        {
+         "n": 7982,
+         "mae": 0.7929757406295566,
+         "rmse": 1.1466635656211805,
+         "r2": 0.7648459881081715
+        },
+        {
+         "n": 7982,
+         "mae": 0.7916221687121452,
+         "rmse": 1.1484495641727321,
+         "r2": 0.7641128841478393
+        },
+        {
+         "n": 7982,
+         "mae": 0.7906942805730487,
+         "rmse": 1.1436510670738738,
+         "r2": 0.7660799517390955
+        }
+       ],
+       "member_mae_mean": 0.7932512926362518,
+       "member_mae_sd": 0.0020932721493122767,
+       "seed_mean_ensemble": {
+        "n": 7982,
+        "mae": 0.7647683004084267,
+        "rmse": 1.114238577602249,
+        "r2": 0.7779571734185464
+       },
+       "per_fold_mae_ensemble": [
+        0.761838920571369,
+        0.7579109051891955,
+        0.7745587547034588
+       ]
+      }
+     }
+    }
+   ]
+  }
+ },
+ "wall_seconds": 13.814170172000104,
+ "peak_memory_mb": 785.1328125,
+ "reference": {
+  "file": "domains/chemistry/work/result.json",
+  "parity_note": "JavaScript reference (float64, its own RNG); bit parity is not expected",
+  "cv_single_network": {
+   "cv_mae": 0.8025,
+   "cv_rmse": 1.1605
+  },
+  "fixed_test_network_ensemble": {
+   "n": 2000,
+   "mae": 0.7613,
+   "rmse": 1.117,
+   "r2": 0.78
+  },
+  "mode_run": "cv"
+ }
+}
