@@ -13,8 +13,9 @@ embodied CO2. Built from scratch at TRIANGULATE, an AI hackathon at NC State.
 The page is titled **Formulation Designer**. The three-bar button at the top left opens a menu of
 seven simulations (families of materials). **Concrete is live.** The other six (polymers, corrosive
 solutions, cleaning products, insulators, general materials, general chemistry) are marked "Planned": choosing one shows what it
-would predict, vary and rank by, and says that nothing is generated for it yet. The page follows
-the visual rules in [`taste.md`](taste.md).
+would predict, vary and rank by, and says that nothing is generated for it yet. The switch at the
+top right turns dark mode on and off; it starts from the system setting and remembers the choice.
+The page follows the visual rules in [`taste.md`](taste.md).
 
 ## What it does
 
