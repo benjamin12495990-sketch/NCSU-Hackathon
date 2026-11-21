@@ -1,0 +1,602 @@
+{
+ "data": {
+  "source": "AqSolDB data_curated.csv (Sorkun, Khetan, Er 2019)",
+  "csv_rows": 9982,
+  "rows_used": 9982,
+  "rows_dropped": 0,
+  "missing_or_non_finite_descriptor_rows": 0,
+  "groups_inchikey_first_block": 9671,
+  "groups_with_more_than_one_row": 278,
+  "train_rows": 7982,
+  "test_rows": 2000,
+  "train_groups": 7736,
+  "test_groups": 1935,
+  "target": "Solubility (LogS, log10 mol/L)",
+  "target_mean_sd_all_rows": [
+   -2.89,
+   2.368
+  ],
+  "balabanj_zero_rows_kept_as_is": 400
+ },
+ "features": [
+  "MolWt",
+  "MolLogP",
+  "MolMR",
+  "HeavyAtomCount",
+  "NumHAcceptors",
+  "NumHDonors",
+  "NumHeteroatoms",
+  "NumRotatableBonds",
+  "NumValenceElectrons",
+  "NumAromaticRings",
+  "NumSaturatedRings",
+  "NumAliphaticRings",
+  "RingCount",
+  "TPSA",
+  "LabuteASA",
+  "BalabanJ",
+  "BertzCT"
+ ],
+ "transforms": {
+  "log1p_columns_decided_on_training_rows": [
+   "MolWt",
+   "MolMR",
+   "HeavyAtomCount",
+   "NumHAcceptors",
+   "NumHDonors",
+   "NumHeteroatoms",
+   "NumRotatableBonds",
+   "NumValenceElectrons",
+   "NumAromaticRings",
+   "NumSaturatedRings",
+   "NumAliphaticRings",
+   "RingCount",
+   "TPSA",
+   "LabuteASA",
+   "BertzCT"
+  ],
+  "rule": "log1p if training min >= 0 and training skewness > 1; then z-score with training mean/sd; then clip to +-5 sd; target z-scored with training mean/sd",
+  "not_used_as_inputs": [
+   "SD",
+   "Occurrences",
+   "Group",
+   "SMILES",
+   "InChI",
+   "Name"
+  ]
+ },
+ "network": {
+  "chosen_settings": {
+   "epochs": 30,
+   "batch": 32,
+   "lr": 0.004,
+   "loss": "huber",
+   "log1p": "auto",
+   "clip": 5,
+   "members": 5,
+   "seed": 11,
+   "hidden": [
+    96,
+    48
+   ],
+   "decay": 0.0001
+  },
+  "layers": [
+   17,
+   96,
+   48,
+   1
+  ],
+  "weights_all_members": 32165,
+  "train_seconds_final_ensemble_node": 17.164,
+  "optimizer": "Adam, lr decays linearly to 10% over the epochs, L2 weight decay inside the gradient (Mlp.step as copied)"
+ },
+ "a_cv_on_training_rows": {
+  "folds": 3,
+  "grouped": true,
+  "grid_single_seed": [
+   {
+    "hidden": [
+     32,
+     16
+    ],
+    "decay": 0.0001,
+    "loss": "huber",
+    "log1p": "auto",
+    "cv_mae": 0.8223,
+    "cv_rmse": 1.1856,
+    "sec_3_folds": 1.6
+   },
+   {
+    "hidden": [
+     32,
+     16
+    ],
+    "decay": 0.001,
+    "loss": "huber",
+    "log1p": "auto",
+    "cv_mae": 0.8218,
+    "cv_rmse": 1.1756,
+    "sec_3_folds": 1.6
+   },
+   {
+    "hidden": [
+     64,
+     32
+    ],
+    "decay": 0.0001,
+    "loss": "huber",
+    "log1p": "auto",
+    "cv_mae": 0.8073,
+    "cv_rmse": 1.1628,
+    "sec_3_folds": 3.9
+   },
+   {
+    "hidden": [
+     64,
+     32
+    ],
+    "decay": 0.001,
+    "loss": "huber",
+    "log1p": "auto",
+    "cv_mae": 0.8096,
+    "cv_rmse": 1.1564,
+    "sec_3_folds": 4.3
+   },
+   {
+    "hidden": [
+     96,
+     48
+    ],
+    "decay": 0.0001,
+    "loss": "huber",
+    "log1p": "auto",
+    "cv_mae": 0.7918,
+    "cv_rmse": 1.1497,
+    "sec_3_folds": 6.9
+   },
+   {
+    "hidden": [
+     96,
+     48
+    ],
+    "decay": 0.001,
+    "loss": "huber",
+    "log1p": "auto",
+    "cv_mae": 0.7968,
+    "cv_rmse": 1.1457,
+    "sec_3_folds": 7.0
+   },
+   {
+    "hidden": [
+     96,
+     48
+    ],
+    "decay": 0.0001,
+    "loss": "huber",
+    "log1p": "none",
+    "cv_mae": 0.8025,
+    "cv_rmse": 1.1605,
+    "sec_3_folds": 6.7
+   },
+   {
+    "hidden": [
+     96,
+     48
+    ],
+    "decay": 0.0001,
+    "loss": "squared",
+    "log1p": "auto",
+    "cv_mae": 0.7959,
+    "cv_rmse": 1.1505,
+    "sec_3_folds": 6.8
+   }
+  ],
+  "chosen_by": "lowest CV MAE with one seed, then run as a 5-seed ensemble",
+  "network_ensemble_cv": {
+   "n": 7982,
+   "mae": 0.7586,
+   "rmse": 1.1073,
+   "r2": 0.7807
+  },
+  "trees_cv_same_folds": {
+   "n": 7982,
+   "mae": 0.8237,
+   "rmse": 1.1776,
+   "r2": 0.752
+  }
+ },
+ "b_test_once": {
+  "network_ensemble": {
+   "n": 2000,
+   "mae": 0.7613,
+   "rmse": 1.117,
+   "r2": 0.78
+  },
+  "trees_gbr": {
+   "n": 2000,
+   "mae": 0.8344,
+   "rmse": 1.1848,
+   "r2": 0.7525
+  },
+  "naive_train_mean": {
+   "n": 2000,
+   "mae": 1.9222,
+   "rmse": 2.3817,
+   "r2": -0.0003
+  },
+  "network_single_members_mae": [
+   0.7952,
+   0.7857,
+   0.7826,
+   0.7761,
+   0.7899
+  ],
+  "mae_network_minus_trees": {
+   "value": -0.0731,
+   "grouped_bootstrap_95": [
+    -0.0936,
+    -0.053
+   ]
+  }
+ },
+ "c_eight_splits": {
+  "splits_done": 8,
+  "per_split": [
+   {
+    "seed": 1001,
+    "mae_network": 0.7562,
+    "mae_trees": 0.8334,
+    "mae_naive": 1.9045,
+    "network_train_seconds": 15.8
+   },
+   {
+    "seed": 1002,
+    "mae_network": 0.7225,
+    "mae_trees": 0.794,
+    "mae_naive": 1.9318,
+    "network_train_seconds": 15.7
+   },
+   {
+    "seed": 1003,
+    "mae_network": 0.7391,
+    "mae_trees": 0.8129,
+    "mae_naive": 1.9065,
+    "network_train_seconds": 16.3
+   },
+   {
+    "seed": 1004,
+    "mae_network": 0.7575,
+    "mae_trees": 0.8258,
+    "mae_naive": 1.9226,
+    "network_train_seconds": 16.8
+   },
+   {
+    "seed": 1005,
+    "mae_network": 0.7672,
+    "mae_trees": 0.8555,
+    "mae_naive": 1.8642,
+    "network_train_seconds": 16.5
+   },
+   {
+    "seed": 1006,
+    "mae_network": 0.7544,
+    "mae_trees": 0.8201,
+    "mae_naive": 1.8835,
+    "network_train_seconds": 18.1
+   },
+   {
+    "seed": 1007,
+    "mae_network": 0.7061,
+    "mae_trees": 0.7795,
+    "mae_naive": 1.8688,
+    "network_train_seconds": 15.4
+   },
+   {
+    "seed": 1008,
+    "mae_network": 0.7558,
+    "mae_trees": 0.8312,
+    "mae_naive": 1.8975,
+    "network_train_seconds": 15.7
+   }
+  ],
+  "mean_mae_network": 0.7449,
+  "mean_mae_trees": 0.8191,
+  "mean_difference_network_minus_trees": -0.0742,
+  "paired_t_95_interval": [
+   -0.0799,
+   -0.0685
+  ],
+  "network_better_in_n_splits": 8,
+  "note": "splits overlap heavily (resampled from the same 9,982 rows), so the t interval is narrower than a truly independent one would be"
+ },
+ "d_interval_90": {
+  "network_half_width_logS": 1.711,
+  "from": "absolute out-of-fold errors of the 5-seed ensemble in 3-fold grouped CV on training rows (n=7982)",
+  "test_coverage": 0.8925,
+  "test_rows": 2000,
+  "trees_half_width_logS": 1.811,
+  "trees_test_coverage": 0.892
+ },
+ "e_reliable_rows_G3_G5": {
+  "label_meaning_checked_in_csv": {
+   "G1": {
+    "rows": 7746,
+    "occurrences_min_max": [
+     1,
+     1
+    ],
+    "sd_min_max": [
+     0.0,
+     0.0
+    ],
+    "sd_median": 0.0
+   },
+   "G2": {
+    "rows": 235,
+    "occurrences_min_max": [
+     2,
+     2
+    ],
+    "sd_min_max": [
+     0.5,
+     2.898
+    ],
+    "sd_median": 0.824
+   },
+   "G3": {
+    "rows": 1182,
+    "occurrences_min_max": [
+     2,
+     2
+    ],
+    "sd_min_max": [
+     0.005,
+     0.5
+    ],
+    "sd_median": 0.073
+   },
+   "G4": {
+    "rows": 183,
+    "occurrences_min_max": [
+     3,
+     38
+    ],
+    "sd_min_max": [
+     0.502,
+     3.87
+    ],
+    "sd_median": 0.904
+   },
+   "G5": {
+    "rows": 636,
+    "occurrences_min_max": [
+     3,
+     12
+    ],
+    "sd_min_max": [
+     0.009,
+     0.496
+    ],
+    "sd_median": 0.12
+   }
+  },
+  "network_ensemble": {
+   "n": 371,
+   "mae": 0.5645,
+   "rmse": 0.7967,
+   "r2": 0.8754
+  },
+  "trees_gbr": {
+   "n": 371,
+   "mae": 0.6585,
+   "rmse": 0.8783,
+   "r2": 0.8486
+  },
+  "naive_train_mean": {
+   "n": 371,
+   "mae": 1.8157,
+   "rmse": 2.2661,
+   "r2": -0.0076
+  },
+  "other_rows_network": {
+   "n": 1629,
+   "mae": 0.8061,
+   "rmse": 1.1779,
+   "r2": 0.7606
+  },
+  "other_rows_trees": {
+   "n": 1629,
+   "mae": 0.8744,
+   "rmse": 1.244,
+   "r2": 0.7329
+  },
+  "per_label_test": {
+   "G1": {
+    "n": 1551,
+    "mae_network": 0.8,
+    "mae_trees": 0.8684
+   },
+   "G2": {
+    "n": 44,
+    "mae_network": 0.6726,
+    "mae_trees": 0.713
+   },
+   "G3": {
+    "n": 252,
+    "mae_network": 0.5628,
+    "mae_trees": 0.6658
+   },
+   "G4": {
+    "n": 34,
+    "mae_network": 1.2571,
+    "mae_trees": 1.3561
+   },
+   "G5": {
+    "n": 119,
+    "mae_network": 0.5682,
+    "mae_trees": 0.6432
+   }
+  },
+  "interval_coverage_reliable_rows": 0.938
+ },
+ "sanity_sweeps": {
+  "MolLogP": {
+   "range_5_to_95_pct_of_training": [
+    -2.832099999999998,
+    6.620600000000001
+   ],
+   "grid_points": 21,
+   "molecules": 2000,
+   "share_net_decrease_over_range": 0.99,
+   "share_monotone_nonincreasing": 0.911,
+   "share_monotone_nondecreasing": 0.002,
+   "share_local_decrease_at_own_value": 0.9665,
+   "local_step": 0.5,
+   "median_net_change_logS": -4.8793,
+   "median_slope_per_unit": -0.5162,
+   "mean_curve_first_mid_last": [
+    -0.391,
+    -2.501,
+    -5.231
+   ]
+  },
+  "MolWt": {
+   "range_5_to_95_pct_of_training": [
+    96.107,
+    555.4350000000001
+   ],
+   "grid_points": 21,
+   "molecules": 2000,
+   "share_net_decrease_over_range": 0.7815,
+   "share_monotone_nonincreasing": 0.462,
+   "share_monotone_nondecreasing": 0.0215,
+   "share_local_decrease_at_own_value": 0.681,
+   "local_step": 25,
+   "median_net_change_logS": -1.1801,
+   "median_slope_per_unit": -0.0026,
+   "mean_curve_first_mid_last": [
+    -2.634,
+    -3.383,
+    -3.91
+   ]
+  }
+ },
+ "trees_feature_importance_top5": [
+  [
+   "MolLogP",
+   0.717
+  ],
+  [
+   "BertzCT",
+   0.06
+  ],
+  [
+   "MolWt",
+   0.044
+  ],
+  [
+   "MolMR",
+   0.034
+  ],
+  [
+   "TPSA",
+   0.03
+  ]
+ ],
+ "extra_scaffold_split_rdkit": {
+  "split": "Bemis-Murcko scaffold of the largest fragment (RDKit), largest scaffold sets in train until 80%",
+  "train_rows": 7985,
+  "test_rows": 1997,
+  "scaffolds": 1895,
+  "acyclic_rows_all_in_train": 2953,
+  "smiles_failed": 2,
+  "inchikey_groups_on_both_sides": 2,
+  "network_ensemble": {
+   "n": 1997,
+   "mae": 1.0033,
+   "rmse": 1.3587,
+   "r2": 0.6299
+  },
+  "trees_gbr": {
+   "n": 1997,
+   "mae": 1.008,
+   "rmse": 1.3582,
+   "r2": 0.6302
+  },
+  "naive_train_mean": {
+   "n": 1997,
+   "mae": 1.8345,
+   "rmse": 2.3362,
+   "r2": -0.0942
+  },
+  "network_train_seconds": 16.431,
+  "note": "network settings are the ones chosen by CV on the main training rows; one run, no tuning on this split"
+ },
+ "extra_cv_outside_grid_not_used": {
+  "what": "single-seed 3-fold grouped CV on training rows, run after the final model was fixed; compare with 0.7918 for the chosen setting",
+  "rows": [
+   {
+    "hidden": [
+     128,
+     64
+    ],
+    "epochs": 30,
+    "decay": 0.0001,
+    "cv_mae": 0.785,
+    "cv_rmse": 1.1386,
+    "sec_3_folds": 11.488
+   },
+   {
+    "hidden": [
+     96,
+     48
+    ],
+    "epochs": 60,
+    "decay": 0.0001,
+    "cv_mae": 0.7935,
+    "cv_rmse": 1.1522,
+    "sec_3_folds": 13.811
+   }
+  ]
+ },
+ "sanity_outcome": "MolLogP: trend holds. Raising MolLogP from the 5th to the 95th training percentile with the other 16 inputs fixed lowers predicted LogS for 99.0% of the 2,000 test molecules (monotone at all 21 grid points for 91.1%; 96.7% fall locally around their own value); median slope about -0.52 LogS per logP unit. MolWt: weaker and mixed. Predicted LogS falls over the range 96 to 555 g/mol for 78.2% of molecules (median -1.18 LogS), is monotone for only 46.2%, and does not fall for the remaining 22%. Both sweeps are off-manifold: MolWt cannot really change while MolMR, HeavyAtomCount and LabuteASA stay fixed.",
+ "caveats": [
+  "17 bulk 2D descriptors cannot see 3D structure, crystal packing or melting point, polymorph, ionisation or pH, or temperature. Typical error is about 0.76 log units (a factor of about 6 in mol/L) and the 90% band is +-1.71 log units (a factor of about 50): a rough screen, not a replacement for measurement, and not able to rank close analogues.",
+  "Labels are noisy and the split is only moderately strict. 78% of rows are single measurements (G1) of unknown quality; on rows measured at least twice with SD <= 0.5 (G3+G5, 371 test rows) MAE drops from 0.76 to 0.56, but those rows are also better-studied chemistry, so the gap is not a clean estimate of measurement noise. Grouping by the InChIKey first block keeps stereoisomers together, but different salts of one parent get different first blocks and close analogues sit on both sides; the scaffold split is the tougher figure. On the scaffold split (test ring systems never seen in training) MAE rises to 1.00 for the network and 1.01 for the trees, R2 about 0.63: expect that level, not 0.76, on new chemical families.",
+  "The comparison favours the network: it was tuned (8 settings by CV, 5-seed ensemble) while the tree model is one fixed untuned configuration, so the 0.07 MAE margin says this network beats this baseline, not that networks beat trees here. The chosen size is the largest in the grid. The eight extra splits are overlapping resamples of the same rows (the t interval is too narrow as a claim about new data) and their rows include main-test rows, with settings carried over rather than re-tuned. The 90% band has constant width and covered 89.3% of test rows, slightly under nominal. On the scaffold split the two are tied (MAE 1.003 network, 1.008 trees), so the network lead is confined to molecules that resemble the training set."
+ ],
+ "provenance": "Every number here was computed in this session by the scripts listed under files, on this machine; none is quoted from the literature. The repository README does not define the G1-G5 labels; their meaning was checked against the SD and Occurrences columns of the CSV (table under e_reliable_rows_G3_G5). Test rows of the main split were predicted once, with settings fixed beforehand by the automated CV step. RDKit installed with pip (one attempt) and used only for the scaffold split.",
+ "files": [
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/all_rows.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/cv_extra.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/cv_result.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/data/data_curated.csv",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/data_readme/README.md",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/data_readme/data-curation.py",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/evaluate.py",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/make_notes.py",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/nn_cv_extra.js",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/nn_data.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/nn_final.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/nn_generic.js",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/nn_run.js",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/nn_splits.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/notes.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/package.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/prepare.py",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/prepare_info.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/result.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/run.log",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/run2.log",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/scaffold/cv_result.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/scaffold/nn_splits.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/scaffold/scaffold_result.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/scaffold/scaffold_split.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/scaffold_eval.py",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/scaffold_split.py",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/splits.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/trees.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry/trees.py"
+ ]
+}

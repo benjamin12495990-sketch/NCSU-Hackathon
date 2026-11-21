@@ -32,3 +32,24 @@ pigments · catalysts · propellants · sealants · composites · glasses & cera
 
 Both model scripts (`train/train.py` trees, `pipeline/train_nn.py` neural net) were written for
 concrete and could be pointed at another tabular dataset. None of these domains has one yet. Literature grounding for every domain lives in `../research/references/<domain>.md`.
+
+## Work folders: everything needed to rebuild and re-check the trained families
+
+Each trained family has a `work/` folder with the files its training agent produced: the results
+(`result.json`), the independent re-run (`skeptic_check.json`), the data preparation and trainer
+(`prepare.py`, `nn_generic.js`), the training and evaluation scripts, the splits, and the dataset
+where its licence allows it. `npm run family-files` rebuilds `public/model/<family>/` from these
+folders alone, and `npm run alloy-check` and `npm run family-parity` run from them too. The
+network's own training rows (`nn_data.json`) are not duplicated here; they are read from
+`public/model/<family>/`.
+
+| Family | Dataset in `work/data/` | Source and licence |
+| --- | --- | --- |
+| materials | `MPEA_dataset.csv` | Borg et al. (2020), *Scientific Data* 7, 430; CitrineInformatics/MPEA_dataset on GitHub, Apache License 2.0 |
+| insulators | `dielectric_table.csv` (columns taken from the full records) | Petousis et al., DOI 10.18126/racd-go9m; Hugging Face foundry-ml/dielectric_constant_v1-1, CC BY 4.0. Values are calculated (DFT), not measured |
+| polymers | `experimental_dataset.csv` | Zenodo record 19242815 (Bhati et al.), CC BY 4.0 |
+| polymers | `HT_MD_polymer_properties.csv` (checked, not used for training) | Hugging Face AdrianM0/bicerano_polymers, MIT |
+| chemistry | not included (3.8 MB) | AqSolDB, Sorkun, Khetan and Er (2019), *Scientific Data* 6, 143. Download `https://raw.githubusercontent.com/mcsorkun/AqSolDB/master/results/data_curated.csv` (repository MIT, data folder CC0) into `chemistry/work/data/` and run `prepare.py` to rebuild its 2 MB `nn_data.json` |
+
+Not included: the polymer agent's `tasks.json` (3.4 MB of cross-validation fold rows) and the raw
+Hugging Face responses for the insulators (6.4 MB); both can be rebuilt from the files above.

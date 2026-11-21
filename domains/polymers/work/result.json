@@ -1,0 +1,638 @@
+{
+ "task": "Predict measured glass-transition temperature Tg (K) of homopolymers and binary copolymers",
+ "numbers_run_by": "every number in this file was computed in this session by prepare.py / evaluate.py / run_nn.js; nothing is quoted from a paper",
+ "data": {
+  "rows_used_copolymer_file": 666,
+  "rows_used_homopolymer_file": 0,
+  "training_set_choice": "copolymer file alone: it already contains 315 homopolymer rows (301 with empty SMILES_1), and 304 of the 313 distinct structures in the Bicerano file are among them (293 with the same Tg within 0.5 K); merging would mostly add duplicates, and the 9 new rows were left out",
+  "groups": 386,
+  "distinct_monomers": 315,
+  "copolymer_systems": 85,
+  "rows_true_copolymer": 351,
+  "rows_homopolymer": 315,
+  "duplicates": 0,
+  "missing_tg": 0,
+  "composition_basis": "not stated in the file; column x1 = comp_0/100 looks like a mole fraction, so comp was treated as mole percent and converted to weight fraction (repeat-unit molar mass) for the Fox estimate",
+  "homopolymer_file_check": {
+   "rows": 315,
+   "rows_with_experiment_tg": 314,
+   "distinct_structures": 313,
+   "structures_already_in_copolymer_file_as_homopolymer": 304,
+   "rows_not_in_copolymer_file": 9,
+   "same_tg_within_0p5K": 293,
+   "max_abs_tg_diff_K": 54.0
+  }
+ },
+ "rdkit_installed": true,
+ "rdkit_version": "2026.09.2",
+ "features": [
+  "mean_MolWt",
+  "mean_LogP",
+  "mean_TPSA",
+  "mean_RotBonds",
+  "mean_Rings",
+  "mean_AromRings",
+  "mean_FracCSP3",
+  "mean_HBD",
+  "mean_HBA",
+  "mean_HeavyAtoms",
+  "mean_BackboneLen",
+  "mean_SideHeavy",
+  "mean_RotPerHeavy",
+  "mean_AromAtomFrac",
+  "mean_BackboneRingFrac",
+  "mean_Halogens",
+  "mean_Si",
+  "absdiff_MolWt",
+  "absdiff_LogP",
+  "absdiff_TPSA",
+  "absdiff_RotBonds",
+  "absdiff_Rings",
+  "absdiff_AromRings",
+  "absdiff_FracCSP3",
+  "absdiff_HBD",
+  "absdiff_HBA",
+  "absdiff_HeavyAtoms",
+  "absdiff_BackboneLen",
+  "absdiff_SideHeavy",
+  "absdiff_RotPerHeavy",
+  "absdiff_AromAtomFrac",
+  "absdiff_BackboneRingFrac",
+  "absdiff_Halogens",
+  "absdiff_Si",
+  "x_a",
+  "mix_4x(1-x)",
+  "fox_tg_from_train",
+  "fox_available",
+  "homoTg_known_wfrac",
+  "homoTg_known_wmean",
+  "mean_morgan0",
+  "mean_morgan1",
+  "mean_morgan2",
+  "mean_morgan3",
+  "mean_morgan4",
+  "mean_morgan5",
+  "mean_morgan6",
+  "mean_morgan7",
+  "mean_morgan8",
+  "mean_morgan9",
+  "mean_morgan10",
+  "mean_morgan11",
+  "mean_morgan12",
+  "mean_morgan13",
+  "mean_morgan14",
+  "mean_morgan15"
+ ],
+ "feature_count": 56,
+ "feature_set_choice": {
+  "gbr_cv_mae_descriptors_only": 19.371701367108198,
+  "gbr_cv_mae_with_morgan16": 15.891447138287223,
+  "morgan_used": true
+ },
+ "fox_feature_note": "homopolymer Tg values come only from training rows of the split in use, and never from the row's own copolymer system (leave-own-group-out), recomputed for every CV fold and every split",
+ "network": {
+  "chosen_settings": {
+   "hidden": [
+    128,
+    64
+   ],
+   "epochs": 200,
+   "batch": 32,
+   "lr": 0.004,
+   "decay": 0.01,
+   "loss": "huber",
+   "seed": 11,
+   "members": 5
+  },
+  "layers": [
+   56,
+   128,
+   64,
+   1
+  ],
+  "weights": 78085,
+  "cv_grid": [
+   {
+    "config": {
+     "hidden": [
+      64,
+      32
+     ],
+     "epochs": 300,
+     "batch": 32,
+     "lr": 0.004,
+     "decay": 0.001,
+     "loss": "squared",
+     "seed": 11
+    },
+    "cv_mae_single_net": 15.62
+   },
+   {
+    "config": {
+     "hidden": [
+      64,
+      32
+     ],
+     "epochs": 300,
+     "batch": 32,
+     "lr": 0.004,
+     "decay": 0.001,
+     "loss": "huber",
+     "seed": 11
+    },
+    "cv_mae_single_net": 15.33
+   },
+   {
+    "config": {
+     "hidden": [
+      64,
+      32
+     ],
+     "epochs": 300,
+     "batch": 32,
+     "lr": 0.004,
+     "decay": 0.01,
+     "loss": "huber",
+     "seed": 11
+    },
+    "cv_mae_single_net": 15.15
+   },
+   {
+    "config": {
+     "hidden": [
+      64,
+      32
+     ],
+     "epochs": 300,
+     "batch": 32,
+     "lr": 0.004,
+     "decay": 0.03,
+     "loss": "huber",
+     "seed": 11
+    },
+    "cv_mae_single_net": 16.14
+   },
+   {
+    "config": {
+     "hidden": [
+      32,
+      16
+     ],
+     "epochs": 300,
+     "batch": 32,
+     "lr": 0.004,
+     "decay": 0.01,
+     "loss": "huber",
+     "seed": 11
+    },
+    "cv_mae_single_net": 15.59
+   },
+   {
+    "config": {
+     "hidden": [
+      128,
+      64
+     ],
+     "epochs": 200,
+     "batch": 32,
+     "lr": 0.004,
+     "decay": 0.01,
+     "loss": "huber",
+     "seed": 11
+    },
+    "cv_mae_single_net": 15.1
+   },
+   {
+    "config": {
+     "hidden": [
+      64,
+      32
+     ],
+     "epochs": 150,
+     "batch": 32,
+     "lr": 0.004,
+     "decay": 0.01,
+     "loss": "huber",
+     "seed": 11
+    },
+    "cv_mae_single_net": 15.34
+   },
+   {
+    "config": {
+     "hidden": [
+      32
+     ],
+     "epochs": 300,
+     "batch": 32,
+     "lr": 0.004,
+     "decay": 0.01,
+     "loss": "huber",
+     "seed": 11
+    },
+    "cv_mae_single_net": 15.68
+   },
+   {
+    "config": {
+     "hidden": [
+      64,
+      32
+     ],
+     "epochs": 300,
+     "batch": 32,
+     "lr": 0.004,
+     "decay": 0.1,
+     "loss": "huber",
+     "seed": 11
+    },
+    "cv_mae_single_net": 23.28
+   },
+   {
+    "config": {
+     "hidden": [
+      32,
+      16
+     ],
+     "epochs": 300,
+     "batch": 32,
+     "lr": 0.002,
+     "decay": 0.03,
+     "loss": "huber",
+     "seed": 11
+    },
+    "cv_mae_single_net": 16.34
+   }
+  ],
+  "cv_mae_chosen_single_net": 15.1,
+  "cv_mae_chosen_ensemble5": 14.97,
+  "cv_mae_trees_same_folds": 15.89,
+  "training_seconds_final_network": 16.89
+ },
+ "b_test_split_seed42": {
+  "train_rows": 514,
+  "test_rows": 152,
+  "network": {
+   "mae": 15.33,
+   "rmse": 26.67,
+   "r2": 0.926,
+   "n": 152
+  },
+  "trees": {
+   "mae": 17.54,
+   "rmse": 28.14,
+   "r2": 0.917,
+   "n": 152
+  },
+  "naive_mean": {
+   "mae": 66.44,
+   "rmse": 97.94,
+   "r2": -0.0,
+   "n": 152
+  },
+  "network_train_mae": 8.54,
+  "interval90_half_width_K": 40.4,
+  "interval90_test_coverage": 0.888,
+  "subsets": {
+   "true_copolymer_rows": {
+    "network": {
+     "mae": 5.84,
+     "rmse": 7.42,
+     "r2": 0.964,
+     "n": 93
+    },
+    "trees": {
+     "mae": 6.21,
+     "rmse": 7.99,
+     "r2": 0.958,
+     "n": 93
+    },
+    "naive_mean": {
+     "mae": 38.51,
+     "rmse": 48.29,
+     "r2": -0.522,
+     "n": 93
+    },
+    "interval90_coverage": 1.0
+   },
+   "homopolymer_rows": {
+    "network": {
+     "mae": 30.28,
+     "rmse": 41.78,
+     "r2": 0.908,
+     "n": 59
+    },
+    "trees": {
+     "mae": 35.39,
+     "rmse": 44.04,
+     "r2": 0.898,
+     "n": 59
+    },
+    "naive_mean": {
+     "mae": 110.47,
+     "rmse": 145.03,
+     "r2": -0.105,
+     "n": 59
+    },
+    "interval90_coverage": 0.712
+   },
+   "fox_available_rows": {
+    "network": {
+     "mae": 5.97,
+     "rmse": 7.91,
+     "r2": 0.963,
+     "n": 36
+    },
+    "trees": {
+     "mae": 5.5,
+     "rmse": 6.84,
+     "r2": 0.972,
+     "n": 36
+    },
+    "naive_mean": {
+     "mae": 32.4,
+     "rmse": 42.87,
+     "r2": -0.095,
+     "n": 36
+    },
+    "interval90_coverage": 1.0,
+    "fox_equation_alone": {
+     "mae": 7.47,
+     "rmse": 10.76,
+     "r2": 0.931,
+     "n": 36
+    }
+   },
+   "fox_not_available_rows": {
+    "network": {
+     "mae": 18.23,
+     "rmse": 30.21,
+     "r2": 0.924,
+     "n": 116
+    },
+    "trees": {
+     "mae": 21.28,
+     "rmse": 31.99,
+     "r2": 0.915,
+     "n": 116
+    },
+    "naive_mean": {
+     "mae": 77.01,
+     "rmse": 109.54,
+     "r2": -0.001,
+     "n": 116
+    },
+    "interval90_coverage": 0.853
+   }
+  }
+ },
+ "c_eight_splits": {
+  "per_split": [
+   {
+    "seed": 1001,
+    "network_mae": 14.56,
+    "trees_mae": 14.37,
+    "naive_mae": 71.37,
+    "network_r2": 0.911,
+    "trees_r2": 0.925,
+    "coverage90": 0.889
+   },
+   {
+    "seed": 1002,
+    "network_mae": 18.53,
+    "trees_mae": 19.35,
+    "naive_mae": 75.94,
+    "network_r2": 0.902,
+    "trees_r2": 0.904,
+    "coverage90": 0.844
+   },
+   {
+    "seed": 1003,
+    "network_mae": 13.17,
+    "trees_mae": 15.1,
+    "naive_mae": 66.56,
+    "network_r2": 0.934,
+    "trees_r2": 0.913,
+    "coverage90": 0.926
+   },
+   {
+    "seed": 1004,
+    "network_mae": 11.62,
+    "trees_mae": 12.48,
+    "naive_mae": 62.8,
+    "network_r2": 0.95,
+    "trees_r2": 0.958,
+    "coverage90": 0.941
+   },
+   {
+    "seed": 1005,
+    "network_mae": 13.54,
+    "trees_mae": 14.54,
+    "naive_mae": 62.64,
+    "network_r2": 0.927,
+    "trees_r2": 0.927,
+    "coverage90": 0.915
+   },
+   {
+    "seed": 1006,
+    "network_mae": 14.39,
+    "trees_mae": 14.83,
+    "naive_mae": 68.74,
+    "network_r2": 0.933,
+    "trees_r2": 0.932,
+    "coverage90": 0.907
+   },
+   {
+    "seed": 1007,
+    "network_mae": 20.2,
+    "trees_mae": 22.56,
+    "naive_mae": 72.58,
+    "network_r2": 0.869,
+    "trees_r2": 0.829,
+    "coverage90": 0.851
+   },
+   {
+    "seed": 1008,
+    "network_mae": 13.1,
+    "trees_mae": 12.24,
+    "naive_mae": 61.81,
+    "network_r2": 0.942,
+    "trees_r2": 0.931,
+    "coverage90": 0.935
+   }
+  ],
+  "mean_network_mae": 14.89,
+  "mean_trees_mae": 15.68,
+  "mean_difference_network_minus_trees": -0.79,
+  "paired_t95_interval": [
+   -1.67,
+   0.08
+  ],
+  "mean_coverage90": 0.901
+ },
+ "d_interval": {
+  "method": "absolute-error quantile of out-of-fold predictions from 3-fold grouped CV on the 514 training rows (split-conformal style), ceil((n+1)*0.9)-th smallest",
+  "calibration_rows": 514,
+  "half_width_K": 40.4,
+  "test_coverage": 0.888,
+  "test_coverage_true_copolymer_rows": 1.0,
+  "hard_split_coverage": 0.873
+ },
+ "e_hard_split_unseen_monomer": {
+  "held_out_monomers": 81,
+  "train_rows": 532,
+  "test_rows": 134,
+  "test_rows_true_copolymer": 53,
+  "network": {
+   "mae": 18.51,
+   "rmse": 26.84,
+   "r2": 0.919,
+   "n": 134
+  },
+  "trees": {
+   "mae": 18.74,
+   "rmse": 25.99,
+   "r2": 0.924,
+   "n": 134
+  },
+  "naive_mean": {
+   "mae": 68.88,
+   "rmse": 96.09,
+   "r2": -0.041,
+   "n": 134
+  },
+  "network_train_mae": 7.26,
+  "interval90_half_width_K": 40.4,
+  "interval90_test_coverage": 0.873,
+  "subsets": {
+   "true_copolymer_rows": {
+    "network": {
+     "mae": 8.63,
+     "rmse": 10.5,
+     "r2": 0.865,
+     "n": 53
+    },
+    "trees": {
+     "mae": 12.29,
+     "rmse": 17.21,
+     "r2": 0.638,
+     "n": 53
+    },
+    "naive_mean": {
+     "mae": 28.34,
+     "rmse": 32.53,
+     "r2": -0.294,
+     "n": 53
+    },
+    "interval90_coverage": 1.0
+   },
+   "homopolymer_rows": {
+    "network": {
+     "mae": 24.97,
+     "rmse": 33.47,
+     "r2": 0.921,
+     "n": 81
+    },
+    "trees": {
+     "mae": 22.96,
+     "rmse": 30.39,
+     "r2": 0.935,
+     "n": 81
+    },
+    "naive_mean": {
+     "mae": 95.4,
+     "rmse": 120.75,
+     "r2": -0.033,
+     "n": 81
+    },
+    "interval90_coverage": 0.79
+   },
+   "fox_not_available_rows": {
+    "network": {
+     "mae": 18.51,
+     "rmse": 26.84,
+     "r2": 0.919,
+     "n": 134
+    },
+    "trees": {
+     "mae": 18.74,
+     "rmse": 25.99,
+     "r2": 0.924,
+     "n": 134
+    },
+    "naive_mean": {
+     "mae": 68.88,
+     "rmse": 96.09,
+     "r2": -0.041,
+     "n": 134
+    },
+    "interval90_coverage": 0.873
+   }
+  }
+ },
+ "sanity_composition_sweep": {
+  "systems": 23,
+  "points_per_system": 21,
+  "network_monotonic_share_tol0K": 0.87,
+  "network_monotonic_share_tol1K": 0.913,
+  "trees_monotonic_share_tol0K": 0.174,
+  "trees_monotonic_share_tol1K": 0.348,
+  "measured_monotonic_share_systems_with_3plus_points": 0.957,
+  "measured_systems_counted": 23
+ },
+ "evaluate_seconds": 270.8,
+ "integrity_checks": {
+  "no_group_on_both_sides_any_task": true,
+  "cv_folds_use_only_main_training_rows": true,
+  "nn_data_shape_ok": true,
+  "splits_json_keys": [
+   "main_seed42",
+   "1001",
+   "1002",
+   "1003",
+   "1004",
+   "1005",
+   "1006",
+   "1007",
+   "1008",
+   "hard_unseen_monomer"
+  ],
+  "main_test_rows_with_a_monomer_unseen_in_training_share": 0.362,
+  "hard_test_rows_with_a_monomer_unseen_in_training_share": 1.0,
+  "main_train_rows_fox_available_share": 0.233,
+  "main_test_rows_fox_available_share": 0.237
+ },
+ "verdict_network_vs_trees": "On the seed-42 test split the network ensemble has lower MAE than the trees (15.33 vs 17.54 K). Over the eight other grouped splits the mean difference is -0.79 K with paired 95% t interval [-1.67, 0.08], which includes zero: the network is not shown to be better than the trees; it lost on 2 of 8 splits. On the unseen-monomer split they tie (18.51 vs 18.74 K).",
+ "caveats": [
+  "The headline error mixes two problems. Test rows that are real copolymers (93 rows, 23 systems) get MAE about 6 K because their monomers mostly also occur in training rows, often with a measured homopolymer Tg that feeds the Fox input; test homopolymer rows (59), most of them chemistry seen nowhere else, get about 30 K. Only 85 copolymer systems exist in the file, and the unseen-monomer split holds out mostly rare monomers (frequent ones were skipped to keep the test share near 20%), so it understates how hard a truly new common monomer would be.",
+  "Network versus trees is not settled: the paired interval over eight splits includes zero, the eight splits reuse the same 666 rows so the interval is narrower than it should be, and the network settings and the Morgan-bits choice were picked on seed-42 training rows that overlap the other splits' test rows. The trees are piecewise constant, so only 17% of their composition sweeps are strictly monotonic against 87% for the network (96% of the measured systems are).",
+  "The 90% interval is one fixed width (plus or minus 40.4 K). It covers 88.8% of test rows overall but 100% of copolymer rows (far too wide for them) and only 71% of homopolymer rows (too narrow), and 87.3% on the unseen-monomer split. Labels are literature values with unknown method, heating rate and molar mass; the same structure differs by up to 54 K between the two source files. Whether composition is mole or weight percent is not stated in the file; mole percent was assumed."
+ ],
+ "files_written": [
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/polymers/prepare.py",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/polymers/nn_generic.js",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/polymers/run_nn.js",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/polymers/evaluate.py",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/polymers/finalize.py",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/polymers/package.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/polymers/nn_data.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/polymers/splits.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/polymers/tasks.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/polymers/rows.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/polymers/prepare_report.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/polymers/result_core.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/polymers/result.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/polymers/runs/evaluate.log",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/polymers/runs/final.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/polymers/runs/cv_best_ens5.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/polymers/runs/cv_cfg0.json ... runs/cv_cfg9.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/polymers/runs/smoke.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/polymers/.t0"
+ ],
+ "environment_note": "rdkit 2026.09.2 was installed with pip into the system Python (the one install attempt allowed); nothing under /workspace/ncsu-hackathon or W/data was modified; no network, MCP or paid tools were used apart from that pip install",
+ "notes_for_integration": [
+  "nn_data.json holds the seed-42 split; g is an integer group id (rows.json maps ids to canonical monomer SMILES a, b and fraction x_a of monomer a).",
+  "The four Fox/homopolymer-Tg columns in nn_data.json were computed from the seed-42 training rows; if browser code re-splits or pools the rows, those columns must be recomputed or dropped, otherwise test targets leak.",
+  "nn_generic.js is an ES module (package.json sets type=module); Mlp and seeded are byte-identical to src/lib/nn.js lines 5-98 (checked with diff).",
+  "The seed-42 test split was scored once, by one run of evaluate.py, after settings were fixed by cross-validation on training rows.",
+  "The conformal calibration nets were trained on two thirds of the training rows, so the half-width is slightly conservative for the final model."
+ ]
+}

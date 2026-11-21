@@ -4,7 +4,7 @@
 //         generator for three targets plus one adversarial request, and asserts every rule on every
 //         returned candidate.
 // nn_data.json and nn_generic.js are read from public/model/materials/ and src/lib/ when another
-// branch has put them there, otherwise from MATERIALS_SIM_DIR (default: tonight's training folder).
+// branch has put them there; result.json and nn_generic.js from domains/materials/work/ (or MATERIALS_SIM_DIR).
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -12,8 +12,7 @@ import { featurize } from '../src/lib/alloyFeatures.js'
 import { generate, generateAsync, spacing, testedSets, TOO_FAR, NOT_NEW, INTERPOLATION, TIER_INTERPOLATION, TIER_NEAR, TIER_FAR, FAR, NEIGHBOURS, SUPPORT_NEEDED } from '../src/lib/alloyGen.js'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const SIM = process.env.MATERIALS_SIM_DIR ||
-  '/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/materials'
+const SIM = process.env.MATERIALS_SIM_DIR || join(root, 'domains/materials/work')
 const pick = (...paths) => paths.find((p) => existsSync(p))
 const nnPath = pick(join(root, 'public/model/materials/nn_data.json'), join(SIM, 'nn_data.json'))
 const resultPath = join(SIM, 'result.json')

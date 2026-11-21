@@ -1,14 +1,20 @@
 // Writes public/model/<family>/ for the three trained families from the family agents' files.
 // Every number in family.json is read from result.json or skeptic_check.json; "source" names the
 // file and the path inside it, so nothing is typed by hand. Both files are also copied into
-// domains/<family>/, so the numbers can be checked from the repo. Run: node scripts/build_family_files.mjs [simDir]
+// domains/<family>/, so the numbers can be checked from the repo. Inputs come from domains/<family>/work/
+// (the family agents' files, committed so this runs after the training session is gone).
+// Run: npm run family-files   (or node scripts/build_family_files.mjs [dir with one folder per family])
 import { readFileSync, writeFileSync, mkdirSync, copyFileSync, existsSync, statSync } from 'node:fs'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { gzipSync } from 'node:zlib'
 
-const SIM = process.argv[2] || process.env.FAMILY_SIM_DIR || '/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim'
+const SIM = process.argv[2] || process.env.FAMILY_SIM_DIR || null
 const OUT = new URL('../public/model/', import.meta.url).pathname
 const DOMAINS = new URL('../domains/', import.meta.url).pathname
+const dirOf = (id) => (SIM ? join(SIM, id) : join(DOMAINS, id, 'work'))
+// nn_data.json is not duplicated in work/: it is read from public/model/<family>/ when work/ lacks it.
+const nnDataPath = (id, dir) => (existsSync(join(dir, 'nn_data.json')) ? join(dir, 'nn_data.json') : join(OUT, id, 'nn_data.json'))
+const copyIfOther = (from, to) => { if (resolve(from) !== resolve(to)) copyFileSync(from, to) }
 
 const read = (f) => JSON.parse(readFileSync(f, 'utf8'))
 // get(obj, 'a.b.c') with a record of where each value came from.
@@ -25,13 +31,14 @@ function picker(file, obj, sourceLog) {
 }
 
 function family(id, build) {
-  const dir = join(SIM, id)
-  for (const f of ['result.json', 'skeptic_check.json', 'nn_data.json', 'prepare.py', 'nn_generic.js']) {
+  const dir = dirOf(id)
+  for (const f of ['result.json', 'skeptic_check.json', 'prepare.py', 'nn_generic.js']) {
     if (!existsSync(join(dir, f))) throw new Error(`refusing to build ${id}: ${join(dir, f)} is missing`)
   }
+  if (!existsSync(nnDataPath(id, dir))) throw new Error(`refusing to build ${id}: no nn_data.json in ${dir} or public/model/${id}/`)
   const result = read(join(dir, 'result.json'))
   const skeptic = read(join(dir, 'skeptic_check.json'))
-  const nnData = read(join(dir, 'nn_data.json'))
+  const nnData = read(nnDataPath(id, dir))
   const usedR = {}, usedS = {}
   const r = picker('result.json', result, usedR)
   const s = picker('skeptic_check.json', skeptic, usedS)
@@ -50,10 +57,10 @@ function family(id, build) {
     trainingRange: 'min and max of train.y in nn_data.json',
   }
   mkdirSync(join(OUT, id), { recursive: true })
-  copyFileSync(join(dir, 'nn_data.json'), join(OUT, id, 'nn_data.json'))
+  copyIfOther(nnDataPath(id, dir), join(OUT, id, 'nn_data.json'))
   writeFileSync(join(OUT, id, 'family.json'), JSON.stringify(out, null, 1) + '\n')
   mkdirSync(join(DOMAINS, id), { recursive: true })
-  for (const f of ['prepare.py', 'nn_generic.js', 'result.json', 'skeptic_check.json']) copyFileSync(join(dir, f), join(DOMAINS, id, f))
+  for (const f of ['prepare.py', 'nn_generic.js', 'result.json', 'skeptic_check.json']) copyIfOther(join(dir, f), join(DOMAINS, id, f))
   console.log(`${id}: wrote family.json and nn_data.json (${nnData.train.y.length} train / ${nnData.test.y.length} test rows)`)
   return { out, nnData, dir }
 }
@@ -149,13 +156,15 @@ family('polymers', ({ r, s }) => ({
 
 // ---- chemistry: not shipped, only its verified numbers for the Planned note ----
 {
-  const dir = join(SIM, 'chemistry')
+  const dir = dirOf('chemistry')
   const result = read(join(dir, 'result.json')), skeptic = read(join(dir, 'skeptic_check.json'))
-  const raw = readFileSync(join(dir, 'nn_data.json'))
+  // The 2 MB training file is not in the repo; without it, keep the sizes measured when it was built.
+  const raw = existsSync(join(dir, 'nn_data.json')) ? readFileSync(join(dir, 'nn_data.json')) : null
+  const before = existsSync(join(OUT, 'chemistry', 'family.json')) ? read(join(OUT, 'chemistry', 'family.json')) : {}
   const note = {
     id: 'chemistry',
     shipped: false,
-    reason: `Its training file is about ${(raw.length / 1e6).toFixed(0)} MB (${Math.round(gzipSync(raw, { level: 9 }).length / 1000)} kB compressed), too slow to load on a phone for now.`,
+    reason: raw ? `Its training file is about ${(raw.length / 1e6).toFixed(0)} MB (${Math.round(gzipSync(raw, { level: 9 }).length / 1000)} kB compressed), too slow to load on a phone for now.` : before.reason,
     folder: 'domains/chemistry/',
     test: { network: result.b_test_once.network_ensemble.mae, trees: result.b_test_once.trees_gbr.mae, treesTuned: skeptic.my_trees_tuned, mean: result.b_test_once.naive_train_mean.mae, unit: 'LogS (log10 mol/L)' },
     source: { folder: 'domains/chemistry/ (copies of the family agent\'s result.json and skeptic_check.json)', files: ['result.json: b_test_once', 'skeptic_check.json: my_trees_tuned'] },
@@ -163,6 +172,6 @@ family('polymers', ({ r, s }) => ({
   mkdirSync(join(OUT, 'chemistry'), { recursive: true })
   writeFileSync(join(OUT, 'chemistry', 'family.json'), JSON.stringify(note, null, 1) + '\n')
   mkdirSync(join(DOMAINS, 'chemistry'), { recursive: true })
-  for (const f of ['prepare.py', 'nn_generic.js', 'result.json', 'skeptic_check.json']) copyFileSync(join(dir, f), join(DOMAINS, 'chemistry', f))
+  for (const f of ['prepare.py', 'nn_generic.js', 'result.json', 'skeptic_check.json']) copyIfOther(join(dir, f), join(DOMAINS, 'chemistry', f))
   console.log('chemistry: wrote the Planned-card numbers only (no training data shipped)')
 }
