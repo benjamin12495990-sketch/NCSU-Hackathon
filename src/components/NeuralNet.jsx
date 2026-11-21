@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { createTrainer } from '../lib/nn.js'
+import { createTrainer, PANEL_DESIGN } from '../lib/nn.js'
 import { featurize } from '../lib/featurize.js'
 import { predict } from '../lib/predict.js'
 import { mixName } from '../lib/name.js'
@@ -89,6 +89,8 @@ export default function NeuralNet({ data, result }) {
   const [status, setStatus] = useState('idle') // idle, training, measuring or done
   const [foldsDone, setFoldsDone] = useState(0)
   const [band, setBand] = useState(null) // { halfWidth, coverage, errors }
+  const [physics, setPhysics] = useState(false) // the switch: also give it the textbook strength laws
+  const [runPhysics, setRunPhysics] = useState(false) // what the run on screen was trained with
   const trainer = useRef(null)
   const frame = useRef(0)
 
@@ -106,7 +108,7 @@ export default function NeuralNet({ data, result }) {
   // each time leaving out a third of the training mixes and scoring on them.
   // The interval is the size of miss that 90% of those unseen results stayed
   // inside (cross-validation on training rows; the held-out mixes are not used).
-  const measure = (main) => {
+  const measure = (main, design) => {
     const groups = [...new Set(nnData.train.g)].sort((a, b) => a - b)
     const foldOf = new Map(groups.map((id, i) => [id, i % FOLDS]))
     const errors = []
@@ -118,7 +120,7 @@ export default function NeuralNet({ data, result }) {
         const part = foldOf.get(nnData.train.g[i]) === k ? left : tr
         part.X.push(row); part.y.push(nnData.train.y[i])
       })
-      fold = createTrainer({ features: nnData.features, train: tr, test: left })
+      fold = createTrainer({ features: nnData.features, train: tr, test: left }, design)
     }
     const tick = () => {
       fold.runEpochs(30)
@@ -143,8 +145,10 @@ export default function NeuralNet({ data, result }) {
 
   const train = () => {
     clearTimeout(frame.current)
-    const t = createTrainer(nnData)
+    const design = physics ? PANEL_DESIGN : {}
+    const t = createTrainer(nnData, design)
     trainer.current = t
+    setRunPhysics(physics)
     setHistory([...t.history])
     setBand(null)
     setFoldsDone(0)
@@ -155,7 +159,7 @@ export default function NeuralNet({ data, result }) {
       setHistory([...t.history])
       if (t.done) {
         setStatus('measuring')
-        measure(t)
+        measure(t, design)
       } else frame.current = setTimeout(tick, pauseAfter(t.epoch))
     }
     frame.current = setTimeout(tick, 0)
@@ -238,6 +242,10 @@ export default function NeuralNet({ data, result }) {
           {status === 'idle' ? 'Train the network' : status === 'training' ? 'Training…'
             : status === 'measuring' ? `Measuring its uncertainty: run ${Math.min(FOLDS, foldsDone + 1)} of ${FOLDS}…` : 'Train again from scratch'}
         </button>
+        <label className="switch nnswitch">
+          <input type="checkbox" checked={physics} onChange={(e) => setPhysics(e.target.checked)}
+            disabled={status === 'training' || status === 'measuring'} /> Also give it the textbook strength laws
+        </label>
         {loadError && <span className="note">The training data did not load: {loadError}</span>}
         {last && (
           <div className="nnstats">
@@ -249,6 +257,14 @@ export default function NeuralNet({ data, result }) {
           </div>
         )}
       </div>
+      <p className="note small">
+        Off: it learns from the raw amounts and the age only. On: it also gets four numbers computed from
+        the same amounts, so it does not have to find them itself: water ÷ equivalent cement (Abrams' law)
+        and its inverse (Bolomey's), the binder's share of the paste squared (Feret's), and binder ÷ water
+        times a design-code age curve. Equivalent cement counts 1 kg of slag as 0.9 kg of cement and 1 kg
+        of fly ash as 0.4 kg: our assumption, in the spirit of the efficiency factors in Babu and Kumar
+        (2000) and Yeh (2013), not values from those papers.
+      </p>
 
       {history.length > 0 && (
         <div className="nnbody">
@@ -263,9 +279,10 @@ export default function NeuralNet({ data, result }) {
               <p className="note">
                 It went from {first.mae.toFixed(1)} MPa off to <strong>{last.mae.toFixed(1)} MPa off</strong> (R²{' '}
                 {last.r2.toFixed(2)}) in {last.epoch} passes, with {t.weights.toLocaleString()} weights in layers
-                of {t.layers.join(', ')}. The tree model is still more accurate on the same mixes
-                ({m.test_mae_MPa.toFixed(1)} MPa), so the designer keeps using the trees and the network is a
-                second opinion.
+                of {t.layers.join(', ')}{runPhysics ? ', with the textbook laws as extra inputs' : ''}.{' '}
+                {last.mae > m.test_mae_MPa
+                  ? `The tree model is more accurate on the same mixes (${m.test_mae_MPa.toFixed(1)} MPa), so the designer keeps using the trees and the network is a second opinion.`
+                  : `That matches or beats the tree model on the same mixes (${m.test_mae_MPa.toFixed(1)} MPa). The designer still uses the trees: over many splits the two are within noise of each other.`}
                 {band && (
                   <> Its <strong>90% interval is ± {q.toFixed(1)} MPa</strong>: the size of miss that nine in ten
                   results stayed inside when the same design was trained {FOLDS} more times and scored on{' '}
@@ -326,7 +343,9 @@ export default function NeuralNet({ data, result }) {
           <p className="note">
             One mix, <strong>{sweep.name}</strong>, with one thing changed at a time. Solid line: the network you
             just trained{band && ', with its 90% interval as the shaded band'}. Dashed line: the tree model.
-            Nobody told either model these rules; they can only have come from the lab results.
+            {runPhysics
+              ? ' This network was handed the textbook laws as inputs, but not which way they point: whether more water lowers strength still has to come from the lab results. The trees get the raw amounts only.'
+              : ' Nobody told either model these rules; they can only have come from the lab results.'}
           </p>
           <div className="nnsweeps">
             {sweep.water && (
@@ -371,8 +390,10 @@ export default function NeuralNet({ data, result }) {
 
       <p className="note small">
         The network is written from scratch in JavaScript (src/lib/nn.js): two hidden layers, ReLU, the Adam
-        optimiser, squared-error loss. It gets the tree model's nine inputs plus the logarithm of age. The
-        starting weights use a fixed seed, so every press gives the same run. Its settings were chosen
+        optimiser, squared-error loss. It gets the tree model's nine inputs plus the logarithm of age; with
+        the switch on it also gets the four laws and uses Huber loss and a little more weight decay, the
+        settings that won a comparison of seven ideas. The starting weights use a fixed seed, so every
+        press gives the same run. Its settings were chosen
         after a few trial runs scored on these same held-out mixes, so its final error is slightly
         flattering. The eight lab results in the table are spread evenly through the held-out set, not
         picked for being good. The interval is the same width everywhere, which is crude: misses are
@@ -380,7 +401,11 @@ export default function NeuralNet({ data, result }) {
         ran both on eight other splits by mix: an ensemble of five of these networks averaged 4.2 MPa and
         the trees 4.3 MPa (difference −0.1 MPa, 95% confidence interval −0.5 to +0.3), with the ensemble
         ahead on four splits, behind on three and level on one. That is a tie, not a win; the numbers are
-        in research/nn_vs_trees.json.
+        in research/nn_vs_trees.json. With the textbook laws one network averaged 4.17 and 4.23 MPa on two
+        sets of eight splits, against 4.25 and 4.32 for the trees and 4.29 and 4.38 without the laws, and
+        it predicted strengths below zero about half as often. On this page's split it is level (3.9 to
+        4.1 MPa over six seeds either way). That leans to the laws but is within noise against the trees;
+        the numbers are in research/physics_inputs.json.
       </p>
     </section>
   )

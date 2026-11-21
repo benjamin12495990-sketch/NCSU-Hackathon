@@ -1,0 +1,226 @@
+{
+ "question": "Can an evidence-backed change make the browser neural network more accurate than the gradient-boosted trees on concrete strength?",
+ "answer": "One change survived every check: giving the network four textbook strength laws as extra inputs. It lowered the error on two separate sets of eight held-out splits, but the gain is within split-to-split noise against the trees. On the page's own split it is level with the plain network. The page offers it as a switch, off by default.",
+ "method": {
+  "tournament": "Seven agents, one per literature MCP server, each found one idea, implemented it as an opt-in option in src/lib/nn.js, tuned it by 3-fold cross-validation on the 786 training rows only, and scored it at most three times on the eight selection splits. A second agent then re-ran the claim from the file, read the code for leaks and checked that the default ({}) was unchanged.",
+  "selection_splits": "node scripts/experiments/make_splits.mjs . selection.json        (seeds 1001-1008, 80/20 by mix over all 1,005 lab results)",
+  "confirmation_splits": "node scripts/experiments/make_splits.mjs . confirmation.json 2000   (seeds 2001-2008; no agent saw these; used once, to check the winner)",
+  "score_a_network": "node scripts/experiments/score_on_splits.mjs src/lib/nn.js '<config JSON>' <splits.json>",
+  "score_the_trees": "python3 scripts/experiments/trees_on_splits.py <splits.json>",
+  "interval": "Paired 95% t interval on the per-split differences. 'corrected' widens it for overlapping test sets (Nadeau and Bengio 2003): variance x (1/8 + 0.25)."
+ },
+ "the_change": {
+  "option": "features: 'physics', physicsOn: 'base', physics: ['abrams', 'bolomey', 'feret', 'bolomeyAge'], decay: 0.003, loss: 'huber'  (exported as PANEL_DESIGN)",
+  "inputs_added": {
+   "abrams": "water / equivalent cement",
+   "bolomey": "equivalent cement / water",
+   "feret": "(binder volume / (binder volume + water))^2, binder volume from densities 3.15, 2.9 and 2.3",
+   "bolomeyAge": "(equivalent cement / water) x exp(0.25 (1 - sqrt(28 / age))), the CEB-FIP / fib hardening curve for normal cement"
+  },
+  "equivalent_cement": "cement + 0.9 slag + 0.4 fly ash. The 0.9 and 0.4 are the agent's own defaults, not values read from the papers below.",
+  "sources_checked_in_openalex": [
+   "Yeh, I-C. (2013). Modeling Efficiency Factor of Fly Ash in Concrete Using an Unification Approach. International Journal of Engineering and Technology 5, 546-549. doi:10.7763/ijet.2013.v5.615 (OpenAlex W2328234545)",
+   "Babu, K. G. and Kumar, V. (2000). Efficiency of GGBS in concrete. Cement and Concrete Research 30(7), 1031-1036. doi:10.1016/s0008-8846(00)00271-4 (W2022106669)",
+   "Babu, K. G. and Rao, G. S. N. (1996). Efficiency of fly ash in concrete with age. Cement and Concrete Research 26(3), 465-474. doi:10.1016/s0008-8846(96)85034-4 (W2130323234)"
+  ],
+  "default_unchanged": "With options {} the file gives the same training history and predictions as before (checked by the re-run agent; the page's plain run still shows 3.9 MPa and +-11.1 MPa)."
+ },
+ "results_mean_absolute_error_MPa": {
+  "columns": [
+   "selection splits (8)",
+   "confirmation splits (8)"
+  ],
+  "trees": [
+   4.25,
+   4.317
+  ],
+  "one network, plain (what the page trains with the switch off)": [
+   4.291,
+   4.377
+  ],
+  "one network, rich inputs, Huber": [
+   4.204,
+   4.313
+  ],
+  "one network, textbook laws (switch on)": [
+   4.172,
+   4.227
+  ],
+  "five-network ensemble, rich inputs (best before tonight)": [
+   4.166,
+   4.271
+  ],
+  "five-network ensemble, textbook laws (tournament winner)": [
+   4.034,
+   4.181
+  ]
+ },
+ "per_split": {
+  "trees": {
+   "selection": [
+    4.34,
+    4.72,
+    5.25,
+    3.84,
+    3.71,
+    4.35,
+    3.9,
+    3.9
+   ],
+   "confirmation": [
+    4.074,
+    5.17,
+    4.17,
+    4.375,
+    4.032,
+    4.258,
+    4.203,
+    4.251
+   ]
+  },
+  "one network, plain": {
+   "selection": [
+    4.01,
+    4.32,
+    4.95,
+    4.71,
+    3.58,
+    4.74,
+    4.24,
+    3.78
+   ],
+   "confirmation": [
+    4.026,
+    4.905,
+    4.162,
+    4.826,
+    4.056,
+    4.234,
+    4.238,
+    4.567
+   ]
+  },
+  "one network, textbook laws": {
+   "selection": [
+    3.784,
+    3.987,
+    4.937,
+    4.187,
+    3.837,
+    4.845,
+    3.686,
+    4.117
+   ],
+   "confirmation": [
+    4.037,
+    4.826,
+    4.153,
+    4.621,
+    4.103,
+    4.108,
+    3.751,
+    4.214
+   ]
+  },
+  "five-network ensemble, rich": {
+   "selection": [
+    3.851,
+    3.854,
+    5.177,
+    4.465,
+    3.735,
+    4.76,
+    3.588,
+    3.9
+   ],
+   "confirmation": [
+    4.011,
+    4.703,
+    4.172,
+    4.691,
+    4.258,
+    3.947,
+    3.785,
+    4.597
+   ]
+  },
+  "five-network ensemble, textbook laws": {
+   "selection": [
+    3.728,
+    3.778,
+    4.766,
+    4.364,
+    3.696,
+    4.544,
+    3.52,
+    3.873
+   ],
+   "confirmation": [
+    3.97,
+    4.739,
+    4.041,
+    4.802,
+    4.082,
+    3.969,
+    3.542,
+    4.3
+   ]
+  }
+ },
+ "paired_differences_MPa": {
+  "one network: laws minus plain": {
+   "selection": "-0.119, 5 of 8 better, 95% [-0.41, +0.17]",
+   "confirmation": "-0.150, 6 of 8, [-0.31, +0.01]",
+   "all 16": "-0.134, 11 of 16, [-0.28, +0.01]"
+  },
+  "one network with laws minus trees": {
+   "selection": "-0.079, 4 of 8, [-0.45, +0.29]",
+   "confirmation": "-0.090, 6 of 8, [-0.28, +0.10]",
+   "all 16": "-0.084, 10 of 16, [-0.26, +0.10]"
+  },
+  "ensemble: laws minus rich (confirmation)": "-0.090, 5 of 8, [-0.21, +0.03], corrected [-0.30, +0.12]",
+  "ensemble with laws minus trees (confirmation)": "-0.136, 5 of 8, [-0.41, +0.14], corrected [-0.62, +0.35]"
+ },
+ "page_split_six_seeds": {
+  "note": "The page's own 786/219 split, seeds 11-16. MAE in MPa; water and age = tested mixes (of 26) where the prediction falls with more water and rises with age; below zero = mixes where the network predicted a negative strength somewhere.",
+  "plain": {
+   "mae": [
+    3.902,
+    4.013,
+    3.746,
+    4.011,
+    4.128,
+    3.932
+   ],
+   "mean_mae": 3.96,
+   "water": 21.3,
+   "age": 26.0,
+   "below_zero": 4.5
+  },
+  "textbook laws": {
+   "mae": [
+    3.954,
+    3.971,
+    4.092,
+    3.949,
+    3.701,
+    3.854
+   ],
+   "mean_mae": 3.92,
+   "water": 20.3,
+   "age": 26.0,
+   "below_zero": 2.3
+  }
+ },
+ "browser_check": "Built site, Chromium, seed 11. Switch off: 3.9 MPa, +-11.1 MPa, water 23 of 26, age 26 of 26, below zero on 6, about 7.5 s. Switch on: 4.0 MPa, +-10.3 MPa, water 20 of 26, age 26 of 26, below zero on 3, about 8 s. No console errors; no sideways scroll at 390 px.",
+ "other_lanes": {
+  "note": "Claimed by the exploring agent on the selection splits but NOT re-run by a second agent: those checks stopped at a usage limit. Treat as unverified.",
+  "scispace (averaged weights + input noise)": 4.135,
+  "consensus (Box-Cox target, power 0.75)": 4.123,
+  "fasttrack (monotonicity penalty)": 4.138,
+  "wiley (code age curves as inputs)": 4.099,
+  "priorwork (bagging, tanh, log target)": "4.232: worse than the current ensemble; a clear negative result",
+  "alphaxiv": "did not finish"
+ },
+ "what_not_to_say": "Do not say the network beats the trees: against the trees every interval includes zero. Do not say the network understands concrete: it was handed the laws as inputs and only learned how much weight to give them."
+}

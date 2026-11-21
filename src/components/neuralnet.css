@@ -22,3 +22,7 @@
 .nnsweeps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin: 10px 0; }
 .nnsweeps figure { margin: 0; }
 @media (max-width: 860px) { .nnsweeps { grid-template-columns: minmax(0, 1fr); } }
+
+/* The physics switch sits beside the train button; same look as the environment switches. */
+.nnswitch { display: flex; align-items: center; gap: 8px; margin: 0; font-weight: 600; font-size: 0.9rem; }
+.nnswitch input { accent-color: var(--accent); }

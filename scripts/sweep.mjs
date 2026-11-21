@@ -4,7 +4,7 @@
 // is stronger. Prints the tree model beside it. Exits with an error if the
 // network gets the overall direction wrong on most mixes.
 import { readFileSync } from 'node:fs'
-import { createTrainer } from '../src/lib/nn.js'
+import { createTrainer, PANEL_DESIGN } from '../src/lib/nn.js'
 import { featurize } from '../src/lib/featurize.js'
 import { predict } from '../src/lib/predict.js'
 import { mixName } from '../src/lib/name.js'
@@ -12,7 +12,7 @@ import { AGES, waterSteps, trend } from '../src/lib/sweep.js'
 
 const read = (name) => JSON.parse(readFileSync(new URL('../public/model/' + name, import.meta.url)))
 const nnData = read('nn_data.json'), spec = read('features.json'), space = read('space.json'), trees = read('model.json'), known = read('known.json')
-const net = createTrainer(nnData)
+const net = createTrainer(nnData, PANEL_DESIGN)
 while (!net.done) net.runEpochs(50)
 console.log(`Network trained: ${net.history.at(-1).mae.toFixed(2)} MPa average miss on the held-out mixes.\n`)
 

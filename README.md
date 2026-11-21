@@ -170,6 +170,36 @@ About the same. We tried to make it better and report what we found, not what we
   (`make_splits.mjs`, `networks_on_splits.mjs`, `network_cross_validation.mjs`). The ensemble
   takes about 15 seconds to train in a browser, so the page trains the single network.
 
+### Giving it the textbook laws (the switch under the button)
+
+We ran a tournament of seven ideas for a better network, one per literature connector. Each agent
+tuned its idea by cross-validation on training rows, scored it at most three times on the eight
+splits above, and a second agent re-ran the result and read the code for leaks. One idea survived:
+hand the network four textbook strength laws as extra inputs, computed from the same amounts
+(water ÷ equivalent cement after Abrams, its inverse after Bolomey, Feret's paste ratio, and
+binder ÷ water times the CEB-FIP age curve). We then checked it once on eight fresh splits that no
+agent had seen.
+
+| Mean error, MPa | Eight selection splits | Eight fresh splits |
+| --- | --- | --- |
+| Trees | 4.25 | 4.32 |
+| One network, plain (switch off) | 4.29 | 4.38 |
+| One network, with the laws (switch on) | 4.17 | 4.23 |
+| Five networks, with the laws | 4.03 | 4.18 |
+
+- Against the plain network the laws help on 11 of 16 splits (−0.13 MPa, 95% interval −0.28 to
+  +0.01). Against the trees it is −0.08 MPa with an interval of −0.26 to +0.10: still a tie.
+- On the page's own split the two designs are level (3.92 against 3.96 MPa over six seeds), but
+  with the laws the network predicts a strength below zero about half as often.
+- The page trains the plain network unless you switch the laws on, so the default run and the
+  numbers above it are unchanged. With the switch on it shows 4.0 MPa and ± 10.3 MPa.
+- The slag and fly-ash weights (0.9 and 0.4 kg of cement per kg) are our assumption, in the spirit
+  of Babu and Kumar (2000) and Yeh (2013), not values from those papers.
+- With the laws as inputs the sweep test is less of a surprise: the network was told what to look
+  at, though not which way it points. Everything is in `research/physics_inputs.json`; rerun it
+  with `scripts/experiments/make_splits.mjs` (seed base 2000 for the fresh splits),
+  `score_on_splits.mjs` and `trees_on_splits.py`.
+
 ## How the models were trained
 
 `train/train.py` reads the UCI Concrete Compressive Strength dataset: 1,030 lab results, of which
@@ -280,7 +310,7 @@ train/test split and several wording changes.
 | `src/lib/nearest.js` | Distances to tested mixes and their lab results. |
 | `src/lib/design.js` | Generates, filters, ranks and checks the candidates. |
 | `src/lib/name.js` | Builds each mix's formula name from its recipe. |
-| `src/lib/nn.js` | The neural network: forward pass, backpropagation and Adam, written from scratch. |
+| `src/lib/nn.js` | The neural network: forward pass, backpropagation and Adam, written from scratch. `PANEL_DESIGN` is the textbook-laws design behind the switch. |
 | `src/lib/sweep.js` | The sweep test: vary water or age alone and count which way the prediction moves. |
 | `scripts/sweep.mjs` | `npm run sweep`: trains the network and runs the sweep test on 26 tested mixes. |
 | `src/components/NeuralNet.jsx` | The training panel: button, learning curve and the two prediction tables. |

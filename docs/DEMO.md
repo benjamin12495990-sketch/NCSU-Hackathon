@@ -174,6 +174,14 @@ networks averaged 4.2 MPa and the trees 4.3. The ensemble won four splits, lost 
 so we call it a tie. The trees' 3.3 comes from a split that suits them; on the other eight they
 range from 3.7 to 5.3. The numbers are in `research/nn_vs_trees.json`.
 
+**Can you make the network better than the trees?** We tried seven ideas tonight, each from a
+different literature search, each re-run by a second agent. One survived: tick **Also give it the
+textbook strength laws** and train again. It hands the network Abrams', Bolomey's and Feret's laws
+as inputs. Over 16 held-out splits that lowered the network's error from 4.33 to 4.20 MPa and
+halved its impossible below-zero predictions, but the trees average 4.28, so against the trees it is
+still a tie. On the page's own split it shows 4.0 MPa against 3.9 without the laws: level. The
+numbers are in `research/physics_inputs.json`. Do not say it beats the trees.
+
 **What did AI do here?** Models predict strength. AI research agents compiled the materials
 table, so its values are typical figures, not individually checked, and the page labels them
 "AI judgment". The literature tools (SciSpace, Consensus, FastTrack, OpenAlex) were used to

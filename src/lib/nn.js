@@ -2,6 +2,12 @@
 // It starts from random weights and learns to predict concrete strength from
 // the same training rows the trees used. Nothing is downloaded pre-trained.
 
+// The design the page trains. Besides the nine inputs and ln(age) it gets four
+// textbook strength laws computed from them (see 'physics' in createTrainer).
+// Chosen by cross-validation on training rows, then scored on two sets of eight
+// held-out splits; the numbers are in research/physics_inputs.json.
+export const PANEL_DESIGN = { features: 'physics', physicsOn: 'base', physics: ['abrams', 'bolomey', 'feret', 'bolomeyAge'], decay: 0.003, loss: 'huber' }
+
 // Seeded random numbers, so the same press gives the same training run.
 function seeded(seed) {
   let a = seed >>> 0
@@ -101,7 +107,7 @@ class Mlp {
 // call trains n more passes over the training rows and reports the error on
 // the held-out test mixes, which the network never trains on.
 export function createTrainer(nnData, options = {}) {
-  const opts = { hidden: [64, 32], epochs: 300, batch: 32, lr: 0.004, decay: 1e-3, seed: 11, features: 'base', loss: 'squared', ...options }
+  const opts = { hidden: [64, 32], epochs: 300, batch: 32, lr: 0.004, decay: 1e-3, seed: 11, features: 'base', loss: 'squared', kSlag: 0.9, kFly: 0.4, ...options }
   const at = (name) => nnData.features.indexOf(name)
   const [iC, iS, iF, iW, iSp, iCa, iFa, iAge] = ['cement', 'slag', 'flyash', 'water', 'superplasticizer', 'coarse', 'fine', 'age'].map(at)
   // The network gets the tree model's nine inputs plus ln(age): strength
@@ -110,9 +116,20 @@ export function createTrainer(nnData, options = {}) {
   // work out for itself from raw kilograms.
   const inputs = (row) => {
     const base = [...row, Math.log(row[iAge])]
-    if (opts.features !== 'rich') return base
+    if (opts.features !== 'rich' && opts.features !== 'physics') return base
     const binder = row[iC] + row[iS] + row[iF], agg = row[iCa] + row[iFa]
-    return [...base, binder, row[iW] / row[iC], row[iS] / binder, row[iF] / binder, row[iSp] / binder, agg / binder, row[iFa] / agg, Math.sqrt(row[iAge])]
+    const rich = [...base, binder, row[iW] / row[iC], row[iS] / binder, row[iF] / binder, row[iSp] / binder, agg / binder, row[iFa] / agg, Math.sqrt(row[iAge])]
+    if (opts.features !== 'physics') return rich
+    // 'physics' adds the textbook strength laws as ready-made inputs: Abrams/Bolomey on an "equivalent cement"
+    // (slag and fly ash counted through efficiency factors k), Feret's paste volume ratio, and a code-style age curve.
+    const w = row[iW], t = row[iAge], ceq = row[iC] + opts.kSlag * row[iS] + opts.kFly * row[iF]
+    const vBinder = row[iC] / 3.15 + row[iS] / 2.9 + row[iF] / 2.3 // litres of binder solids per cubic metre
+    const fast = Math.exp(0.25 * (1 - Math.sqrt(28 / t))), slow = Math.exp(0.5 * (1 - Math.sqrt(28 / t))) // fib/CEB-FIP hardening curves
+    const laws = {
+      abrams: w / ceq, bolomey: ceq / w, feret: (vBinder / (vBinder + w)) ** 2, paste: (vBinder + w) / 1000, ageCurve: fast,
+      bolomeyAge: (ceq / w) * fast, cementAge: (row[iC] / w) * fast, slagAge: (row[iS] / w) * slow, flyAge: (row[iF] / w) * slow,
+    }
+    return [...(opts.physicsOn === 'base' ? base : rich), ...(opts.physics || Object.keys(laws)).map((name) => laws[name])]
   }
   const trainX = nnData.train.X.map(inputs), testX = nnData.test.X.map(inputs)
   const n = trainX.length, d = trainX[0].length
