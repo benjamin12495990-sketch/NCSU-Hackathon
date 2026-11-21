@@ -162,6 +162,12 @@ standard itself. The page says that and marks how many sources saw each rule.
 3-day slag mix that measured 41.1 MPa and the network predicted 26.0, a 15 MPa miss. Early-age
 results are its weak spot, and that is one more reason the trees are the main model.
 
+**Is the network as good as the trees?** On the page's held-out mixes the trees are ahead, 3.3
+against 3.9 MPa. We also ran both on eight other held-out splits: an ensemble of five of these
+networks averaged 4.2 MPa and the trees 4.3. The ensemble won four splits, lost three and tied one,
+so we call it a tie. The trees' 3.3 comes from a split that suits them; on the other eight they
+range from 3.7 to 5.3. The numbers are in `research/nn_vs_trees.json`.
+
 **What did AI do here?** Models predict strength. AI research agents compiled the materials
 table, so its values are typical figures, not individually checked, and the page labels them
 "AI judgment". The literature tools (SciSpace, Consensus, FastTrack, OpenAlex) were used to
