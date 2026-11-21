@@ -2,9 +2,9 @@
 
 > **Status: four families are live: concrete, alloys (hardness), insulators (dielectric constant) and
 > polymers (glass transition).** General chemistry (solubility) has a model trained and checked
-> offline; its scripts and results files are in `domains/chemistry/`, but its data file is not in the repo
-> or on the site. The other domains are plans with no dataset, model
-> or references.
+> offline; its scripts, results and source data are in `domains/chemistry/`, but it is not on the site.
+> Cleaning (SURFPRO), corrosion (NIST CORR-DATA) and solid electrolytes (OBELiX) now have source data;
+> see `domains/README.md` for each family's status. The remaining domains are plans.
 
 ## The grand challenge
 

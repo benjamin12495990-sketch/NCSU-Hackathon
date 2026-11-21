@@ -16,8 +16,8 @@ seven simulations (families of materials). **Four are live: concrete, alloys (ha
 "Train the network" button (see "The trained families" below). The other three (corrosive solutions,
 cleaning products, general chemistry) are marked "Planned": choosing one shows what it would predict,
 vary and rank by, and says that nothing is generated for it yet. General chemistry (water solubility)
-has a model that was trained and checked offline; its scripts and results files are in
-`domains/chemistry/`, but its data file is not in the repo or on the site. Its card says so and shows
+has a model that was trained and checked offline; its scripts, results and source data (AqSolDB) are in
+`domains/chemistry/`, but it is not on the site. Its card says so and shows
 its verified numbers. The switch at the
 top right turns dark mode on and off; it starts from the system setting and remembers the choice.
 The page follows the visual rules in [`taste.md`](taste.md).
@@ -417,7 +417,9 @@ how good they are; none is ever deleted. The 271 results older than 28 days are 
 read the vault. `lab/net.mjs` reproduces `src/lib/nn.js` exactly (`npm run lab:parity`). Run
 `npm run lab:smoke` for the smoke test; everything is in `lab/README.md`. Nothing on the page uses it.
 Phase 2 adds physics and BOxCrete pre-training, the research-backed selection rules, a random-search
-control and 13 pre-registered models (`lab/preregistration.json`); the vault is still sealed.
+control and 13 pre-registered models (`lab/preregistration.json`). The vault was then opened once: the
+pre-registered champion lost to a straight-line fit on log(age) (RMSE 11.50 against 9.07 MPa); see
+`lab/results/vault_opening.json`.
 
 ## Files
 
