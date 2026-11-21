@@ -130,6 +130,26 @@ weights, the Adam optimiser and squared-error loss. Nothing pre-trained is downl
   settings were chosen after seven trial runs scored on the same held-out mixes, so 3.9 MPa is
   slightly flattering. Other seeds we tried ended between 4.0 and 4.6 MPa.
 
+### Is the network as accurate as the trees?
+
+About the same. We tried to make it better and report what we found, not what we hoped for.
+
+| Model | Page's held-out split | Mean over eight other splits by mix |
+| --- | --- | --- |
+| Gradient-boosted trees (used by the designer) | 3.29 MPa | 4.25 MPa |
+| One network (what the page trains) | 3.90 MPa | 4.29 MPa |
+| Ensemble of five networks, richer inputs, Huber loss | 3.92 MPa | 4.17 MPa |
+
+- The ensemble was chosen by cross-validation on training rows only (4.48 MPa against 4.75 MPa
+  for the trees on the same folds), then scored once on the page's held-out mixes.
+- Over the eight other splits it beats the trees on four, loses on three and ties one. Its average
+  is 2% lower, which is far smaller than the spread between splits. That is a tie.
+- The trees' 3.29 MPa comes from one split that happens to suit them: on the eight others they
+  range from 3.7 to 5.3 MPa.
+- Per-split numbers are in `research/nn_vs_trees.json`; the scripts are in `scripts/experiments/`
+  (`make_splits.mjs`, `networks_on_splits.mjs`, `network_cross_validation.mjs`). The ensemble
+  takes about 15 seconds to train in a browser, so the page trains the single network.
+
 ## How the models were trained
 
 `train/train.py` reads the UCI Concrete Compressive Strength dataset: 1,030 lab results, of which

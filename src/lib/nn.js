@@ -101,11 +101,19 @@ class Mlp {
 // call trains n more passes over the training rows and reports the error on
 // the held-out test mixes, which the network never trains on.
 export function createTrainer(nnData, options = {}) {
-  const opts = { hidden: [64, 32], epochs: 300, batch: 32, lr: 0.004, decay: 1e-3, seed: 11, ...options }
-  const ageIndex = nnData.features.indexOf('age')
+  const opts = { hidden: [64, 32], epochs: 300, batch: 32, lr: 0.004, decay: 1e-3, seed: 11, features: 'base', loss: 'squared', ...options }
+  const at = (name) => nnData.features.indexOf(name)
+  const [iC, iS, iF, iW, iSp, iCa, iFa, iAge] = ['cement', 'slag', 'flyash', 'water', 'superplasticizer', 'coarse', 'fine', 'age'].map(at)
   // The network gets the tree model's nine inputs plus ln(age): strength
-  // rises roughly with the logarithm of curing time.
-  const inputs = (row) => [...row, Math.log(row[ageIndex])]
+  // rises roughly with the logarithm of curing time. The "rich" set adds the
+  // ratios a concrete engineer reasons with, which a network cannot easily
+  // work out for itself from raw kilograms.
+  const inputs = (row) => {
+    const base = [...row, Math.log(row[iAge])]
+    if (opts.features !== 'rich') return base
+    const binder = row[iC] + row[iS] + row[iF], agg = row[iCa] + row[iFa]
+    return [...base, binder, row[iW] / row[iC], row[iS] / binder, row[iF] / binder, row[iSp] / binder, agg / binder, row[iFa] / agg, Math.sqrt(row[iAge])]
+  }
   const trainX = nnData.train.X.map(inputs), testX = nnData.test.X.map(inputs)
   const n = trainX.length, d = trainX[0].length
 
@@ -157,7 +165,9 @@ export function createTrainer(nnData, options = {}) {
             const idx = order[k]
             const error = net.forward(X[idx]) - y[idx]
             loss += error * error
-            net.backward(error)
+            // Huber loss: beyond one standard deviation a miss counts linearly,
+            // so a few odd lab results cannot drag the whole fit.
+            net.backward(opts.loss === 'huber' ? Math.max(-1, Math.min(1, error)) : error)
           }
           net.step(lr, end - start, opts.decay)
         }
@@ -173,4 +183,43 @@ export function createTrainer(nnData, options = {}) {
     },
   }
   return trainer
+}
+
+// Several networks that differ only in their random starting weights, trained
+// side by side; the prediction is their average. Averaging cancels part of
+// each network's individual error. Same interface as createTrainer.
+export function createEnsemble(nnData, options = {}) {
+  const { members = 5, seed = 11, ...rest } = options
+  const nets = Array.from({ length: members }, (_, i) => createTrainer(nnData, { ...rest, seed: seed + 101 * i }))
+  const yt = nnData.test.y, mean = yt.reduce((s, v) => s + v, 0) / yt.length
+  const predict = (row) => nets.reduce((s, t) => s + t.predict(row), 0) / nets.length
+  const testError = () => {
+    let abs = 0, sq = 0, tot = 0
+    for (let i = 0; i < yt.length; i++) {
+      const e = predict(nnData.test.X[i]) - yt[i]
+      abs += Math.abs(e); sq += e * e; tot += (yt[i] - mean) ** 2
+    }
+    return { mae: abs / yt.length, r2: 1 - sq / tot }
+  }
+  const ensemble = {
+    members,
+    totalEpochs: nets[0].totalEpochs,
+    epoch: 0,
+    trainRows: nets[0].trainRows,
+    testRows: nets[0].testRows,
+    weights: nets[0].weights * members,
+    layers: nets[0].layers,
+    history: [{ epoch: 0, loss: null, ...testError() }],
+    done: false,
+    runEpochs(count) {
+      let last
+      for (const t of nets) last = t.runEpochs(count)
+      ensemble.epoch = nets[0].epoch
+      ensemble.history.push({ epoch: ensemble.epoch, loss: last.loss, ...testError() })
+      ensemble.done = nets[0].done
+      return ensemble.history[ensemble.history.length - 1]
+    },
+    predict,
+  }
+  return ensemble
 }

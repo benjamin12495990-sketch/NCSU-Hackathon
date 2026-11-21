@@ -195,7 +195,10 @@ export default function NeuralNet({ data, result }) {
         starting weights use a fixed seed, so every press gives the same run. Its settings were chosen
         after a few trial runs scored on these same held-out mixes, so its final error is slightly
         flattering. The eight lab results in the table are spread evenly through the held-out set, not
-        picked for being good.
+        picked for being good. One held-out split is a thin basis for ranking two models, so we also ran
+        both on eight other splits by mix: an ensemble of five of these networks averaged 4.2 MPa and the
+        trees 4.3 MPa, with the ensemble ahead on four splits, behind on three and level on one. That is
+        a tie, not a win; the numbers are in research/nn_vs_trees.json.
       </p>
     </section>
   )

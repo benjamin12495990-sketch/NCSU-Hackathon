@@ -1,0 +1,52 @@
+{
+ "what": "Mean absolute error in MPa on eight different 80/20 splits by mix over all 1,005 lab results. Every model was trained and scored on the same eight splits.",
+ "trees": {
+  "model": "GradientBoostingRegressor, the settings in train/train.py",
+  "per_split": [
+   4.34,
+   4.719,
+   5.245,
+   3.843,
+   3.708,
+   4.345,
+   3.9,
+   3.899
+  ],
+  "mean": 4.25
+ },
+ "network_ensemble": {
+  "model": "five networks averaged; 18 inputs (the nine plus ln(age) and eight ratios), hidden layers 64 and 32, Huber loss, weight decay 0.003, 300 passes",
+  "per_split": [
+   3.851,
+   3.854,
+   5.177,
+   4.465,
+   3.735,
+   4.76,
+   3.588,
+   3.9
+  ],
+  "mean": 4.166
+ },
+ "single_network": {
+  "model": "the network the page trains: 10 inputs, hidden layers 64 and 32, squared-error loss, weight decay 0.001, 300 passes",
+  "per_split": [
+   4.01,
+   4.32,
+   4.95,
+   4.71,
+   3.58,
+   4.74,
+   4.24,
+   3.78
+  ],
+  "mean": 4.291
+ },
+ "ensemble_vs_trees": {
+  "ensemble_better": 4,
+  "trees_better": 3,
+  "ties": 1
+ },
+ "how_the_ensemble_was_chosen": "By three-fold cross-validation on the 786 training rows only (whole mixes kept together): ensemble 4.48 MPa, trees 4.75 MPa on the same folds. It was then scored once on the page's held-out mixes: 3.92 MPa, against 3.29 MPa for the trees.",
+ "reading": "A tie. The ensemble's average is 2% lower than the trees', it wins four splits, loses three and ties one, and the gap is far smaller than the spread between splits. On the page's own held-out split the trees are ahead."
+}
