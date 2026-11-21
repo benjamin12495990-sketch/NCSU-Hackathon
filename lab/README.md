@@ -72,7 +72,7 @@ has TRAIN rows.
 
    Any later run only prints what exists. **The person who runs the real opening must commit
    `lab/results/OPENING_STARTED.json`, `vault_opening.json` and `VAULT_OPENED` immediately after the
-   run (and push them)**, so the opening counts as done in every clone. The real opening was run once: opened once on 2026-11-21 (commit c906094); see `lab/results/vault_opening.json`.
+   run (and push them)**, so the opening counts as done in every clone. The real opening was run once, on 2026-11-21 (commit c906094); the result is in `lab/results/vault_opening.json`.
 
 ## Files
 
@@ -92,7 +92,7 @@ has TRAIN rows.
 | `preregister.mjs` | Names the models that will be scored on FUTURE, with their hashes and the vault hash, and writes `preregistration.json` once. `--dry-run` prints instead, and `--out` writes elsewhere. |
 | `scoring.mjs` | Re-hashes each pre-registered model file and scores it on a set of rows, overall, by seen and unseen mixes, by mix group and by age band. `open_vault.mjs` uses it. |
 | `rehearse_scoring.mjs` | Runs `scoring.mjs` on SELECT for any pre-registration and checks the MAE equals the registered SELECT MAE. It tests the opening's code path without the vault. |
-| `open_vault.mjs` | The single opening described above. It was run once; the vault is opened once on 2026-11-21 (commit c906094). |
+| `open_vault.mjs` | The single opening described above. It was run once, on 2026-11-21 (commit c906094). |
 | `smoke.mjs` | `npm run lab:smoke`: splits, baselines, a 14-network evolution in a fresh temporary archive, the isolation check, and a determinism check against `archive_smoke/`. |
 
 ### The baselines exactly
