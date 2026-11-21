@@ -1,0 +1,318 @@
+{
+ "run_id": "20261121T211336Z",
+ "label": "EXPLORATORY baseline",
+ "command": "python3 -I domains/corrosives/work/baseline_corrdata.py",
+ "data_sha256": {
+  "corrdata_normalized.csv": "3a743283e005035e85d6fe5fc50b8448e6d77e0de13e1fcc21e8d0f841245116"
+ },
+ "versions": {
+  "python": "3.13.18",
+  "numpy": "2.5.3",
+  "pandas": "3.0.5",
+  "sklearn": "1.9.1"
+ },
+ "target": "log10 corrosion rate, mm/yr (point values only)",
+ "row_counts": {
+  "all_rows": 24721,
+  "numeric_rate_rows": 7718,
+  "excluded_bounds_or_ranges": 1804,
+  "excluded_zero_rate": 23,
+  "excluded_large_column_disagreement": 127,
+  "excluded_missing_reference_number": 3,
+  "rows_used": 5761
+ },
+ "target_summary": {
+  "mean": -0.781,
+  "sd": 1.262,
+  "min_mm_y": 2.5e-05,
+  "max_mm_y": 58000.0
+ },
+ "features": {
+  "categorical": [
+   "material_class",
+   "material_family",
+   "material",
+   "environment",
+   "conc_qualifier",
+   "temp_qualifier"
+  ],
+  "numeric": [
+   "conc_vol_pct",
+   "temp_C_mid",
+   "log10_hours"
+  ]
+ },
+ "selection_rule": "min pooled OOF MAE within each grouping, simpler model within 0.01; selected on the folds it is scored on",
+ "grouped_by_reference": {
+  "n_groups": 207,
+  "largest_group_rows": 851,
+  "folds": {
+   "method": "GroupKFold(n_splits=5), no shuffle",
+   "rows_per_fold": [
+    1153,
+    1152,
+    1152,
+    1152,
+    1152
+   ],
+   "groups_per_fold": [
+    33,
+    43,
+    43,
+    44,
+    44
+   ]
+  },
+  "models": {
+   "mean": {
+    "complexity_rank": 0,
+    "pooled_oof_mae": 1.0295,
+    "pooled_oof_r2": -0.01,
+    "fold_mae": [
+     1.1072,
+     1.0363,
+     1.0594,
+     0.9626,
+     0.9818
+    ],
+    "seconds": 0.1
+   },
+   "ridge_alpha_10": {
+    "complexity_rank": 1,
+    "pooled_oof_mae": 0.78,
+    "pooled_oof_r2": 0.3872,
+    "fold_mae": [
+     0.7987,
+     0.8703,
+     0.8004,
+     0.6992,
+     0.7314
+    ],
+    "seconds": 0.5
+   },
+   "ridge_alpha_1": {
+    "complexity_rank": 2,
+    "pooled_oof_mae": 0.7876,
+    "pooled_oof_r2": 0.3694,
+    "fold_mae": [
+     0.8018,
+     0.8802,
+     0.7919,
+     0.7256,
+     0.7386
+    ],
+    "seconds": 1.0
+   },
+   "extratrees_300_leaf3": {
+    "complexity_rank": 10,
+    "pooled_oof_mae": 0.8018,
+    "pooled_oof_r2": 0.3477,
+    "fold_mae": [
+     0.8477,
+     0.9204,
+     0.757,
+     0.7011,
+     0.7828
+    ],
+    "seconds": 20.7
+   }
+  },
+  "selected_model": "ridge_alpha_10",
+  "selected_minus_mean_mae": {
+   "value": -0.2495,
+   "group_bootstrap_95": [
+    -0.3264,
+    -0.1728
+   ]
+  },
+  "by_material_class_oof": {
+   "Stainless steels": {
+    "n": 1713,
+    "selected_mae": 0.854,
+    "mean_mae": 1.101
+   },
+   "Nickel and alloys": {
+    "n": 1480,
+    "selected_mae": 0.724,
+    "mean_mae": 0.915
+   },
+   "Refractory metals and alloys": {
+    "n": 1011,
+    "selected_mae": 0.858,
+    "mean_mae": 0.959
+   },
+   "Miscellaneous": {
+    "n": 533,
+    "selected_mae": 0.838,
+    "mean_mae": 1.084
+   },
+   "Carbon and alloy steels": {
+    "n": 473,
+    "selected_mae": 0.648,
+    "mean_mae": 1.015
+   },
+   "Copper and alloys": {
+    "n": 315,
+    "selected_mae": 0.632,
+    "mean_mae": 1.059
+   },
+   "Aluminum and alloys": {
+    "n": 117,
+    "selected_mae": 0.576,
+    "mean_mae": 1.76
+   },
+   "Irons": {
+    "n": 97,
+    "selected_mae": 0.573,
+    "mean_mae": 1.107
+   },
+   "Iron-nickel alloys": {
+    "n": 18,
+    "selected_mae": 0.745,
+    "mean_mae": 0.78
+   },
+   "Irons and alloys": {
+    "n": 4,
+    "selected_mae": 0.519,
+    "mean_mae": 0.605
+   }
+  }
+ },
+ "grouped_by_material": {
+  "n_groups": 557,
+  "largest_group_rows": 521,
+  "folds": {
+   "method": "GroupKFold(n_splits=5), no shuffle",
+   "rows_per_fold": [
+    1153,
+    1152,
+    1152,
+    1152,
+    1152
+   ],
+   "groups_per_fold": [
+    109,
+    108,
+    112,
+    113,
+    115
+   ]
+  },
+  "models": {
+   "mean": {
+    "complexity_rank": 0,
+    "pooled_oof_mae": 1.0251,
+    "pooled_oof_r2": -0.004,
+    "fold_mae": [
+     1.0458,
+     1.0623,
+     1.0222,
+     1.0239,
+     0.9712
+    ],
+    "seconds": 0.0
+   },
+   "ridge_alpha_10": {
+    "complexity_rank": 1,
+    "pooled_oof_mae": 0.7522,
+    "pooled_oof_r2": 0.4199,
+    "fold_mae": [
+     0.7589,
+     0.7568,
+     0.761,
+     0.7818,
+     0.7027
+    ],
+    "seconds": 1.1
+   },
+   "ridge_alpha_1": {
+    "complexity_rank": 2,
+    "pooled_oof_mae": 0.7565,
+    "pooled_oof_r2": 0.4081,
+    "fold_mae": [
+     0.7684,
+     0.7577,
+     0.7728,
+     0.7905,
+     0.6929
+    ],
+    "seconds": 1.3
+   },
+   "extratrees_300_leaf3": {
+    "complexity_rank": 10,
+    "pooled_oof_mae": 0.6925,
+    "pooled_oof_r2": 0.4901,
+    "fold_mae": [
+     0.6482,
+     0.6996,
+     0.7081,
+     0.7969,
+     0.6097
+    ],
+    "seconds": 20.5
+   }
+  },
+  "selected_model": "extratrees_300_leaf3",
+  "selected_minus_mean_mae": {
+   "value": -0.3326,
+   "group_bootstrap_95": [
+    -0.3831,
+    -0.2913
+   ]
+  },
+  "by_material_class_oof": {
+   "Stainless steels": {
+    "n": 1713,
+    "selected_mae": 0.767,
+    "mean_mae": 1.096
+   },
+   "Nickel and alloys": {
+    "n": 1480,
+    "selected_mae": 0.657,
+    "mean_mae": 0.912
+   },
+   "Refractory metals and alloys": {
+    "n": 1011,
+    "selected_mae": 0.806,
+    "mean_mae": 0.961
+   },
+   "Miscellaneous": {
+    "n": 533,
+    "selected_mae": 0.63,
+    "mean_mae": 1.079
+   },
+   "Carbon and alloy steels": {
+    "n": 473,
+    "selected_mae": 0.536,
+    "mean_mae": 1.006
+   },
+   "Copper and alloys": {
+    "n": 315,
+    "selected_mae": 0.536,
+    "mean_mae": 1.051
+   },
+   "Aluminum and alloys": {
+    "n": 117,
+    "selected_mae": 0.507,
+    "mean_mae": 1.744
+   },
+   "Irons": {
+    "n": 97,
+    "selected_mae": 0.558,
+    "mean_mae": 1.104
+   },
+   "Iron-nickel alloys": {
+    "n": 18,
+    "selected_mae": 0.805,
+    "mean_mae": 0.707
+   },
+   "Irons and alloys": {
+    "n": 4,
+    "selected_mae": 0.331,
+    "mean_mae": 0.533
+   }
+  }
+ },
+ "not_safety_advice": "Historical single observations; not a guarantee of service performance.",
+ "elapsed_seconds": 45.4
+}
