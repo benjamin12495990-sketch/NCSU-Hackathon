@@ -140,6 +140,28 @@ mixes**. Scroll to the result.
 
 > Questions?
 
+### Optional beat: generate untested alloys (only if there is time, about 45 s)
+
+**Do:** open the menu, choose **Alloys (hardness)**, scroll to **Generate untested alloys**. Leave the
+target at 400 HV and the route at CAST. Press **Generate untested alloys**. It trains the network
+first (about 2.5 s), then generates.
+
+**Point at row 1** (Al28.9 Co10.0 Cr18.0 Fe24.2 Mo8.9 Ni10.0): predicted 773 HV, nearest tested alloy
+605 HV, gap +168 HV.
+
+> These are compositions nobody has made. The network predicts 773, but the closest alloy anyone
+> actually measured is 605, so we show that gap on every row. Its typical miss is about 78 HV on
+> alloys like the tested ones and about 102 on systems it never saw. The tested neighbours are the
+> evidence; the prediction is a reason to test, not a result.
+
+**Do:** slide the target to 800 HV and press Generate again. The page says nothing reaches it: the
+best lower edge is about 597 HV.
+
+> When it can't support a target, it says so instead of showing a list.
+
+**Do not say** that any candidate was made, tested or measured, or that it is harder or better than
+a tested alloy.
+
 ## Questions you will get
 
 **Can I pour one of these?** No. They are predictions. Nearest tested neighbours agree, but the
@@ -197,6 +219,8 @@ trace and check the cited numbers. See `research/connectors.md` and the root REA
   **cement-only** mix. Against the best tested mix it is 5 percent.
 - "Validated" or "proven". Nothing generated has been cast.
 - "Works for polymers and chemistry." Those are plans.
+- That a generated alloy was made, tested, or is better than a tested alloy. They are predictions;
+  the nearest tested alloy is the evidence.
 - "It trains in three seconds." It took about 7.5 seconds on the machine used to write this.
 - Anything about the materials shortlist ranking being right. Its humidity and wear ratings are
   AI judgments, and the page says most of its values are typical figures, not individually

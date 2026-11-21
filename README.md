@@ -155,6 +155,40 @@ Data: Borg et al., Scientific Data 7, 430 (2020) (https://raw.githubusercontent.
 
 Safe sentence (from the independent re-check): "We tested our small from-scratch neural network on 104 hardness measurements of alloys it never saw during training: its typical miss is about 78 HV, against 177 HV for a guess of the average, and that is about the same as standard gradient-boosted trees (73 HV with default settings, 78 HV after tuning), so it is a rough screening tool, not a precise predictor."
 
+### Generating untested alloys
+
+The alloy page has a **Generate untested alloys** section (`src/components/AlloyGenerator.jsx`, the
+rules in `src/lib/alloyGen.js`). It uses the network trained on the page; pressing Generate before
+training runs the page's own train flow first, then generates with the live 90% interval (or the
+results-file interval if the live one has not been measured, and the page says which). The rules:
+
+- Only element sets that labs have tested, each element inside the range of fractions those tested
+  alloys used (never widened), in steps of 0.001, capped by the user's maximum per element.
+- By default only element sets that were tested by the chosen processing route (CAST unless changed).
+- Distance is L1 on element fractions to the nearest tested alloy, any route. Under 0.10: not new,
+  dropped. 0.10 to 0.20: "interpolation between tested alloys". 0.20 to 0.40: "untested composition
+  near tested ones". Over 0.40 (the 90th percentile of the spacing between tested alloys): dropped.
+- A tested alloy with an element left out and the rest rescaled counts as a copy and is dropped.
+- A prediction at the clamp (107 or 1072 HV, the training range) is dropped, not ranked.
+- Kept if the lower edge of the 90% range (prediction minus the half-width) reaches the target.
+  The half-width is one constant, so the ranking is the same as ranking by prediction.
+- Each kept candidate shows its 3 nearest tested alloys (formula, route, measured HV), how many
+  measured at least the target, and the gap "predicted minus the nearest tested alloy's measured HV".
+  With a target set, by default a candidate is kept only if at least 2 of those 3 reached it.
+- When nothing is kept, the page says why (for a high target: the best lower edge any candidate
+  reached) and shows no table.
+
+Measured with `npm run alloy-check` (one network, seed 11, file half-width 179.2 HV, seed 1, all
+elements, CAST): at 400 HV with both default rules, 38 element sets used, 11400 compositions drawn,
+8502 not new, 11 too far, 170 subset copies, 0 at the clamp, 1497 below the target, 13 removed by the
+neighbour rule, 358 kept. Switching the route rule off: 49 sets, 621 kept before the neighbour rule,
+262 of them from sets never made by CAST. At 600 and 800 HV nothing is kept: the best lower edge any
+candidate reaches is 594 HV. The top candidate at 400 HV, Al28.9 Co10.0 Cr18.0 Fe24.2 Mo8.9 Ni10.0,
+is predicted 773 HV while its nearest tested alloy measured 605 HV (gap +168 HV); its 3 nearest
+tested alloys measured 605, 801 and 708 HV. In headless Chromium (live half-width ±176 HV) the
+default request kept 367 and took about 180 ms, yielding to the browser between element sets.
+None of these compositions has been made or measured.
+
 ### Insulators (dielectric constant)
 
 Data: Petousis et al., DOI 10.18126/racd-go9m (Hugging Face foundry-ml/dielectric_constant_v1-1), licence: CC BY 4.0. 1056 rows, 964 distinct compounds (reduced formulas); 843 training and 213 held-out rows, split by reduced formula, never by row. Values are CALCULATED by computer simulation (DFT), not measured in a lab.
@@ -421,6 +455,12 @@ train/test split and several wording changes.
 | `public/model/<family>/nn_data.json` | The training and held-out rows for alloys, insulators and polymers, copied unchanged from the family agents. The browser trains on it; the polymer file's Fox columns belong to this one split, so the page never re-splits it. |
 | `public/model/<family>/family.json` | Every number and caveat a family page shows, written by `build_family_files.mjs`. For chemistry it holds only the verified test numbers for the Planned card; no chemistry data is shipped. |
 | `public/model/insulators/heldout.json` | The 213 held-out compounds (formula, Materials Project id, calculated band gap and calculated value) in the same order as the test rows. It feeds the ranking of existing compounds and the band-gap trend check. |
+| `src/lib/alloyGen.js` | The alloy generator: draws untested compositions inside tested element sets, applies the novelty, distance, copy, clamp, target and neighbour-support rules, and counts every exclusion. Each candidate carries its nearest 3 tested alloys and the gap to the nearest one; `generateAsync()` gives the same answer while yielding to the browser. |
+| `src/lib/alloyFeatures.js` | Turns an alloy composition and processing route into the 37 network inputs in `nn_data.json` order (element fractions, route and descriptors). `npm run alloy-check` shows it rebuilds all 530 training and test rows with a largest difference of 0. |
+| `public/model/materials/alloys.json` | The 530 tested alloys (raw formula, element fractions, route, measured HV, split) in `nn_data.json` order, plus the element property table, the clamp range and the file's 90% half-width. The generator and the featurizer read it; it is about 20 kB gzipped. |
+| `domains/materials/export_rows.py` | Writes `alloys.json` from the MPEA dataset, the family's `nn_data.json` and `result.json`, with the parse and descriptor code of `prepare.py`. Run it with `python3 -I`; it is not run by the site. |
+| `scripts/alloy_check.mjs` | `npm run alloy-check`: checks feature parity on all 530 rows, then trains one network and asserts every generator rule on every kept candidate, including the 3 nearest tested alloys, the gap and the neighbour-support rule. It reads `nn_generic.js` and `result.json` from the materials work folder (`MATERIALS_SIM_DIR`). |
+| `src/components/AlloyGenerator.jsx` | The "Generate untested alloys" section of the alloy page: switch-and-slider rows, the route and element choices, the counts sentence and the 10-row table. It reads the 78 and 102 HV errors from `family.json` and never shows an empty table. |
 | `research/references/` | Citation notes per domain. Only `concrete.md` has entries. |
 | `scripts/parity.mjs` | Checks that JavaScript predictions match Python. |
 
