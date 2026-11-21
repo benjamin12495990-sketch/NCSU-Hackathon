@@ -139,12 +139,120 @@ npm run lab:rehearse     # scores the pre-registered models on SELECT (no vault)
 node lab/open_vault.mjs  # once, at the very end
 ```
 
-## Not done yet
+## Phase 1 limits, and what phase 2 changed
 
-- `pretrain(rows)` is a seam that does nothing: physics pre-training on synthetic rows still has to
-  be written. The `pretrain` flag in a genome is always false.
-- No long evolution has been run, and `lab/archive/` does not exist yet.
-- `open_vault.mjs` has never been executed, by design. Its scoring code is exercised by
-  `rehearse_scoring.mjs`, but its own hash checks and vault reads are not.
-- The guard covers `node:fs` inside Node only. `trees.py` is kept out of the vault by the static scan,
-  and receives FUTURE rows only through stdin from `open_vault.mjs`.
+- Phase 1 left `pretrain(rows)` as a no-op seam. Phase 2 implements it (below). Phase-1 scripts still
+  call it with no rows, so the smoke test is unchanged.
+- The guard covers `node:fs` inside Node only. The Python scripts are kept out of the vault by the
+  static scan, and receive FUTURE rows only through stdin from `open_vault.mjs`.
+- `preregister.mjs` and `open_vault.mjs` were rewritten for phase 2. `scoring.mjs` and
+  `rehearse_scoring.mjs` belong to phase 1 and are superseded by `open_vault.mjs --dry-run`.
+
+# Phase 2: physics pre-training, research-backed evolution, the full baseline set
+
+The rules follow the lab's methods research ("Recommended design"). A table at the end of this
+section lists the departures.
+
+## Data
+
+- **SELECT is split by mix group** (`split_select.mjs`, seed 2027):
+  - **REWARD** (321 rows, 199 groups) is the only set the reward sees.
+  - **MONITOR** (160 rows, 100 groups) is never used for selection. It is read only for the
+    monitor-gap stopping rule and for reporting.
+- **Pre-training rows:**
+  - `physics`: 1,800 synthetic rows from `physics/synthetic.mjs`. These are 300 synthetic mixes (convex
+    combinations of two TRAIN mixes with the same ingredients present), 6 log-uniform ages each from
+    1 to 365 days, per-mix random tau, beta and n, and 5% noise.
+  - `boxcrete`: the 395 BOxCrete concrete rows at 22 C (79 mixes, ages 1 to 28 days, MIT licence,
+    `external/LICENCE.md`).
+  - `both`: the two sets together.
+- **Generators:** Powers' gel-space law with Mills' a_u, a generic tau of 13 h and beta of 0.8, and
+  efficiency factors k_s(t) and k_f(t). The fib curve is the second, simpler generator. Each has one
+  scale, fitted on TRAIN only: Powers 0.589 (TRAIN RMSE 5.99 MPa), fib 0.622 (TRAIN RMSE 6.60 MPa).
+  Every parameter's confidence label and citation is in `PARAMS` and in `results/baselines2.json`
+  under `physics`.
+- **Pre-training settings:** 40 epochs, lr 0.004, decay 1e-4, squared loss. One input and target
+  scaling, computed from TRAIN plus the pre-training rows, serves both stages. Pre-trained weights are
+  cached in `lab/cache/` per (layers, features, kind, pre-training seed). The cache is gitignored and
+  is rebuilt deterministically when missing.
+
+## Evolution rules
+
+| Rule | Implementation |
+| --- | --- |
+| Seeds | 2 per individual. Fitness pools both seeds' squared errors. |
+| Fitness (lower is better) | REWARD RMSE + bootstrap SE (200 fixed mix-group resamples) + 1 × (V_age + V_wb) in MPa. |
+| Physics filter | More than 5% of query pairs violated means no children (the individual stays in the archive). |
+| Parents, 16 of 20 | p ∝ exp(−(rank−1)/τ) / √(1 + children so far), τ = max(3, 0.1 N), over the whole archive. |
+| Parents, 4 of 20 | Uniform over the MAP-Elites cell elites (size bucket × pretrain kind × feature set). |
+| Mutation | One per child: continuous 0.5 (×0.8 or ×1.2, or a prior resample with p 0.2), layer 0.2 (×0.8 or ×1.25), discrete 0.3. |
+| Inheritance | Only when layers, features and pretrain kind are unchanged, and then with p 0.5: start from the parent's weights and train 30% of the epochs. |
+| Champion | Ladder rule: a challenger needs loss < champion's − the paired bootstrap SE. |
+| Stopping | 25 generations, or 5 generations without a new champion (Ladder), or the monitor gap. |
+| Random-search control | `archive_random/`: as many individuals as evolution, all drawn from the prior, scored and picked the same way. |
+| Parallelism | 3 worker processes. The same lineage results with 2 or 3 workers (checked). |
+
+## Results so far (run seed 1; the vault is still sealed)
+
+- **Evolution stopped after generation 13** on the Ladder rule: no new champion for 5 generations.
+  It trained 280 individuals (560 networks) in 46 s of generation time; the random search took 75 s.
+- **The champion** is `g008-000-428625cae26f`, with genome: hidden 51-18, lr 7.4e-4, decay 1.2e-3,
+  Huber loss, 177 epochs, rich inputs, physics pre-training. It inherited weights from its parent.
+  It scored REWARD RMSE 7.12 (SE 0.38) and MONITOR RMSE 7.43.
+- **The random-search champion** is `g006-001-0eb67f2ec90e`: 18-24 units, rich inputs, both kinds of
+  pre-training. It scored REWARD 7.29 and MONITOR 7.91.
+
+All baselines below were trained on TRAIN only. REWARD scores of evolved models are optimistic,
+because evolution selected on REWARD.
+
+| Model | REWARD RMSE | MONITOR RMSE |
+| --- | --- | --- |
+| Physics equation (Powers, calibrated on TRAIN) | 10.31 | 9.66 |
+| Physics equation (fib) | 9.93 | 9.08 |
+| Gradient-boosted trees | 14.70 | 15.83 |
+| Random forest | 15.80 | 16.75 |
+| Log-age ridge | 8.90 | 8.63 |
+| Plain network, median of 10 seeds | 14.12 | 14.24 |
+| PANEL_DESIGN, median of 10 | 10.40 | 12.14 |
+| Plain network + physics pre-training, median of 10 | 7.72 | 8.57 |
+| Champion retrained from scratch, median of 10 | 7.92 | 8.30 |
+| Champion without pre-training, median of 10 | 21.65 | 21.00 |
+| Champion as archived (2 seeds) | 6.87 | 7.21 |
+| Random-search champion | 7.09 | 7.74 |
+| Top-10 archive ensemble | 6.89 | 7.33 |
+
+- **Physics pre-training does most of the work.** It takes the plain network from 14.2 to 8.6 MPa on
+  MONITOR. Without it the champion's genome is unstable: its median is 21 MPa.
+- **Evolution added little beyond that.** The champion retrained from scratch is 8.30 MPa on
+  MONITOR, against 8.57 for the plain network with pre-training and 7.74 for the random-search
+  champion.
+- **The champion does not retrain to its archived score** (7.92 against 7.12 on REWARD). That is the
+  gap Real et al.'s criterion warns about.
+
+## Pre-registration and the dry run
+
+- **Pre-registration.** `lab/preregistration.json` has SHA-256
+  `4b67533ec706c4ecf3f70d70d5f855e388404a6cbf7f7b98c969344e9b1ae6b8`. It lists all 13 models with
+  their hashes, the FUTURE hash, both lineage hashes, the champion rule, the metrics, and the
+  success criterion. The criterion is that champion_retrained beats the best of: physics_powers,
+  physics_fib, gbt, rf, ridge, plain and random_champion, with a paired mix-grouped bootstrap 95%
+  interval below zero.
+- **Dry run.** `npm run lab:dry-run` runs the whole opening on a decoy vault of MONITOR rows in a
+  temporary folder, with the guard loaded. It checks the hashes, scores the models, writes the
+  result and then the marker, shows that a second run only prints the stored result, and confirms
+  that `lab/vault/future.json` throws. The output is in `results/vault_dry_run.txt`.
+  - On the decoy, the primary difference is +0.07 MPa with a 95% interval of [−0.49, 0.69] against
+    the random-search champion. That is not a success.
+  - That is a MONITOR number, not a FUTURE one.
+- **The real opening** (`node lab/open_vault.mjs`) has not been run. It now writes the marker only
+  after the result is saved.
+
+## Departures from the research note
+
+| Note | What was done |
+| --- | --- |
+| Loss MAE, activation toggle | MAE loss added. The activation toggle is not implemented: Mlp is copied unchanged and is ReLU only. |
+| "Toggle one input feature" | Switch between the three input sets (base, rich, physics). |
+| Champion must retrain well (5 seeds) | Not used to choose the champion. Pre-registered instead as champion_retrained over 10 seeds, which is the primary model. |
+| Ladder compares RMSE | It compares RMSE + 1 × (V_age + V_wb), with the SE of the RMSE difference. |
+| Fit A and n on UCI 28-day rows | Only one scale per generator, fitted on TRAIN (1 to 7 days), as instructed for this lab. |

@@ -416,6 +416,8 @@ how good they are; none is ever deleted. The 271 results older than 28 days are 
 `lab/preregistration.json`. A guard makes every lab script except the one-time opener unable to
 read the vault. `lab/net.mjs` reproduces `src/lib/nn.js` exactly (`npm run lab:parity`). Run
 `npm run lab:smoke` for the smoke test; everything is in `lab/README.md`. Nothing on the page uses it.
+Phase 2 adds physics and BOxCrete pre-training, the research-backed selection rules, a random-search
+control and 13 pre-registered models (`lab/preregistration.json`); the vault is still sealed.
 
 ## Files
 

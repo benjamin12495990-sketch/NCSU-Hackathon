@@ -20,7 +20,12 @@
     "lab:check": "node lab/check_isolation.mjs",
     "lab:preregister": "node lab/preregister.mjs",
     "lab:rehearse": "nice -n 10 node lab/rehearse_scoring.mjs",
-    "lab:smoke": "node lab/smoke.mjs"
+    "lab:smoke": "node lab/smoke.mjs",
+    "lab:split-select": "node lab/split_select.mjs",
+    "lab:evolve2": "nice -n 10 node lab/evolve2.mjs",
+    "lab:random": "nice -n 10 node lab/evolve2.mjs --random",
+    "lab:baselines2": "nice -n 10 node lab/baselines2.mjs",
+    "lab:dry-run": "nice -n 10 node lab/open_vault.mjs --dry-run"
   },
   "dependencies": {
     "react": "^19.3.1",

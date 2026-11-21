@@ -1,0 +1,34 @@
+dry run: decoy vault of 160 MONITOR rows in /tmp/lab-vault-dry-run-ngGIPc
+physics_powers           RMSE 9.664 [8.21, 10.93]  seen 8.845 (82)  unseen 10.456 (78)
+physics_fib              RMSE 9.076 [7.73, 10.34]  seen 8.056 (82)  unseen 10.038 (78)
+gbt                      RMSE 15.834 [14.15, 17.49]  seen 15.023 (82)  unseen 16.643 (78)
+rf                       RMSE 16.747 [15.06, 18.39]  seen 15.635 (82)  unseen 17.843 (78)
+ridge                    RMSE 8.628 [7.15, 10.00]  seen 6.560 (82)  unseen 10.366 (78)
+plain                    RMSE 12.763 [10.72, 14.56] median of 10 seeds 14.237  seen 9.086 (82)  unseen 15.727 (78)
+panel_design             RMSE 10.296 [8.40, 11.91] median of 10 seeds 12.143  seen 10.315 (82)  unseen 10.276 (78)
+plain_physics_pretrain   RMSE 8.220 [6.69, 9.66] median of 10 seeds 8.569  seen 7.055 (82)  unseen 9.288 (78)
+champion_retrained       RMSE 7.801 [6.53, 9.00] median of 10 seeds 8.303  seen 7.155 (82)  unseen 8.428 (78)
+champion_no_pretrain     RMSE 8.786 [6.99, 10.37] median of 10 seeds 20.998  seen 6.098 (82)  unseen 10.920 (78)
+champion                 RMSE 7.206 [5.83, 8.44]  seen 6.368 (82)  unseen 7.992 (78)
+random_champion          RMSE 7.737 [6.28, 9.10]  seen 6.586 (82)  unseen 8.785 (78)
+top10_ensemble           RMSE 7.334 [5.93, 8.61]  seen 6.472 (82)  unseen 8.142 (78)
+primary: champion_retrained minus best of baselines (random_champion) = 0.065 MPa, 95% CI [-0.490, 0.690]: success false
+open_vault --dry-run: wrote /tmp/lab-vault-dry-run-ngGIPc/results/vault_opening.json and then the marker.
+
+dry run, second invocation of step (0):
+open_vault: the vault was already opened (opened 2026-11-21T06:28:24.242Z with pre-registration sha256 4b67533ec706c4ecf3f70d70d5f855e388404a6cbf7f7b98c969344e9b1ae6b8 (DRY RUN on a decoy)). It is never scored twice. Stored result:
+  physics_powers: RMSE 9.664 MPa
+  physics_fib: RMSE 9.076 MPa
+  gbt: RMSE 15.834 MPa
+  rf: RMSE 16.747 MPa
+  ridge: RMSE 8.628 MPa
+  plain: RMSE 12.763 MPa
+  panel_design: RMSE 10.296 MPa
+  plain_physics_pretrain: RMSE 8.220 MPa
+  champion_retrained: RMSE 7.801 MPa
+  champion_no_pretrain: RMSE 8.786 MPa
+  champion: RMSE 7.206 MPa
+  random_champion: RMSE 7.737 MPa
+  top10_ensemble: RMSE 7.334 MPa
+  success criterion met: false
+dry run: reading lab/vault/future.json now throws (guard active): the real vault was never read
