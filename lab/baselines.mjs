@@ -17,6 +17,7 @@ import { LAB } from './guard.mjs'
 import { writeSame, sha256 } from './io.mjs'
 import { createNet, PANEL_DESIGN } from './net.mjs'
 import { reward } from './reward.mjs'
+import { fitCurve, curvePredict } from './curve.mjs'
 
 const TRAIN = JSON.parse(readFileSync(path.join(LAB, 'data', 'train.json'), 'utf8'))
 const SELECT = JSON.parse(readFileSync(path.join(LAB, 'data', 'select.json'), 'utf8'))
@@ -47,20 +48,15 @@ out.models.trees = { kind: 'trees', file: 'results/models/trees.pkl', sha256: fi
 console.log(`trees: SELECT MAE ${out.models.trees.selectMae.toFixed(3)} MPa, violations ${out.models.trees.violations.toFixed(3)}, reward ${out.models.trees.reward.toFixed(3)}`)
 
 // (d) curve
-const f = (t) => Math.exp(0.25 * (1 - Math.sqrt(28 / t)))
-const fitS28 = (idx) => idx.reduce((s, i) => s + TRAIN.y[i] * f(TRAIN.X[i][7]), 0) / idx.reduce((s, i) => s + f(TRAIN.X[i][7]) ** 2, 0)
-const byMix = new Map()
-TRAIN.mix.forEach((m, i) => (byMix.get(m) || byMix.set(m, []).get(m)).push(i))
-const curve = { format: 'lab-curve-1', curve: 'exp(0.25 * (1 - sqrt(28 / t)))', globalS28: fitS28(TRAIN.y.map((_, i) => i)), perMixS28: Object.fromEntries([...byMix].map(([m, idx]) => [m, fitS28(idx)])) }
-const mixOf = (x) => x.slice(0, 7).join(',')
-export const curvePredict = (c, perMix) => (rows) => rows.map((x) => (perMix && mixOf(x) in c.perMixS28 ? c.perMixS28[mixOf(x)] : c.globalS28) * f(x[7]))
+const curve = fitCurve(TRAIN)
+const trainMixSet = new Set(TRAIN.mix)
 const curveText = JSON.stringify(curve)
 writeSame(path.join(MODELS, 'curve.json'), curveText)
 for (const [name, perMix] of [['curve', true], ['curve_global', false]]) {
   out.models[name] = { kind: 'curve', perMix, file: 'results/models/curve.json', sha256: sha256(curveText), ...reward(curvePredict(curve, perMix), TRAIN, SELECT) }
   console.log(`${name}: SELECT MAE ${out.models[name].selectMae.toFixed(3)} MPa, violations ${out.models[name].violations.toFixed(3)}, reward ${out.models[name].reward.toFixed(3)}`)
 }
-const seenShare = SELECT.mix.filter((m) => byMix.has(m)).length / SELECT.y.length
+const seenShare = SELECT.mix.filter((m) => trainMixSet.has(m)).length / SELECT.y.length
 out.selectRowsWhoseMixIsInTrain = Number(seenShare.toFixed(4))
 writeSame(path.join(LAB, 'results', 'baselines_select.json'), JSON.stringify(out, null, 1) + '\n')
 console.log(`SELECT rows whose exact mix has TRAIN rows: ${(100 * seenShare).toFixed(1)}%. Wrote lab/results/baselines_select.json`)
