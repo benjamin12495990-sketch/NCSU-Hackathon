@@ -1,0 +1,4 @@
+# Tested with Python 3.11+; exact versions used are recorded in each reproductions/*.json report.
+numpy>=1.26
+pandas>=2.1
+scikit-learn>=1.4

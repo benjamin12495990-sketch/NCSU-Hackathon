@@ -1,0 +1,76 @@
+{
+ "source_sha256": "316a136630ab08097454518231b952c78d65773a125627ae38d874b889b8d841",
+ "rows_raw": 1624,
+ "duplicate_inchikeys": 0,
+ "surfactant_type_counts": {
+  "gemini cationic": 588,
+  "non-ionic": 325,
+  "cationic": 316,
+  "anionic": 239,
+  "sugar-based non-ionic": 100,
+  "zwitterionic": 36,
+  "gemini zwitterionic": 17,
+  "gemini anionic": 3
+ },
+ "tasks": {
+  "pCMC": {
+   "groups_meas": {
+    "n_groups": 115,
+    "largest": 150,
+    "singletons": 8
+   },
+   "groups_union": {
+    "n_groups": 89,
+    "largest": 649,
+    "singletons": 5
+   },
+   "rows_with_label": 1395,
+   "rows_using_Ref_CMC_fallback_for_group": 0,
+   "label_min_max": [
+    0.00899556,
+    6.795880017
+   ],
+   "rows_with_several_ref_tokens": 49
+  },
+  "AW_ST_CMC": {
+   "groups_meas": {
+    "n_groups": 190,
+    "largest": 70,
+    "singletons": 36
+   },
+   "groups_union": {
+    "n_groups": 29,
+    "largest": 719,
+    "singletons": 3
+   },
+   "rows_with_label": 972,
+   "rows_using_Ref_CMC_fallback_for_group": 43,
+   "label_min_max": [
+    18.0,
+    61.9
+   ],
+   "rows_with_several_ref_tokens": 22
+  }
+ },
+ "output": "cleaned/surfpro_clean.csv",
+ "output_sha256": "649bb430a48bea38ca8ead0121bc80622ac32c848fb1cbed467e37b6d06f0951",
+ "status": "written",
+ "columns": [
+  "Index",
+  "SMILES",
+  "InChIKey",
+  "Surfactant_Type",
+  "temp_C_cmc",
+  "pCMC",
+  "AW_ST_CMC",
+  "meas_ref_pCMC",
+  "all_refs_pCMC",
+  "group_meas_pCMC",
+  "group_union_pCMC",
+  "meas_ref_AW_ST_CMC",
+  "all_refs_AW_ST_CMC",
+  "group_meas_AW_ST_CMC",
+  "group_union_AW_ST_CMC"
+ ],
+ "note": "Labels are surfactant physical properties (pCMC = -log10 CMC in mol/L; AW_ST_CMC in mN/m), not cleaning efficacy."
+}

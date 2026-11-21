@@ -23,3 +23,11 @@ dist-ssr
 *.sln
 *.sw?
 __pycache__/
+
+# Regenerated data-pipeline caches (rebuild with the scripts named in each domain README)
+domains/chemistry/work/runs/
+domains/chemistry/work/nn_data.json
+domains/chemistry/work/all_rows.json
+domains/chemistry/work/splits.json
+domains/chemistry/work/prepare_info.json
+domains/corrosives/work/cache/

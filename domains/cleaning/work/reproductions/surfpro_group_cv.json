@@ -1,0 +1,387 @@
+{
+ "run_id": "20261121T210702Z",
+ "command": "python3 -I domains/cleaning/work/train_surfpro.py",
+ "data_sha256": {
+  "S129_SURFPRO.csv": "316a136630ab08097454518231b952c78d65773a125627ae38d874b889b8d841",
+  "surfpro_clean.csv": "649bb430a48bea38ca8ead0121bc80622ac32c848fb1cbed467e37b6d06f0951"
+ },
+ "versions": {
+  "python": "3.13.18",
+  "numpy": "2.5.3",
+  "pandas": "3.0.5",
+  "sklearn": "1.9.1",
+  "rdkit": "2026.09.2"
+ },
+ "features": {
+  "rdkit_descriptors": 217,
+  "morgan_count_bits": 512,
+  "type_onehot": 8,
+  "temperature": 1,
+  "total": 738,
+  "smiles_failed": []
+ },
+ "what_this_is": "Surfactant physical-property prediction (pCMC, surface tension at CMC). NOT cleaning efficacy.",
+ "tasks": {
+  "pCMC": {
+   "rows": 1395,
+   "unit": "log10(1/(mol/L))",
+   "groups": {
+    "definition": "connected components of measurement-reference tokens (SubRef if present, else Ref)",
+    "n_groups": 115,
+    "largest_group_rows": 150
+   },
+   "folds": {
+    "method": "GroupKFold(n_splits=5), no shuffle",
+    "rows_per_fold": [
+     279,
+     279,
+     279,
+     279,
+     279
+    ],
+    "groups_per_fold": [
+     23,
+     22,
+     22,
+     24,
+     24
+    ]
+   },
+   "target_sd": 1.1195,
+   "models": {
+    "mean": {
+     "complexity_rank": 0,
+     "pooled_oof_mae": 0.8991,
+     "pooled_oof_rmse": 1.1316,
+     "pooled_oof_r2": -0.0217,
+     "fold_mae": [
+      1.0422,
+      0.8683,
+      0.8975,
+      0.7619,
+      0.9258
+     ],
+     "seconds": 0.0
+    },
+    "ridge_alpha_100": {
+     "complexity_rank": 1,
+     "pooled_oof_mae": 0.8293,
+     "pooled_oof_rmse": 1.1846,
+     "pooled_oof_r2": -0.1197,
+     "fold_mae": [
+      0.9439,
+      0.7699,
+      0.7929,
+      0.8195,
+      0.8202
+     ],
+     "seconds": 4.4
+    },
+    "ridge_alpha_10": {
+     "complexity_rank": 2,
+     "pooled_oof_mae": 1.0279,
+     "pooled_oof_rmse": 1.5605,
+     "pooled_oof_r2": -0.9433,
+     "fold_mae": [
+      1.1785,
+      0.9515,
+      0.9574,
+      0.9452,
+      1.1069
+     ],
+     "seconds": 4.4
+    },
+    "ridge_alpha_1": {
+     "complexity_rank": 3,
+     "pooled_oof_mae": 1.5423,
+     "pooled_oof_rmse": 2.3567,
+     "pooled_oof_r2": -3.4317,
+     "fold_mae": [
+      1.8788,
+      1.5183,
+      1.5472,
+      1.2699,
+      1.4974
+     ],
+     "seconds": 4.6
+    },
+    "extratrees_500_leaf1_sqrt": {
+     "complexity_rank": 10,
+     "pooled_oof_mae": 0.5418,
+     "pooled_oof_rmse": 0.7515,
+     "pooled_oof_r2": 0.5493,
+     "fold_mae": [
+      0.6184,
+      0.479,
+      0.6518,
+      0.4147,
+      0.5449
+     ],
+     "seconds": 6.5
+    },
+    "extratrees_500_leaf3_0.3": {
+     "complexity_rank": 11,
+     "pooled_oof_mae": 0.5298,
+     "pooled_oof_rmse": 0.7421,
+     "pooled_oof_r2": 0.5605,
+     "fold_mae": [
+      0.5974,
+      0.4884,
+      0.5983,
+      0.4454,
+      0.5194
+     ],
+     "seconds": 14.8
+    },
+    "histgb_lr0.05_500": {
+     "complexity_rank": 12,
+     "pooled_oof_mae": 0.5419,
+     "pooled_oof_rmse": 0.7362,
+     "pooled_oof_r2": 0.5675,
+     "fold_mae": [
+      0.6134,
+      0.5002,
+      0.529,
+      0.5212,
+      0.5458
+     ],
+     "seconds": 316.1
+    }
+   },
+   "selected_model": "extratrees_500_leaf3_0.3",
+   "selected_minus_mean_mae": {
+    "value": -0.3693,
+    "group_bootstrap_95": [
+     -0.4517,
+     -0.2515
+    ]
+   },
+   "selection_note": "selected on the same folds it is scored on (7 fixed candidates); tie tolerance 0.01",
+   "by_surfactant_type_oof": {
+    "anionic": {
+     "n": 239,
+     "n_groups": 15,
+     "selected_mae": 0.394,
+     "mean_baseline_mae": 0.898
+    },
+    "cationic": {
+     "n": 237,
+     "n_groups": 47,
+     "selected_mae": 0.623,
+     "mean_baseline_mae": 0.829
+    },
+    "gemini anionic": {
+     "n": 3,
+     "n_groups": 1,
+     "selected_mae": 2.006,
+     "mean_baseline_mae": 1.472
+    },
+    "gemini cationic": {
+     "n": 497,
+     "n_groups": 47,
+     "selected_mae": 0.514,
+     "mean_baseline_mae": 0.74
+    },
+    "gemini zwitterionic": {
+     "n": 17,
+     "n_groups": 1,
+     "selected_mae": 1.247,
+     "mean_baseline_mae": 1.742
+    },
+    "non-ionic": {
+     "n": 281,
+     "n_groups": 9,
+     "selected_mae": 0.507,
+     "mean_baseline_mae": 1.121
+    },
+    "sugar-based non-ionic": {
+     "n": 100,
+     "n_groups": 6,
+     "selected_mae": 0.607,
+     "mean_baseline_mae": 1.099
+    },
+    "zwitterionic": {
+     "n": 21,
+     "n_groups": 4,
+     "selected_mae": 0.539,
+     "mean_baseline_mae": 0.784
+    }
+   }
+  },
+  "AW_ST_CMC": {
+   "rows": 972,
+   "unit": "mN/m",
+   "groups": {
+    "definition": "connected components of measurement-reference tokens (SubRef if present, else Ref)",
+    "n_groups": 190,
+    "largest_group_rows": 70
+   },
+   "folds": {
+    "method": "GroupKFold(n_splits=5), no shuffle",
+    "rows_per_fold": [
+     195,
+     195,
+     194,
+     194,
+     194
+    ],
+    "groups_per_fold": [
+     36,
+     38,
+     38,
+     39,
+     39
+    ]
+   },
+   "target_sd": 6.9906,
+   "models": {
+    "mean": {
+     "complexity_rank": 0,
+     "pooled_oof_mae": 5.5468,
+     "pooled_oof_rmse": 7.1116,
+     "pooled_oof_r2": -0.0349,
+     "fold_mae": [
+      7.3243,
+      4.9475,
+      5.2441,
+      4.9974,
+      5.2146
+     ],
+     "seconds": 0.0
+    },
+    "ridge_alpha_100": {
+     "complexity_rank": 1,
+     "pooled_oof_mae": 5.39,
+     "pooled_oof_rmse": 7.0946,
+     "pooled_oof_r2": -0.03,
+     "fold_mae": [
+      7.0102,
+      4.9135,
+      5.2633,
+      4.6302,
+      5.1271
+     ],
+     "seconds": 1.0
+    },
+    "ridge_alpha_10": {
+     "complexity_rank": 2,
+     "pooled_oof_mae": 6.352,
+     "pooled_oof_rmse": 8.5151,
+     "pooled_oof_r2": -0.4837,
+     "fold_mae": [
+      7.7489,
+      5.8814,
+      5.9174,
+      5.3211,
+      6.8863
+     ],
+     "seconds": 0.8
+    },
+    "ridge_alpha_1": {
+     "complexity_rank": 3,
+     "pooled_oof_mae": 9.6868,
+     "pooled_oof_rmse": 16.249,
+     "pooled_oof_r2": -4.4029,
+     "fold_mae": [
+      10.0068,
+      9.9168,
+      7.3524,
+      10.8818,
+      10.2731
+     ],
+     "seconds": 0.6
+    },
+    "extratrees_500_leaf1_sqrt": {
+     "complexity_rank": 10,
+     "pooled_oof_mae": 4.7519,
+     "pooled_oof_rmse": 6.4698,
+     "pooled_oof_r2": 0.1434,
+     "fold_mae": [
+      7.095,
+      4.0176,
+      4.0404,
+      4.6729,
+      3.9254
+     ],
+     "seconds": 4.7
+    },
+    "extratrees_500_leaf3_0.3": {
+     "complexity_rank": 11,
+     "pooled_oof_mae": 4.7718,
+     "pooled_oof_rmse": 6.5377,
+     "pooled_oof_r2": 0.1254,
+     "fold_mae": [
+      7.2381,
+      4.0043,
+      3.9744,
+      4.5701,
+      4.0632
+     ],
+     "seconds": 10.8
+    },
+    "histgb_lr0.05_500": {
+     "complexity_rank": 12,
+     "pooled_oof_mae": 4.7572,
+     "pooled_oof_rmse": 6.4251,
+     "pooled_oof_r2": 0.1552,
+     "fold_mae": [
+      6.5834,
+      4.2974,
+      4.191,
+      4.8459,
+      3.8614
+     ],
+     "seconds": 23.8
+    }
+   },
+   "selected_model": "extratrees_500_leaf1_sqrt",
+   "selected_minus_mean_mae": {
+    "value": -0.7949,
+    "group_bootstrap_95": [
+     -1.1958,
+     -0.3794
+    ]
+   },
+   "selection_note": "selected on the same folds it is scored on (7 fixed candidates); tie tolerance 0.1",
+   "by_surfactant_type_oof": {
+    "anionic": {
+     "n": 39,
+     "n_groups": 10,
+     "selected_mae": 6.185,
+     "mean_baseline_mae": 6.294
+    },
+    "cationic": {
+     "n": 274,
+     "n_groups": 82,
+     "selected_mae": 4.283,
+     "mean_baseline_mae": 5.181
+    },
+    "gemini cationic": {
+     "n": 416,
+     "n_groups": 80,
+     "selected_mae": 5.987,
+     "mean_baseline_mae": 5.904
+    },
+    "non-ionic": {
+     "n": 145,
+     "n_groups": 26,
+     "selected_mae": 2.501,
+     "mean_baseline_mae": 5.252
+    },
+    "sugar-based non-ionic": {
+     "n": 74,
+     "n_groups": 6,
+     "selected_mae": 3.456,
+     "mean_baseline_mae": 5.309
+    },
+    "zwitterionic": {
+     "n": 24,
+     "n_groups": 8,
+     "selected_mae": 3.956,
+     "mean_baseline_mae": 4.825
+    }
+   }
+  }
+ },
+ "elapsed_seconds": 408.5
+}
