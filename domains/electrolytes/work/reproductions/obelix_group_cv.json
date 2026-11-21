@@ -1,0 +1,316 @@
+{
+  "run_id": "20261121T210255Z",
+  "task": "log10 ionic conductivity (S/cm), OBELiX official train partition, formula-only",
+  "command": "python3 domains/electrolytes/work/baseline.py",
+  "data_sha256": {
+    "processed.csv": "2a57b4b4287bd56e774402c8aec313f44c33df74d26a32e4bc3196e40b051474",
+    "train_idx.csv": "6bd506b34d431ff233880147f934369e3d7c7f739299e10284e32927f502775a",
+    "test_idx.csv": "0ad4cfaf5a61e85e228b2e0782a97b01469d08ac481b553622b91035a8ec719d",
+    "all_cifs.zip": "90f54f781fe6c4ba014636046556ec66c3bfa909b617e7258ff50ac3dcfa027c"
+  },
+  "versions": {
+    "python": "3.13.18",
+    "numpy": "2.5.3",
+    "pandas": "3.0.5",
+    "sklearn": "1.9.1"
+  },
+  "rows": 478,
+  "features": 54,
+  "elements": [
+    "Al",
+    "B",
+    "Ba",
+    "Bi",
+    "Br",
+    "C",
+    "Ca",
+    "Cd",
+    "Ce",
+    "Cl",
+    "Co",
+    "Cr",
+    "Cu",
+    "Er",
+    "F",
+    "Fe",
+    "Ga",
+    "Gd",
+    "Ge",
+    "H",
+    "Hf",
+    "I",
+    "In",
+    "K",
+    "La",
+    "Li",
+    "Lu",
+    "Mg",
+    "Mn",
+    "Mo",
+    "N",
+    "Na",
+    "Nb",
+    "Nd",
+    "O",
+    "P",
+    "Pb",
+    "Pr",
+    "S",
+    "Sb",
+    "Sc",
+    "Se",
+    "Si",
+    "Sm",
+    "Sn",
+    "Sr",
+    "Ta",
+    "Te",
+    "Ti",
+    "V",
+    "W",
+    "Y",
+    "Zn",
+    "Zr"
+  ],
+  "groups": {
+    "definition": "connected components of shared Composition string or shared DOI token (split on '|')",
+    "n_groups": 124,
+    "largest_group": 106,
+    "singletons": 78
+  },
+  "folds": {
+    "method": "sklearn GroupKFold(n_splits=5), no shuffle",
+    "n_folds": 5,
+    "rows_per_fold": [
+      106,
+      93,
+      93,
+      93,
+      93
+    ],
+    "groups_per_fold": [
+      1,
+      23,
+      31,
+      34,
+      35
+    ]
+  },
+  "selection_rule": "min pooled OOF MAE; within 0.01 log10 of min prefer lowest complexity_rank",
+  "models": {
+    "mean": {
+      "complexity_rank": 0,
+      "pooled_oof_mae": 2.5542,
+      "pooled_oof_rmse": 3.4845,
+      "pooled_oof_r2": -0.0483,
+      "fold_mae": [
+        2.0549,
+        1.7085,
+        3.0005,
+        2.6757,
+        3.401
+      ]
+    },
+    "ridge_alpha_100": {
+      "complexity_rank": 1,
+      "pooled_oof_mae": 2.7241,
+      "pooled_oof_rmse": 4.0502,
+      "pooled_oof_r2": -0.4163,
+      "fold_mae": [
+        3.1776,
+        2.3539,
+        2.6091,
+        2.6088,
+        2.8077
+      ]
+    },
+    "ridge_alpha_10": {
+      "complexity_rank": 2,
+      "pooled_oof_mae": 2.7848,
+      "pooled_oof_rmse": 4.311,
+      "pooled_oof_r2": -0.6046,
+      "fold_mae": [
+        3.1897,
+        2.7252,
+        2.5982,
+        2.5133,
+        2.8412
+      ]
+    },
+    "ridge_alpha_1": {
+      "complexity_rank": 3,
+      "pooled_oof_mae": 2.8114,
+      "pooled_oof_rmse": 4.3737,
+      "pooled_oof_r2": -0.6516,
+      "fold_mae": [
+        3.2003,
+        2.8178,
+        2.6216,
+        2.4996,
+        2.8635
+      ]
+    },
+    "ridge_alpha_0.1": {
+      "complexity_rank": 4,
+      "pooled_oof_mae": 2.8158,
+      "pooled_oof_rmse": 4.3819,
+      "pooled_oof_r2": -0.6577,
+      "fold_mae": [
+        3.2023,
+        2.8289,
+        2.6252,
+        2.5029,
+        2.8658
+      ]
+    },
+    "ridge_alpha_0.01": {
+      "complexity_rank": 5,
+      "pooled_oof_mae": 2.8163,
+      "pooled_oof_rmse": 4.3827,
+      "pooled_oof_r2": -0.6584,
+      "fold_mae": [
+        3.2025,
+        2.83,
+        2.6256,
+        2.5033,
+        2.866
+      ]
+    },
+    "extratrees_500_leaf1": {
+      "complexity_rank": 10,
+      "pooled_oof_mae": 1.5196,
+      "pooled_oof_rmse": 2.2436,
+      "pooled_oof_r2": 0.5654,
+      "fold_mae": [
+        1.1919,
+        0.8926,
+        2.097,
+        1.6432,
+        1.8191
+      ]
+    },
+    "extratrees_500_leaf3_sqrt": {
+      "complexity_rank": 11,
+      "pooled_oof_mae": 2.452,
+      "pooled_oof_rmse": 3.1366,
+      "pooled_oof_r2": 0.1506,
+      "fold_mae": [
+        3.1636,
+        1.8894,
+        2.3112,
+        2.0976,
+        2.6987
+      ]
+    }
+  },
+  "selected_model": "extratrees_500_leaf1",
+  "selected_pooled_oof_mae": 1.5196,
+  "mean_baseline_pooled_oof_mae": 2.5542,
+  "multiplicative_error_scale_of_selected": 33.1,
+  "by_family_oof": {
+    "NASICON-like (Li-M(IV)-P-O)": {
+      "n": 121,
+      "n_groups": 10,
+      "selected_mae": 1.174,
+      "mean_baseline_mae": 1.909,
+      "target_mean_log10": -4.282
+    },
+    "argyrodite-like (Li-P-S-halide)": {
+      "n": 50,
+      "n_groups": 3,
+      "selected_mae": 1.466,
+      "mean_baseline_mae": 2.242,
+      "target_mean_log10": -3.192
+    },
+    "garnet-like (Li-La-M-O, O/La~4)": {
+      "n": 71,
+      "n_groups": 16,
+      "selected_mae": 0.384,
+      "mean_baseline_mae": 1.419,
+      "target_mean_log10": -4.11
+    },
+    "halide": {
+      "n": 15,
+      "n_groups": 12,
+      "selected_mae": 2.622,
+      "mean_baseline_mae": 1.947,
+      "target_mean_log10": -6.343
+    },
+    "other": {
+      "n": 11,
+      "n_groups": 7,
+      "selected_mae": 1.808,
+      "mean_baseline_mae": 1.872,
+      "target_mean_log10": -5.655
+    },
+    "other oxide": {
+      "n": 120,
+      "n_groups": 55,
+      "selected_mae": 2.718,
+      "mean_baseline_mae": 4.256,
+      "target_mean_log10": -9.227
+    },
+    "other sulfide / thiophosphate": {
+      "n": 67,
+      "n_groups": 21,
+      "selected_mae": 1.053,
+      "mean_baseline_mae": 2.432,
+      "target_mean_log10": -4.112
+    },
+    "perovskite-like (Li-La-Ti-O)": {
+      "n": 23,
+      "n_groups": 6,
+      "selected_mae": 1.212,
+      "mean_baseline_mae": 2.329,
+      "target_mean_log10": -3.858
+    }
+  },
+  "fold_sensitivity_not_used_for_selection": {
+    "shuffle_seed_0": {
+      "mean": 2.639,
+      "ridge_alpha_100": 3.1259,
+      "extratrees_500_leaf1": 1.5893,
+      "extratrees_500_leaf3_sqrt": 2.6084
+    },
+    "shuffle_seed_1": {
+      "mean": 2.6551,
+      "ridge_alpha_100": 2.7013,
+      "extratrees_500_leaf1": 1.6615,
+      "extratrees_500_leaf3_sqrt": 2.5085
+    },
+    "shuffle_seed_2": {
+      "mean": 2.6093,
+      "ridge_alpha_100": 3.1888,
+      "extratrees_500_leaf1": 1.712,
+      "extratrees_500_leaf3_sqrt": 2.8754
+    },
+    "shuffle_seed_3": {
+      "mean": 2.5778,
+      "ridge_alpha_100": 3.0329,
+      "extratrees_500_leaf1": 1.7101,
+      "extratrees_500_leaf3_sqrt": 2.4958
+    },
+    "shuffle_seed_4": {
+      "mean": 2.9624,
+      "ridge_alpha_100": 2.8596,
+      "extratrees_500_leaf1": 1.6328,
+      "extratrees_500_leaf3_sqrt": 2.5226
+    }
+  },
+  "family_rule": "composition-pattern heuristic in baseline.py:family(); not a crystallographic assignment",
+  "snapshot_comparison": {
+    "snapshot_groups": 124,
+    "snapshot_selected": "ExtraTrees",
+    "snapshot_selected_mae": 1.77,
+    "snapshot_mean_mae": 2.55
+  },
+  "holdout": "test_idx.csv rows (121) were NOT scored; their labels are public, so they are not blind.",
+  "cif_audit": {
+    "files": 321,
+    "parsed": 321,
+    "failed": [],
+    "ids_in_table": 321,
+    "cell_a_matches_table": 245
+  },
+  "elapsed_seconds": 32.28
+}
