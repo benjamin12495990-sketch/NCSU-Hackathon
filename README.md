@@ -21,7 +21,10 @@ Enter a target strength in MPa and a curing age. In the browser, with no server,
    and a cautious lower estimate;
 4. keeps the mixes whose cautious estimate reaches the target (or the expected strength, if you turn
    caution off);
-5. ranks them by embodied CO2 per cubic metre;
+5. ranks them by embodied CO2 per cubic metre and gives each a formula name built from its recipe,
+   for example `Ternary blend C30-S35-F35-W40` (binder shares of cement, slag and fly ash in
+   percent, then water ÷ binder × 100). The names are labels for this page, not standard
+   designations;
 6. checks each against its three nearest lab-tested mixes and marks it "neighbours passed" only when at
    least two of them are close to it and reached the target in the lab.
 
@@ -186,6 +189,7 @@ train/test split and several wording changes.
 | `src/lib/co2.js` | Embodied CO2 and solid volume of a mix. |
 | `src/lib/nearest.js` | Distances to tested mixes and their lab results. |
 | `src/lib/design.js` | Generates, filters, ranks and checks the candidates. |
+| `src/lib/name.js` | Builds each mix's formula name from its recipe. |
 | `src/lib/loadModel.js` | Downloads the JSON files when the page opens. |
 | `public/model/exposure.json` | ACI 318 exposure limits used by the sliders, with an evidence label per class. |
 | `public/model/materials.json` | The 32 reference materials, with which values were sourced. |

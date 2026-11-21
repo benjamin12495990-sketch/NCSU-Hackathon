@@ -2,6 +2,7 @@ import { featurize } from './featurize.js'
 import { predict } from './predict.js'
 import { co2PerM3, absoluteVolume } from './co2.js'
 import { mixKey, nearestTested, resultUpTo, scaledDistance } from './nearest.js'
+import { mixName, nameAll } from './name.js'
 
 // Small seeded random generator, so the same request always gives the same
 // candidates (a demo must not change between clicks).
@@ -156,5 +157,6 @@ export function design(request, data, limit = 10) {
       supported,
     })
   }
-  return { targetMPa, ageDays, top, baseline, cementOnly, stats }
+  const withName = (item) => item && { ...item, name: mixName(item.mix) }
+  return { targetMPa, ageDays, top: nameAll(top), baseline: withName(baseline), cementOnly: withName(cementOnly), stats }
 }

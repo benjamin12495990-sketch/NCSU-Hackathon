@@ -198,6 +198,7 @@ export default function App() {
                 <div className="stagehead">
                   <span className="label">{stage.label}</span>
                   <h2>{stage.title}: {kg(stage.item.co2)} kg CO<sub>2</sub>e per m³</h2>
+                  <span className="mixname">{stage.item.name}</span>
                   <span className="flag hot">Cement pulses: it is {Math.round(cementShare * 100)}% of this mix's CO<sub>2</sub></span>
                 </div>
                 <Suspense fallback={<div className="stage"><div className="canvas" /></div>}>
@@ -232,6 +233,7 @@ export default function App() {
                   onClick={() => show(p.id)}
                 >
                   <span className="label">{p.label}</span>
+                  {p.item && <span className="mixname">{p.item.name}</span>}
                   <span className="big">{p.item ? kg(p.item.co2) : '–'} <small>kg CO<sub>2</sub>e per m³</small></span>
                   <span className="label">{p.sub}</span>
                 </button>
@@ -277,6 +279,7 @@ export default function App() {
                   <thead>
                     <tr>
                       <th>#</th>
+                      <th>Formula name</th>
                       <th className="num">Cement</th><th className="num">Slag</th><th className="num">Fly ash</th>
                       <th className="num">Water</th><th className="num">Super&shy;plasticizer</th>
                       <th className="num">Coarse agg.</th><th className="num">Fine agg.</th>
@@ -295,6 +298,7 @@ export default function App() {
                     {result.top.map((c, i) => (
                       <tr key={c.mix.join('|')} className={stage?.item === c ? 'on' : ''}>
                         <td>{i + 1}</td>
+                        <td className="strong">{c.name}</td>
                         {c.mix.map((v, k) => <td key={k} className="num">{v}</td>)}
                         <td className="num">{c.waterBinder.toFixed(2)}</td>
                         <td className="num">{c.strength.toFixed(1)} MPa</td>
@@ -320,6 +324,9 @@ export default function App() {
                 </table>
               </div>
               <p className="note small">
+                Formula names are made by the app from the recipe: C, S and F are the shares of cement, slag
+                and fly ash in the binder by mass (percent), and W is water ÷ binder × 100. They are labels for
+                this page, not standard designations.{' '}
                 “Differs by” is the gap to the closest tested mix on the ingredient where they differ most; a
                 generated mix must differ by more than 5 kg to count as new. New means not in this dataset: it
                 may exist elsewhere in the literature.

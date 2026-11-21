@@ -126,3 +126,4 @@ td .label { font-size: 0.75rem; }
 .mini { border: 1px solid var(--line); border-radius: 6px; background: var(--card); padding: 14px 16px; }
 .mini h3 { margin: 0 0 6px; font-size: 0.95rem; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .mini p { margin: 0 0 6px; font-size: 0.88rem; }
+.mixname { display: block; font-weight: 600; font-size: 0.92rem; color: var(--accent); }
