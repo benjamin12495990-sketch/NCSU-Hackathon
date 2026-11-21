@@ -1,6 +1,9 @@
 # Carbon-based polymers
 
-> **Status: plan only.** No dataset, model or references yet.
+> **Status: one property is live: glass-transition temperature Tg, measured values (source file
+> experimental_dataset.csv; citation and licence not confirmed).** `prepare.py` and `nn_generic.js` here
+> are the agent's files, copied byte-identical; the numbers are in `public/model/polymers/family.json`.
+> Sources were not checked again through MCPs. The rest of this page is the original plan.
 
 Propose new polymer formulations that hit a target property, ranked by cost and recyclability.
 

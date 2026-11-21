@@ -1,6 +1,9 @@
 # General materials
 
-> **Status: plan only.** No dataset, model or references yet.
+> **Status: one property is live: alloy hardness (Vickers HV), measured values collected from published
+> papers (Borg et al., Scientific Data 7, 430 (2020)).** `prepare.py` and `nn_generic.js` here are the
+> agent's files, copied byte-identical; the numbers are in `public/model/materials/family.json`. Sources
+> were not checked again through MCPs. The rest of this page is the original plan.
 
 The umbrella domain: any measured material property as the surrogate target. Concrete (repo root)
 is the first fully worked example; polymers and insulators are specialised siblings.

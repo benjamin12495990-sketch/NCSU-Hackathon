@@ -123,7 +123,7 @@ family('polymers', ({ r, s }) => ({
   kindText: 'MEASURED in labs: glass-transition temperatures collected from published papers',
   target: 'Glass-transition temperature Tg', unit: 'K', display: { kind: 'identity', digits: 1 },
   task: r('task'),
-  data: { source: 'source file experimental_dataset.csv, citation not confirmed', citation: 'citation not confirmed', licence: 'licence not confirmed', rows: r('data.rows_used_copolymer_file'), groups: r('data.copolymer_systems'), groupWord: 'copolymer systems', homopolymerRows: r('data.rows_homopolymer'), copolymerRows: r('data.rows_true_copolymer'), train: r('b_test_split_seed42.train_rows'), test: r('b_test_split_seed42.test_rows'), inputs: r('feature_count'), inputsText: 'structure descriptors of the two monomers (computed with RDKit), short structure fingerprints, the composition and a Fox-equation estimate from training homopolymers', splitRule: 'split by copolymer system, never by row' },
+  data: { source: 'source file experimental_dataset.csv, citation not confirmed', citation: 'citation not confirmed', licence: 'licence not confirmed', rows: r('data.rows_used_copolymer_file'), groups: r('data.groups'), groupWord: `groups (${r('data.copolymer_systems')} copolymer systems, the rest homopolymers)`, homopolymerRows: r('data.rows_homopolymer'), copolymerRows: r('data.rows_true_copolymer'), train: r('b_test_split_seed42.train_rows'), test: r('b_test_split_seed42.test_rows'), inputs: r('feature_count'), inputsText: 'structure descriptors of the two monomers (computed with RDKit), short structure fingerprints, the composition and a Fox-equation estimate from training homopolymers', splitRule: 'split by copolymer system, never by row' },
   options: { hidden: r('network.chosen_settings.hidden'), epochs: r('network.chosen_settings.epochs'), batch: r('network.chosen_settings.batch'), lr: r('network.chosen_settings.lr'), decay: r('network.chosen_settings.decay'), seed: r('network.chosen_settings.seed'), loss: r('network.chosen_settings.loss') },
   members: r('network.chosen_settings.members'),
   trainSecondsNode: r('network.training_seconds_final_network'),
@@ -148,7 +148,7 @@ family('polymers', ({ r, s }) => ({
   const note = {
     id: 'chemistry',
     shipped: false,
-    reason: 'The training file is about 2 MB (680 kB compressed), too slow for a phone tonight.',
+    reason: 'Its training file is about 2 MB (680 kB compressed), too slow to load on a phone for now.',
     folder: 'domains/chemistry/',
     test: { network: result.b_test_once.network_ensemble.mae, trees: result.b_test_once.trees_gbr.mae, treesTuned: skeptic.my_trees_tuned, mean: result.b_test_once.naive_train_mean.mae, unit: 'LogS (log10 mol/L)' },
     source: { folder: dir, files: ['result.json: b_test_once', 'skeptic_check.json: my_trees_tuned'] },

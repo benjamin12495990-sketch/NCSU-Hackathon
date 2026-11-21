@@ -1,7 +1,9 @@
 # Scope: a general engine for proposing physical formulations
 
-> **Status: only concrete is built.** Every other domain in this repository is a plan. None has a
-> dataset, a trained model or any references yet.
+> **Status: four families are live: concrete, alloys (hardness), insulators (dielectric constant) and
+> polymers (glass transition).** General chemistry (solubility) has a trained model in
+> `domains/chemistry/` that is not on the site yet. The other domains are plans with no dataset, model
+> or references.
 
 ## The grand challenge
 

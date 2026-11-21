@@ -1,7 +1,11 @@
 # domains/
 
-> **Status: only concrete is built.** Every domain in this folder is a plan. None has a
-> dataset, a trained model or any references yet.
+> **Status: concrete is built in the main app. `materials` (alloy hardness), `insulators` (dielectric
+> constant) and `polymers` (glass transition) are live on the site; their folders hold the agent's
+> `prepare.py` and `nn_generic.js`, copied byte-identical. `chemistry` (solubility) has the same two
+> files and a verified model that is not on the site yet. The other folders are plans.** Sources were
+> not checked again through MCPs (see docs/AGENTS.md), and the insulator element table was typed from
+> memory by its agent and is uncited.
 
 Scope beyond concrete. Each subfolder is one domain that reuses the project's method
 (`../docs/SCOPE.md`): a surrogate model, a cautious lower estimate (on the live concrete page it covers 87.7% of test

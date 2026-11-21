@@ -11,9 +11,13 @@ embodied CO2. Built from scratch at TRIANGULATE, an AI hackathon at NC State.
 ## The page
 
 The page is titled **Formulation Designer**. The three-bar button at the top left opens a menu of
-seven simulations (families of materials). **Concrete is live.** The other six (polymers, corrosive
-solutions, cleaning products, insulators, general materials, general chemistry) are marked "Planned": choosing one shows what it
-would predict, vary and rank by, and says that nothing is generated for it yet. The switch at the
+seven simulations (families of materials). **Four are live: concrete, alloys (hardness), insulators
+(dielectric constant) and polymers (glass transition).** Each trained family has its own page with a
+"Train the network" button (see "The trained families" below). The other three (corrosive solutions,
+cleaning products, general chemistry) are marked "Planned": choosing one shows what it would predict,
+vary and rank by, and says that nothing is generated for it yet. General chemistry (water solubility)
+has a trained model in `domains/chemistry/` that is not on the site yet; its card says so and shows
+its verified numbers. The switch at the
 top right turns dark mode on and off; it starts from the system setting and remembers the choice.
 The page follows the visual rules in [`taste.md`](taste.md).
 
@@ -109,8 +113,75 @@ Two kinds of numbers are not measured by us and are labelled on the page:
   calcium figure depends most on the slag value, which is uncertain.
 
 Not used by the live page: the neural network in `pipeline/` (an alternative model that turned out
-less accurate) and the folders `domains/` and `docs/`, which hold plans for other domains. Only
-concrete is built.
+less accurate) and `docs/`, which holds plans. In `domains/`, the folders `materials`, `insulators`,
+`polymers` and `chemistry` hold the data-preparation script and trainer each family was built with;
+the other folders are plans.
+
+## The trained families
+
+Three more families are live, each on one shared page (`src/components/FamilyPage.jsx`) that is
+downloaded with its data only when it is opened. Every number on those pages is read from
+`public/model/<family>/family.json`, which `scripts/build_family_files.mjs` writes from the family's
+`result.json` and an independent re-check (`skeptic_check.json`); nothing is typed into the
+component. The browser trains one network (seed 11, the family's chosen settings) with
+`src/lib/nnFamily.js`; the five-network number in the table was trained in Node with the same code.
+`npm run family-parity` trains each family with `nnFamily.js` and with the agent's own trainer in
+`domains/<family>/nn_generic.js` and requires identical test predictions (measured difference 0) and
+the test error in `result.json`.
+
+Single network trained by the page (seed 11), measured in Node and in headless Chromium: alloys
+76.7 HV, insulators 0.121 log10, polymers 16.1 K. Wall time from pressing Train to done in headless
+Chromium on a shared 4-CPU machine: alloys about 2.5 s and insulators about 6.3 s (both including
+the live interval), polymers about 5.2 s.
+
+For every family: settings were chosen by cross-validation on training rows; the test split was
+scored once. Sources were not checked again through MCPs tonight, and the insulator element table
+was typed from memory by its agent (it says so in `domains/insulators/prepare.py`).
+
+### Alloys (hardness)
+
+Data: Borg et al., Scientific Data 7, 430 (2020) (https://raw.githubusercontent.com/CitrineInformatics/MPEA_dataset/master/MPEA_dataset.csv), licence: licence not confirmed. 530 rows, 377 distinct alloys; 426 training and 104 held-out rows, split by alloy formula, never by row. Values are MEASURED in labs: hardness values collected from published papers.
+
+| Model, on the 104 held-out rows | Average miss |
+|---|---|
+| Five networks averaged (Node, same code as the page) | 78.2 HV |
+| Gradient-boosted trees, first settings | 73.3 HV |
+| Gradient-boosted trees, tuned fairly by cross-validation | 78.2 HV |
+| Always guess the training mean | 176.8 HV |
+
+90% interval: ± 179.2 HV, held for 91 in 100 held-out rows. One width everywhere; it fails on alloy systems the model never saw (whole-system error about 102 HV instead of 78), where the true coverage is unknown and probably lower. The page also measures it live after training (3-fold grouped CV on training rows).
+
+Safe sentence (from the independent re-check): "We tested our small from-scratch neural network on 104 hardness measurements of alloys it never saw during training: its typical miss is about 78 HV, against 177 HV for a guess of the average, and that is about the same as standard gradient-boosted trees (73 HV with default settings, 78 HV after tuning), so it is a rough screening tool, not a precise predictor."
+
+### Insulators (dielectric constant)
+
+Data: Petousis et al., DOI 10.18126/racd-go9m (Hugging Face foundry-ml/dielectric_constant_v1-1), licence: CC BY 4.0. 1056 rows, 964 distinct compounds (reduced formulas); 843 training and 213 held-out rows, split by reduced formula, never by row. Values are CALCULATED by computer simulation (DFT), not measured in a lab.
+
+| Model, on the 213 held-out rows | Average miss |
+|---|---|
+| Five networks averaged (Node, same code as the page) | 0.1211 log10 |
+| Gradient-boosted trees, first settings | 0.1173 log10 |
+| Gradient-boosted trees, tuned fairly by cross-validation | 0.1116 log10 |
+| Always guess the training mean | 0.2131 log10 |
+
+90% interval: x/÷ 1.76 (0.245 log10), held for 89 in 100 held-out rows. One width everywhere; it fails on compounds with a dielectric constant above 30 (coverage 39% on 18 held-out rows). The page also measures it live after training (3-fold grouped CV on training rows).
+
+Safe sentence (from the independent re-check): "Our small neural network, written from scratch in JavaScript, estimates a compound's DFT-calculated dielectric constant from its formula, symmetry and cell volume with a typical error of about a factor of 1.3 (0.121 log10 on 213 held-out compounds, against 0.213 for always guessing the average). Standard gradient-boosted trees do as well or slightly better (0.112 to 0.117), and both badly underestimate the rare high-dielectric compounds."
+
+### Polymers (glass transition)
+
+Data: source file experimental_dataset.csv, citation and licence not confirmed. 666 rows, 386 groups (85 copolymer systems, the rest homopolymers); 514 training and 152 held-out rows, split by copolymer system, never by row. Values are MEASURED in labs: glass-transition temperatures collected from published papers.
+
+| Model, on the 152 held-out rows | Average miss |
+|---|---|
+| Five networks averaged (Node, same code as the page) | 15.33 K |
+| Gradient-boosted trees, first settings | 17.54 K |
+| Gradient-boosted trees, tuned fairly by cross-validation | 16.37 K |
+| Always guess the training mean | 66.44 K |
+
+90% interval: ± 40.4 K, held for 89 in 100 held-out rows. One width everywhere; it fails on homopolymers (coverage 71%). No live measure on the page: The Fox inputs in this file were computed from this one split's training rows, so re-splitting in the browser would leak test values into training. The width shown is the one measured in Node with the Fox inputs recomputed for every fold.
+
+Safe sentence (from the independent re-check): "We held out whole copolymer systems the model never saw (152 of 666 measured rows). On those rows our from-scratch JavaScript neural network predicts glass-transition temperature with an average error of 15.3 K. Guessing the average gives 66 K, and gradient-boosted trees give 16.4 to 17.5 K. The error is about 6 K on real copolymers and about 30 K on pure homopolymers."
 
 ## The neural network you can train on the page
 
@@ -317,9 +388,9 @@ train/test split and several wording changes.
 | `public/model/nn_data.json` | The training and held-out rows the network uses, the same split as the trees. |
 | `train/export_nn_data.py` | Writes `nn_data.json` from the same loading, features and split as `train/train.py`. |
 | `src/lib/formula.js` | Estimates the paste's chemical formula per silicon atom from oxide analyses. |
-| `src/lib/domains.js` | The seven families of materials and which one is live. |
+| `src/lib/domains.js` | The seven families of materials and which ones are live. |
 | `src/components/Formula.jsx` | Shows the formula with subscripts. |
-| `src/components/Planned.jsx` | The "Planned, not built" card for the six other families. |
+| `src/components/Planned.jsx` | The "Planned, not built" card for the three families that are not live. For general chemistry it also shows the verified numbers of the model trained offline, read from `public/model/chemistry/family.json`. |
 | `public/model/oxides.json` | Oxide analyses of cement, slag and fly ash, with an evidence label each. |
 | `src/lib/loadModel.js` | Downloads the JSON files when the page opens. |
 | `public/model/exposure.json` | ACI 318 exposure limits used by the sliders, with an evidence label per class. |
@@ -335,7 +406,17 @@ train/test split and several wording changes.
 | `api/design.js` | Vercel serverless function: same pipeline as `design.js` plus the exposure limits and materials shortlist, over HTTP, with a fresh random seed per call. |
 | `src/App.jsx` | The page. |
 | `pipeline/train_nn.py` | An alternative neural-network model in NumPy. Not used by the live page. |
-| `docs/SCOPE.md`, `domains/` | Plans for applying the same method to other domains. Nothing there is built. |
+| `docs/SCOPE.md`, `domains/` | Plans for applying the same method to other domains. Four folders in `domains/` also hold what a trained family was built with (next rows). |
+| `domains/<family>/prepare.py` | The script each family agent used to build its training file (materials, insulators, polymers, chemistry). Copied byte-identical from the agents' work folders so the method survives; it is not run by the site. |
+| `domains/<family>/nn_generic.js` | Each family agent's own network trainer, copied byte-identical. `npm run family-parity` trains with it to prove that `src/lib/nnFamily.js` gives the same predictions. |
+| `src/lib/nnFamily.js` | The trainer behind the three family pages: `seeded()` and `Mlp` copied unchanged from `nn.js`, plus every preprocessing option the families use. `nn.js` itself is not edited, so the concrete page cannot change. |
+| `src/components/FamilyPage.jsx` | One page for every trained family: data facts, the Train button and learning curve, error table, interval, sweep or trend check and the caveat box. It is lazy-loaded and fetches its family's files only when opened. |
+| `src/components/family.css` | The few layout rules the family pages add. Colours come only from the existing variables, so dark mode works. |
+| `scripts/build_family_files.mjs` | `npm run family-files`: copies each family's `nn_data.json` into `public/model/<family>/` and writes `family.json` from `result.json` and `skeptic_check.json`. Each `family.json` has a `source` field naming the files and paths its numbers came from. |
+| `scripts/family_parity.mjs` | `npm run family-parity`: trains each family twice (shared trainer and agent trainer) on the shipped file. It fails unless predictions match to 1e-9 and the test error equals `result.json`. |
+| `public/model/<family>/nn_data.json` | The training and held-out rows for alloys, insulators and polymers, copied unchanged from the family agents. The browser trains on it; the polymer file's Fox columns belong to this one split, so the page never re-splits it. |
+| `public/model/<family>/family.json` | Every number and caveat a family page shows, written by `build_family_files.mjs`. For chemistry it holds only the verified test numbers for the Planned card; no chemistry data is shipped. |
+| `public/model/insulators/heldout.json` | The 213 held-out compounds (formula, Materials Project id, calculated band gap and calculated value) in the same order as the test rows. It feeds the ranking of existing compounds and the band-gap trend check. |
 | `research/references/` | Citation notes per domain. Only `concrete.md` has entries. |
 | `scripts/parity.mjs` | Checks that JavaScript predictions match Python. |
 

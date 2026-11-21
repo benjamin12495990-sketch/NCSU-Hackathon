@@ -1,6 +1,10 @@
 # General chemistry (molecules & mixtures)
 
-> **Status: plan only.** No dataset, model or references yet.
+> **Status: a water-solubility (LogS) model was trained and verified but is not on the site yet: its
+> training file is about 2 MB (680 kB compressed), too slow for a phone.** `prepare.py` and
+> `nn_generic.js` here are the agent's files, copied byte-identical; the verified test numbers are in
+> `public/model/chemistry/family.json`. Sources were not checked again through MCPs. The rest of this
+> page is the original plan.
 
 Molecular and mixture properties as the surrogate target — the non-biological, physico-chemical
 end of chemistry.

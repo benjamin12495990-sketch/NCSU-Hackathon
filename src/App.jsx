@@ -190,7 +190,7 @@ export default function App() {
           <Suspense fallback={<section className="card"><p className="note">Loading…</p></section>}>
             <FamilyView key={domainId} family={domainId} onBack={() => setDomainId('concrete')} />
           </Suspense>
-        ) : <Planned domain={domain} onBack={() => setDomainId('concrete')} />
+        ) : <Planned key={domainId} domain={domain} onBack={() => setDomainId('concrete')} />
       ) : (
       <>
       <section className="intro">

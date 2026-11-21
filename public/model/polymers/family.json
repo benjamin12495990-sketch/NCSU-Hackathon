@@ -15,8 +15,8 @@
   "citation": "citation not confirmed",
   "licence": "licence not confirmed",
   "rows": 666,
-  "groups": 85,
-  "groupWord": "copolymer systems",
+  "groups": 386,
+  "groupWord": "groups (85 copolymer systems, the rest homopolymers)",
   "homopolymerRows": 315,
   "copolymerRows": 351,
   "train": 514,
@@ -117,6 +117,7 @@
     "paths": [
      "task",
      "data.rows_used_copolymer_file",
+     "data.groups",
      "data.copolymer_systems",
      "data.rows_homopolymer",
      "data.rows_true_copolymer",

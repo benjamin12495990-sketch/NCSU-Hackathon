@@ -1,6 +1,10 @@
 # Insulators (thermal & electrical / dielectrics)
 
-> **Status: plan only.** No dataset, model or references yet.
+> **Status: one property is live: the dielectric constant, CALCULATED by DFT (Materials Project /
+> Petousis et al., CC BY 4.0), not measured.** `prepare.py` and `nn_generic.js` here are the agent's
+> files, copied byte-identical; the numbers are in `public/model/insulators/family.json`. The element
+> table in `prepare.py` was typed from memory and is uncited. Sources were not checked again through
+> MCPs. The rest of this page is the original plan.
 
 Propose materials or composites that insulate best for the lowest cost and weight.
 

@@ -47,9 +47,9 @@ it never trained on (R² 0.91). Data: **306** lab-tested mixes, Yeh (1998), UCI.
 
 **Do:** click the three bars at the top left. Point at the list. Press **Escape**.
 
-> This is a menu of simulations. Seven families of materials. Only concrete is built. The other six
-> are marked Planned, and I'll show you what that looks like at the end. We'd rather show one
-> thing that works than seven that don't.
+> This is a menu of simulations. Seven families of materials. Four are live: concrete, alloys,
+> insulators and polymers. The other three are marked Planned, and I'll show you what that looks
+> like at the end. We'd rather show four things that work than seven that don't.
 
 ### Beat 3: design a mix (1:00 to 2:15)
 
@@ -131,11 +131,12 @@ mixes**. Scroll to the result.
 > are untested predictions. The more we search for the lowest CO2, the more likely we find a mix the
 > model is too optimistic about. Cast it and test it before you rely on it.
 
-**Do:** open the menu, choose **Carbon-based polymers**.
+**Do:** open the menu, choose **Corrosive solutions**.
 
-> The same method needs a lab dataset to learn from. Polymers would predict glass transition
-> temperature and rank by cost and recyclability. We haven't built it, so the page says Planned,
-> not built, and states what it would need first.
+> The same method needs a lab dataset to learn from. We haven't built this one, so the page says
+> Planned, not built, and states what it would need first. Alloys, insulators and polymers each
+> have a page where you press Train and watch a network learn; the numbers there come from files,
+> with the trees and a guess of the average beside them.
 
 > Questions?
 
@@ -148,8 +149,10 @@ mixes themselves are untested. The page says so on every result, and the last bo
 is 249 and a tested mix is 208, so the candidate is **20 percent worse** than what a lab already
 has. At 25 MPa it was 5 percent better. Show it if asked: click **Structural · 35 MPa**.
 
-**Why only concrete?** Concrete has a public lab dataset (about 1,000 results). The method needs
-real measured data for each family, and we only had it for this one. We would not fake the rest.
+**Why not every family?** Concrete, alloys and polymers have public measured datasets; the insulator
+values are calculated by computer simulation (DFT) and the page says so. Solubility has a trained
+model that is not on the site yet because its training file is too big for a phone. The method needs
+real data for each family, and we would not fake the rest.
 
 **Where do the CO2 numbers come from?** One fixed factor per ingredient, listed with sources at the
 bottom of the page. Some are confirmed by a second source, some are labelled unconfirmed. Real
