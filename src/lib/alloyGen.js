@@ -44,13 +44,37 @@ export function l1(a, b) {
   return d
 }
 
-// Nearest tested alloy (train and test rows, any route) to a composition.
+// The tested compositions as one dense matrix, built once per alloys.json.
+const denseCache = new WeakMap()
+function denseRows(data) {
+  if (!denseCache.has(data)) {
+    const els = [...new Set(data.rows.flatMap((r) => Object.keys(r.frac)))]
+    const col = new Map(els.map((el, i) => [el, i]))
+    const m = new Float64Array(data.rows.length * els.length), sums = new Float64Array(data.rows.length)
+    data.rows.forEach((r, i) => {
+      for (const [el, x] of Object.entries(r.frac)) { m[i * els.length + col.get(el)] = x; sums[i] += x }
+    })
+    denseCache.set(data, { col, m, sums, w: els.length })
+  }
+  return denseCache.get(data)
+}
+
+// Nearest tested alloy (train and test rows, any route) to a composition. The L1 distance is
+// sum over the candidate's elements of |x - y| plus the tested alloy's fraction in other elements.
 export function nearestTested(frac, data) {
+  const { col, m, sums, w } = denseRows(data)
+  const els = Object.keys(frac)
+  const idx = els.map((el) => col.get(el)), xs = els.map((el) => frac[el])
   let best = Infinity, at = -1
-  data.rows.forEach((r, i) => {
-    const d = l1(frac, r.frac)
-    if (d < best) { best = d; at = i }
-  })
+  for (let r = 0; r < sums.length; r++) {
+    let d = 0, cover = 0
+    for (let k = 0; k < idx.length; k++) {
+      const y = idx[k] === undefined ? 0 : m[r * w + idx[k]]
+      d += Math.abs(xs[k] - y); cover += y
+    }
+    d += sums[r] - cover
+    if (d < best) { best = d; at = r }
+  }
   return { distance: best, index: at }
 }
 
@@ -97,14 +121,15 @@ export function generate(options, data, predict, q) {
   const rand = seeded(seed)
   const own = new Set(data.elements)
   const [clampLo, clampHi] = data.clamp_HV
-  const sets = { tested: 0, pooledElement: 0, notAllowed: 0, cappedOut: 0, offGrid: 0, used: 0 }
+  const sets = { tested: 0, pooledElement: 0, singleComposition: 0, notAllowed: 0, offGrid: 0, cappedOut: 0, used: 0 }
   const excluded = { duplicate: 0, notNew: 0, tooFar: 0, subsetCopy: 0, clamped: 0, belowTarget: 0 }
   const all = testedSets(data)
   sets.tested = all.length
-  let draws = 0
+  let draws = 0, bestCautious = -Infinity
   const kept = []
   for (const s of all) {
     if (s.els.some((el) => !own.has(el))) { sets.pooledElement++; continue }
+    if (new Set(s.rows.map((i) => data.rows[i].g)).size < 2) { sets.singleComposition++; continue }
     if (s.els.some((el) => !(allowed[el] > 0))) { sets.notAllowed++; continue }
     const lo = s.els.map((el) => Math.ceil(s.lo[el] * UNITS - 1e-6))
     const hiData = s.els.map((el) => Math.floor(s.hi[el] * UNITS + 1e-6))
@@ -151,6 +176,7 @@ export function generate(options, data, predict, q) {
       const predicted = predict(featurize(frac, proc, data))
       if (predicted <= clampLo + 1e-9 || predicted >= clampHi - 1e-9) { excluded.clamped++; continue }
       const cautious = predicted - q
+      bestCautious = Math.max(bestCautious, cautious)
       if (targetHV != null && cautious < targetHV) { excluded.belowTarget++; continue }
       const r = data.rows[near.index]
       kept.push({
@@ -168,7 +194,10 @@ export function generate(options, data, predict, q) {
     candidates: kept.slice(0, limit),
     stats: {
       sets, draws, unique: draws - excluded.duplicate, excluded, kept: kept.length,
-      returned: Math.min(limit, kept.length), tiers, keptSets: new Set(kept.map((c) => c.set)).size,
+      returned: Math.min(limit, kept.length), tiers,
+      // The highest cautious estimate any candidate that passed every other rule reached, and the
+      // highest the clamp allows at all: a target above either cannot be met.
+      bestCautious: Number.isFinite(bestCautious) ? bestCautious : null, ceilingCautious: clampHi - q, keptSets: new Set(kept.map((c) => c.set)).size,
       rules: { notNew: NOT_NEW, interpolation: INTERPOLATION, tooFar: TOO_FAR, step: 1 / UNITS, clamp: data.clamp_HV, q, targetHV, proc, seed, perSet },
     },
   }

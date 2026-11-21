@@ -86,7 +86,13 @@ function checkRequest(label, opts) {
   console.log(`\n${label}: target ${opts.targetHV ?? 'as high as possible'} HV, route ${opts.proc}, seed ${opts.seed}, ` +
     `elements ${Object.keys(opts.allowed).length === data.elements.length ? 'all 21' : Object.keys(opts.allowed).join(' ')}`)
   console.log(`  element sets: ${st.sets.tested} tested, ${st.sets.used} used; skipped: ${st.sets.pooledElement} contain an element pooled in x_other, ` +
-    `${st.sets.notAllowed} use an element not allowed, ${st.sets.offGrid} cannot be varied on the 0.001 grid without widening, ${st.sets.cappedOut} ruled out by the maximum fractions`)
+    `${st.sets.singleComposition} have only one tested composition, ${st.sets.notAllowed} use an element not allowed, ` +
+    `${st.sets.offGrid} cannot be varied on the 0.001 grid without widening, ${st.sets.cappedOut} ruled out by the maximum fractions`)
+  const setTotal = Object.entries(st.sets).reduce((a, [k, v]) => a + (k === 'tested' ? 0 : v), 0)
+  if (setTotal !== st.sets.tested) fail(`${label}: set counts do not add up`)
+  console.log(`  best cautious estimate of any candidate passing the other rules: ${st.bestCautious?.toFixed(0)} HV ` +
+    `(clamp ceiling ${st.ceilingCautious.toFixed(0)} HV)`)
+  if (opts.targetHV != null && !st.kept && !(st.bestCautious < opts.targetHV)) fail(`${label}: empty although best cautious reaches the target`)
   console.log(`  generated ${st.draws}; excluded: ${ex.duplicate} duplicates, ${ex.notNew} under 0.10 from a tested alloy (not new), ` +
     `${ex.tooFar} over 0.40 (too far), ${ex.subsetCopy} a tested alloy with an element left out, ${ex.clamped} prediction at the clamp, ` +
     `${ex.belowTarget} cautious estimate below target; kept ${st.kept} (${st.tiers[TIER_INTERPOLATION]} interpolation, ${st.tiers[TIER_NEAR]} near-tested) from ${st.keptSets} sets; returned ${st.returned}`)
@@ -157,6 +163,14 @@ for (const c of adv.candidates) {
   }
 }
 console.log(`  rescaled-copy test over ${adv.candidates.length} candidates: closest rescaled tested alloy L1 ${closest.toFixed(3)} (${closestAt})`)
+
+// How much the answer depends on the seed, and how long one request takes.
+const seedRows = [1, 2, 3].map((seed) => {
+  const t = Date.now()
+  const r = generate({ targetHV: 400, allowed: all, proc: 'CAST', limit: 20, seed }, data, predict, q)
+  return `seed ${seed}: kept ${r.stats.kept}, best cautious ${r.stats.bestCautious.toFixed(0)} HV, top ${r.candidates[0]?.composition} (${Date.now() - t} ms)`
+})
+console.log(`\nSeed sensitivity, target 400 HV, all elements, CAST:\n  ${seedRows.join('\n  ')}`)
 
 console.log(failures ? `\n${failures} failure(s)` : '\nALL CHECKS PASSED')
 process.exit(failures ? 1 : 0)
