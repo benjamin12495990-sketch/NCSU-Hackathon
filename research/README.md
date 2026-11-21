@@ -13,9 +13,10 @@ README). **Chemistry and materials only — biology is out of scope.**
   - `concrete.md` — the live concrete app's factors (ported from `public/model/factors.json`).
   - `polymers.md`, `corrosives.md`, `cleaning.md`, `insulators.md` — the ambitious new domains.
   - `materials.md`, `chemistry.md` — general stubs.
+  - `electrolytes.md` — solid lithium electrolytes; one dataset entry (OBELiX).
 - `templates/reference-entry.md` — the citation format, so sources stay consistent.
 
-The six new-domain files hold no entries yet.
+The six new-domain files hold no entries yet. `electrolytes.md` holds the OBELiX dataset entry.
 
 **Rule for the concrete factors and for new domains:** a factor without an entry here does not ship. Cross-check each with a second,
 independent search before recording it.
