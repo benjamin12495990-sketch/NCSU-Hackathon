@@ -55,6 +55,29 @@ def test_symlink_to_blocked_file_is_refused():
         assert _refused(link)
 
 
+def test_recorded_sources_use_forward_slashes():
+    from gpu.data import _rel
+    assert '\\' not in _rel(REPO / 'lab' / 'data' / 'train.json')
+    assert _rel(REPO / 'lab' / 'data' / 'train.json') == 'lab/data/train.json'
+
+
+def test_windows_slash_and_case_variants_are_refused():
+    if os.name != 'nt':
+        return  # only meaningful where paths are case-insensitive and accept both slashes
+    root = str(REPO)
+    variants = [root.upper() + '\\LAB\\VAULT\\FUTURE.JSON', root.lower() + '/Lab/Vault/future.json',
+                root + '\\lab\\vault', root + '\\public\\model\\NN_DATA.JSON', root + '/PUBLIC/model/nn_data.json']
+    for v in variants:
+        assert _refused(v), f'guard let {v} through'
+    cwd = os.getcwd()
+    try:
+        os.chdir(REPO)
+        for rel in ('lab\\vault\\future.json', 'LAB\\Vault', 'public\\model\\nn_data.json'):
+            assert _refused(rel), rel
+    finally:
+        os.chdir(cwd)
+
+
 def test_allowed_files_pass_and_concrete_reads_only_lab_data():
     for p in ALLOWED:
         guard_path(p)

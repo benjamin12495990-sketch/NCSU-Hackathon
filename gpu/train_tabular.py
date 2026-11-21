@@ -207,10 +207,10 @@ def reference_numbers(family, mode):
     if family == 'electrolytes':
         q = REPO / 'domains/electrolytes/work/reproductions/obelix_group_cv.json'
         if not q.exists():
-            return {'note': f'{q.relative_to(REPO)} not in this checkout (it is on main after 1d1b90b); nothing to compare'}
+            return {'note': f'{q.relative_to(REPO).as_posix()} not in this checkout (it is on main after 1d1b90b); nothing to compare'}
         r = json.loads(q.read_text())
         m = r.get('models', {})
-        return {'file': str(q.relative_to(REPO)), 'parity_note': 'same groups and GroupKFold(5) folds; the mean baseline should match exactly',
+        return {'file': q.relative_to(REPO).as_posix(), 'parity_note': 'same groups and GroupKFold(5) folds; the mean baseline should match exactly',
                 'cv_mean_baseline': {'mae': m.get('mean', {}).get('pooled_oof_mae'), 'rmse': m.get('mean', {}).get('pooled_oof_rmse'),
                                      'per_fold_mae': m.get('mean', {}).get('fold_mae')},
                 'cv_selected_' + str(r.get('selected_model')): {'mae': r.get('selected_pooled_oof_mae'),
@@ -221,7 +221,7 @@ def reference_numbers(family, mode):
         return {'note': f'no result.json for {family}; nothing to compare'}
     r = json.loads(p.read_text())
     pick = lambda d, *ks: {k: d[k] for k in ks if k in d}  # noqa: E731
-    out = {'file': str(p.relative_to(REPO)), 'parity_note': 'JavaScript reference (float64, its own RNG); bit parity is not expected'}
+    out = {'file': p.relative_to(REPO).as_posix(), 'parity_note': 'JavaScript reference (float64, its own RNG); bit parity is not expected'}
     if family == 'alloys':
         out['cv_network_ensemble'] = pick(r['cv_on_training_rows']['network_ensemble'], 'mae', 'rmse', 'r2', 'per_fold_mae')
         out['cv_network_single'] = pick(r['cv_on_training_rows']['network_single_chosen'], 'mae', 'rmse', 'r2')

@@ -99,7 +99,8 @@ class Dataset:
 
 
 def _rel(p):
-    return str(Path(p).resolve().relative_to(REPO.resolve()))
+    # Always forward slashes, so the recorded sources are the same on Windows and Linux.
+    return Path(p).resolve().relative_to(REPO.resolve()).as_posix()
 
 
 def _src(ds_sources, p):
