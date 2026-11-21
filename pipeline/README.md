@@ -8,10 +8,10 @@ aside a calibration set, so compare the numbers loosely.
 - **Expected strength:** a small ReLU MLP (`[9, 64, 32, 1]`), trained with mean-squared error in
   pure NumPy (hand-written forward/backward + Adam, learning-rate decay).
 - **Cautious lower estimate:** the expected model minus a **split-conformal offset**, calibrated on
-  a held-out set of mixes so a target share of lab results clear it. This is the calibrated
-  alternative to GBR's quantile-loss model. (A direct pinball-loss MLP was tried first; it would not
-  calibrate reliably with this optimizer, so conformal calibration replaced it — see the commit
-  history / `train_nn.py` docstring.)
+  a held-out set of mixes so a target share of lab results clear it. This is an
+  alternative to GBR's quantile-loss model. (A direct pinball-loss MLP was tried first; it would
+  not calibrate reliably with this optimizer, so conformal calibration replaced it. That attempt is not in this
+  repository; it is only noted in the message of commit e55cd76.)
 
 ## Run
 
@@ -20,7 +20,7 @@ python3 pipeline/train_nn.py
 ```
 
 Only dependency is NumPy (`pipeline/requirements.txt`). No scikit-learn, no PyTorch. Trains in a
-few seconds. Outputs go to `pipeline/out/<task>/` — **never** to `public/model/**, so this pipeline
+few seconds. Outputs go to `pipeline/out/<task>/`, **never** to `public/model/`, so this pipeline
 does not disturb the app's own exported models.
 
 Outputs:
@@ -50,5 +50,6 @@ comparison.
 ## Reusing it on another domain
 
 `train_nn.py` is driven by the `CONFIG` block at the top: dataset path, feature columns, derived
-ratios, target, and the group columns that define a leak-free split. Point those at any tabular
-dataset from `domains/` to get the same expected + calibrated-cautious pair. See `../docs/SCOPE.md`.
+ratios, target, and the group columns that define a leak-free split. In principle it could be
+pointed at another all-numeric table. That has not been done: it has only been run on the concrete
+data, and the folders in `domains/` hold plans, not datasets. See `../docs/SCOPE.md`.

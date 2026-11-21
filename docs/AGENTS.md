@@ -21,11 +21,13 @@ scope-expansion effort) separate from the app directories above. Prefer a branch
 
 1. **Predictions are labelled as predictions, measurements as measurements.** Never present a
    model output as a lab result.
-2. **Every number the model does not learn from data is cited** to a retrievable source. Put the
-   citation in the matching `research/references/<domain>.md` file.
-3. **Retrieve sources through the research MCPs** listed in `research/connectors.md`, and
-   cross-check each factor with a second, independent search — the same method the concrete
-   `factors.json` already follows.
+2. **Every number the model does not learn from data gets a citation, or a label saying it has
+   none.** Put citations in the matching `research/references/<domain>.md` file. On the live page,
+   most of the materials table is uncited typical values, and the page says so.
+3. **Retrieve sources through the research MCPs** listed in `research/connectors.md`, run a second,
+   independent search for each factor, and record whether it confirmed the value. That is the
+   method the concrete `factors.json` follows; several of its values were not confirmed and are
+   labelled.
 4. **The tool narrows the experiment list; it does not replace the experiment.**
 
 ## The method, in one line

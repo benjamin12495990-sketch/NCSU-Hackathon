@@ -25,7 +25,8 @@ Every physical experiment is slow and expensive, so only a handful of the possib
 get tried. The engine:
 
 1. **Learns a surrogate** on a lab-tested dataset: predict the expensive outcome from cheap inputs.
-2. **Quantifies caution**: pair the expected value with a calibrated lower (or upper) bound, so it
+2. **Quantifies caution**: pair the expected value with a cautious lower (or upper) estimate and
+   measure how often lab results clear it (87.7% for live concrete; the aim was 90%), so it
    proposes candidates *likely* to clear the bar.
 3. **Generates and ranks candidates**: perturb known-good examples into new ones, drop duplicates,
    keep those the cautious model clears, rank by a cost objective.
@@ -44,7 +45,7 @@ sources — **not the method**.
 
 | Domain | Expensive outcome to predict | Candidate space | Cost / objective |
 | --- | --- | --- | --- |
-| **Concrete** (live) | compressive strength, cure time | mix proportions | embodied CO2 |
+| **Concrete** (live) | compressive strength at a chosen curing age | mix proportions | embodied CO2 |
 | **Carbon-based polymers** | glass transition, tensile strength, thermal stability | monomer choice, chain/composition | synthesis cost, CO2, recyclability |
 | **Corrosive solutions** | corrosion rate / material compatibility | acid·base·salt·inhibitor + concentration + temperature | material loss, hazard, cost |
 | **Cleaning products** | cleaning efficacy, critical micelle concentration, surface tension | surfactant blend + builders + solvent | cost, biodegradability, irritancy |
@@ -59,6 +60,8 @@ pigments · catalysts · propellants · sealants · composites · glasses & cera
 ## What stays true across every domain
 
 - **Nothing is mocked.** Predictions are labelled as predictions; measurements as measurements.
-- **Every non-learned number is cited** to a retrievable source (`research/references/<domain>.md`).
+- **Every non-learned number is cited or labelled as uncited.** Citations go in
+  `research/references/<domain>.md`. On the live page, 176 of the 232 numbers in the materials
+  table are uncited typical values, and the page marks them.
 - **The engine narrows the experiment list; it does not replace the experiment.**
 - **Chemistry and materials only — never biology.**

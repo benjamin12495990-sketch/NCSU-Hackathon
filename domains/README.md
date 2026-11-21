@@ -4,7 +4,8 @@
 > dataset, a trained model or any references yet.
 
 Scope beyond concrete. Each subfolder is one domain that reuses the project's method
-(`../docs/SCOPE.md`): a surrogate model, a calibrated cautious bound, candidate generation by
+(`../docs/SCOPE.md`): a surrogate model, a cautious lower estimate (on the live concrete page it covers 87.7% of test
+results, short of the 90% aim), candidate generation by
 perturbing known-good examples, ranking by a cost objective, and a "neighbours passed" check.
 
 **Chemistry and materials only. No biology** — it is a complete subject of its own and is

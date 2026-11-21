@@ -6,11 +6,14 @@ The live app (train/train.py) uses a GradientBoostingRegressor. This is a drop-i
   - an EXPECTED-strength model: a ReLU MLP trained with mean-squared error;
   - a CAUTIOUS lower estimate: the expected model minus a conformal offset, chosen
     on a held-out calibration set so a target share of lab results clear it
-    (split-conformal prediction -- a calibrated alternative to GBR's quantile loss).
+    (split-conformal prediction -- an alternative to GBR's quantile loss; on the
+    current split it reaches about 81% coverage, short of its 90% target).
 
-It reuses the project's method exactly: the same 9 features and the same leak-free
-split BY MIX (every age of a test mix is held out), so the two model families are
-directly comparable on the same test set.
+It reuses the project's data rule: the same 9 features, the same 25 repeated rows
+dropped, and the same grouping BY MIX (recipes within 5 kg on every ingredient are
+one mix; every age of a test mix is held out). The two scripts draw their test
+mixes separately and this one also sets aside a calibration set, so the two
+models are NOT scored on the same test set: compare the numbers loosely.
 
 Pure NumPy -- no scikit-learn, no PyTorch. The network is just matmuls, so the
 exported weights (pipeline/out/<task>/nn_model.json) can run in the browser the

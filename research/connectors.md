@@ -1,9 +1,10 @@
 # Research MCPs (literature grounding)
 
-These Model Context Protocol connectors give agents direct access to scientific literature, so
-every non-learned number in the project traces to a real, retrievable source. They are the same
-kind of tooling the concrete `public/model/factors.json` already credits ("retrieved through
-literature search tools and checked by a second, independent search").
+These Model Context Protocol connectors give agents direct access to scientific literature, so a
+number the models do not learn from data can be traced to a real, retrievable source. They are the
+same kind of tooling the concrete `public/model/factors.json` credits: its note says each sourced
+number was retrieved through literature search tools and a second independent search was run for
+it, and its Source columns say whether that search confirmed the value.
 
 **Scope note:** chemistry and materials only. Biology is out of scope (see `../docs/SCOPE.md`), so
 the biomedical connectors (PubMed, Arca, EDEN) are intentionally **not** used.
@@ -13,8 +14,10 @@ the biomedical connectors (PubMed, Arca, EDEN) are intentionally **not** used.
 ## The set
 
 Used so far, for the live concrete page: **SciSpace**, **Consensus** and **FastTrack Literature
-Open** (see the root README). The table below is the set recommended for the new domains. Scite,
-Wiley Scholar Gateway and Firecrawl have not been used in this project yet.
+Open** (see the root README). The table below is the set recommended for the new domains. Of these, only
+SciSpace has been used. OpenAlex (as its own connector), Scite, Wiley Scholar Gateway and Firecrawl
+have not been used in this project yet; FastTrack Literature Open, which was used, searches the
+OpenAlex index.
 
 | Connector | Best for | Notes |
 | --- | --- | --- |

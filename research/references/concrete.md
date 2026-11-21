@@ -1,9 +1,10 @@
 # References — Concrete (live app)
 
 Sourced numbers behind the concrete mix designer. Canonical values live in
-`public/model/factors.json`; this file mirrors them in citation form. All retrieved through
-literature-search tools and cross-checked by a second, independent search. PDFs were not opened by
-hand; where a factor was seen only in a secondary table, that is noted.
+`public/model/factors.json`; this file mirrors them in citation form. All were retrieved through
+literature-search tools, and a second, independent search was run for each. That second search did
+not confirm three densities (slag, fly ash, superplasticizer), and the slag and fly ash CO2 factors
+were seen only in a secondary table; each entry below says which. PDFs were not opened by hand.
 
 > Factors are a **consistent way to compare mixes**, not exact footprints. Published values differ,
 > some by a lot. The Flower & Sanjayan factors are for Australian concrete and include transport to
