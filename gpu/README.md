@@ -13,6 +13,7 @@ first time this code meets a GPU, so run the checks below in order.
 | `data.py` | Family loaders that read only repo files, through a guard (below). Each returns X, y, groups, a fixed split and/or grouped CV folds, the SHA-256 of the arrays and the SHA-256 of each source file. |
 | `train_tabular.py` | Mirror of `src/lib/nnFamily.js` (hidden, epochs, batch, lr with linear decay to 10%, L2 decay, squared or Huber loss, inputClip, clampOutput, logTarget, standardisation on training rows only). Trains seed replicas and/or a grid of configurations at the same time. |
 | `structure/` | The first structure-aware workload: JARVIS-DFT download (`fetch_jarvis.py`), periodic neighbour graphs (`graph.py`), a CGCNN in plain PyTorch (`model.py`), and the bulk-modulus trainer (`train_structure.py`). |
+| `grids/` | Example configuration grids for `train_tabular.py --grid`. |
 | `tests/smoke.py` | CPU end-to-end test of every piece on tiny settings: `python -m gpu.tests.smoke`. |
 | `reference_cpu/` | Compact CPU results from the build machine, to compare the laptop against. |
 
@@ -115,12 +116,13 @@ python -m gpu.train_tabular --family alloys --mode cv --device cpu --tag laptop_
 
 # a bank: 32 seed replicas, or a grid of configurations x seeds, trained together
 python -m gpu.train_tabular --family alloys --members 32 --device cuda --tag seeds32
-python -m gpu.train_tabular --family alloys --members 5 --device cuda --tag grid \
-  --grid '[{"decay":0.001},{"decay":0.01},{"decay":0.03},{"loss":"huber"},{"hidden":[64,32]},{"hidden":[64,32],"decay":0.03}]'
+python -m gpu.train_tabular --family alloys --members 5 --device cuda --tag grid --grid gpu/grids/alloys_example.json
 ```
 
-PowerShell keeps the single-quoted JSON as it is. On one line, drop the `\`. A grid can also be a `.json`
-file: `--grid my_grid.json`. Override any setting with `--set key=value`, for example `--set epochs=50`,
+A grid is a JSON list of setting overrides; each entry is trained with every seed. Put it in a `.json` file,
+as in `gpu/grids/alloys_example.json`. On Linux an inline `--grid '[{"decay":0.001},{"hidden":[64,32]}]'`
+also works. Windows PowerShell 5.1 strips the inner double quotes from arguments passed to native programs,
+so use a file there. Override any setting with `--set key=value`, for example `--set epochs=50`,
 `--set hidden=[64,32]` or `--set loss=huber`. Members with the same layer sizes, epochs, batch and transforms
 share one bank. Different layer sizes make separate banks, which still run in the same process.
 
@@ -153,9 +155,11 @@ compare its numbers directly with `reference_cpu/`.
 - Baselines on the same split: the training mean, and ridge regression on element fractions (alpha chosen
   on val). The val set picks the best epoch. The test set is scored once at the end.
 - Graphs (8 A cutoff, 12 neighbours) are built once per subset and cached in `gpu/data_cache/jarvis/graphs/`.
-  All 31,897 take a few minutes on the CPU.
+  3,000 took 2 s here, so all 31,897 should take well under a minute. Loading the 254 MB JSON takes about
+  6 s and 1.2 GB of RAM.
 - Checkpoints are written after every epoch (`<run>/ckpt/last.pt`). Resume with `--resume <run>` on the
-  same command.
+  same command. On CPU a resumed run matches an uninterrupted one exactly. On CUDA, `index_add_` uses atomic
+  adds, so the two runs agree only to within rounding.
 
 ## 3. Record and share results
 

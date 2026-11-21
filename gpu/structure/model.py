@@ -31,7 +31,7 @@ class CGConv(nn.Module):
         z = self.bn1(self.lin(torch.cat([h[src], h[dst], e], dim=-1)))
         gate, core = z.chunk(2, dim=-1)
         msg = torch.sigmoid(gate) * F.softplus(core)
-        agg = torch.zeros_like(h).index_add_(0, src, msg)
+        agg = torch.zeros_like(h).index_add_(0, src, msg.to(h.dtype))  # under bf16 autocast msg is bf16
         return F.softplus(h + self.bn2(agg))
 
 
@@ -48,6 +48,7 @@ class CGCNN(nn.Module):
         e = self.rbf(dist)
         for conv in self.convs:
             h = conv(h, src, dst, e)
-        pooled = torch.zeros(n_graphs, h.shape[1], device=h.device, dtype=h.dtype).index_add_(0, batch, h)
-        counts = torch.zeros(n_graphs, device=h.device, dtype=h.dtype).index_add_(0, batch, torch.ones_like(batch, dtype=h.dtype))
+        h = h.float()  # pool in float32
+        pooled = torch.zeros(n_graphs, h.shape[1], device=h.device).index_add_(0, batch, h)
+        counts = torch.zeros(n_graphs, device=h.device).index_add_(0, batch, torch.ones_like(batch, dtype=h.dtype))
         return self.head(pooled / counts.clamp(min=1).unsqueeze(1)).squeeze(-1)

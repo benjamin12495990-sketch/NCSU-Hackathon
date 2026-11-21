@@ -236,6 +236,34 @@ def reference_numbers(family, mode):
     return out
 
 
+def print_comparison(result):
+    """The family's JavaScript reference numbers beside this run's first configuration."""
+    ref = result['reference']
+    print(f"\nreference: {ref.get('file', '')}  ({ref.get('parity_note') or ref.get('note', '')})")
+    fmt = lambda v: f'{v:.4g}' if isinstance(v, (int, float)) else '-'  # noqa: E731
+    for mode, mres in result['modes'].items():
+        sets = mres['configs'][0]['sets']
+        for name, e in sets.items():
+            en = e['seed_mean_ensemble']
+            print(f"  this run  [{mode}/{name}] seed-mean ensemble MAE {fmt(en['mae'])} RMSE {fmt(en['rmse'])} R2 {fmt(en['r2'])} | "
+                  f"members MAE {fmt(e['member_mae_mean'])} | train mean MAE {fmt(mres['naive_train_mean'][name]['mae'])}")
+        prefix = 'cv_' if mode == 'cv' else 'fixed_'
+        for k, v in ref.items():
+            if not k.startswith(prefix):
+                continue
+            if isinstance(v, dict):
+                mae = v.get('mae', v.get('cv_mae', v.get('mae_log10')))
+                rmse = v.get('rmse', v.get('cv_rmse'))
+                r2 = v.get('r2', v.get('r2_log10'))
+                print(f'  reference [{k}] MAE {fmt(mae)} RMSE {fmt(rmse)} R2 {fmt(r2)}')
+            else:
+                print(f'  reference [{k}] {fmt(v)}')
+    for k in ('select_mae_plain_network_MPa',):
+        if k in ref:
+            print(f'  reference [{k}] {ref[k]}')
+    print('  (exact parity with the JavaScript trainer is not expected; compare within seed noise)')
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--family', required=True, choices=sorted(FAMILY_DEFAULTS))
@@ -359,8 +387,7 @@ def main(argv=None):
                 print(f'  config {ci} {json.dumps(diff) if ci else ""} {name}: members MAE {e["member_mae_mean"]:.4g} +- {e["member_mae_sd"]:.2g} | '
                       f'ensemble MAE {en["mae"]:.4g} RMSE {en["rmse"]:.4g} R2 {en["r2"]:.4f}')
     if a.compare_reference:
-        print('\nreference (JavaScript trainer, from result.json):')
-        print(json.dumps(result['reference'], indent=1))
+        print_comparison(result)
     print(f'\nwrote {run / "result.json"}  (wall {result["wall_seconds"]:.1f} s)')
     return result, run
 

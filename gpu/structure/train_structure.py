@@ -165,7 +165,8 @@ def main(argv=None):
     split_sha = sha256_bytes(json.dumps(split_list))
     idx = {p: np.where(parts == p)[0] for p in ('train', 'val', 'test')}
     y = np.array([r['y'] for r in recs])
-    data_sha = sha256_bytes(json.dumps(source, sort_keys=True), split_sha, y.tobytes())
+    ident_src = {k: v for k, v in source.items() if k != 'zip'}  # the file's hash, not where it sits on disk
+    data_sha = sha256_bytes(json.dumps(ident_src, sort_keys=True), split_sha, y.tobytes())
     cfg = {k: getattr(a, k) for k in ('synthetic', 'limit', 'epochs', 'batch', 'lr', 'weight_decay', 'atom_features', 'conv',
                                       'hidden', 'cutoff', 'max_neighbors', 'seed', 'amp')}
     ident = sha256_bytes(json.dumps(cfg, sort_keys=True), data_sha)
@@ -200,7 +201,7 @@ def main(argv=None):
     base['ridge_element_fractions'] = {'alpha_chosen_on_val': best[0], 'val': best[1],
                                        'test': metrics(best[2].predict(F[idx['test']]), y[idx['test']])}
 
-    gkey = sha256_bytes(source.get('zip_sha256', json.dumps(source, sort_keys=True)), json.dumps([r['jid'] for r in recs]), a.cutoff, a.max_neighbors)[:24]
+    gkey = sha256_bytes(json.dumps(ident_src, sort_keys=True), json.dumps([r['jid'] for r in recs]), a.cutoff, a.max_neighbors)[:24]
     graphs, t_graph, cached = graphs_for(recs, a, gkey)
     n_edges = sum(len(g['src']) for g in graphs)
     print(f'graphs: {len(graphs)} crystals, {sum(len(g["Z"]) for g in graphs)} atoms, {n_edges} edges, '
