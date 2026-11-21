@@ -9,12 +9,13 @@ import { gzipSync } from 'node:zlib'
 import { LAB } from './guard.mjs'
 import { writeSame, sha256 } from './io.mjs'
 import { TRAIN, REWARD, MONITOR, scorer, trainReplica } from './evo2_core.mjs'
-import { calibrate, meta as physicsMeta } from './physics/synthetic.mjs'
+import { calibrate, meta as physicsMeta, fibS } from './physics/synthetic.mjs'
 import { boxcreteRows } from './physics/boxcrete.mjs'
 import { openArchive } from './archive.mjs'
 import { predictions, scoreAll } from './scoring2.mjs'
 
 const DIR = path.join(LAB, 'results', 'models2')
+const OUT = path.resolve(process.argv.includes('--out') ? process.argv[process.argv.indexOf('--out') + 1] : path.join(LAB, 'results', 'baselines2_v2.json'))
 const rel = (p) => path.relative(LAB, p)
 const SEEDS10 = 10
 const evo = openArchive(path.join(LAB, 'archive')), rnd = openArchive(path.join(LAB, 'archive_random'))
@@ -47,6 +48,18 @@ for (const gen of ['powers', 'fib']) {
   writeSame(file, text)
   models.push({ role: `physics_${gen}`, kind: 'physics', file: rel(file), sha256: sha256(text), note: `${gen} generator, scale ${cal[gen].scale.toFixed(4)} fitted on TRAIN` })
 }
+// 1b. per-mix age curve: s28 of each TRAIN mix by least squares on its own TRAIN rows, f(t) = exp(s (1 - sqrt(28/t)))
+// with s = 0.20 + 0.35 p_SCM; fallback for a mix with no TRAIN rows: the TRAIN-calibrated fib generator (physics_fib).
+{
+  const f = (x) => Math.exp(fibS(x) * (1 - Math.sqrt(28 / x[7])))
+  const by = new Map()
+  TRAIN.X.forEach((x, i) => { const k = x.slice(0, 7).join(','); (by.get(k) || by.set(k, []).get(k)).push(i) })
+  const perMixS28 = Object.fromEntries([...by].map(([k, idx]) => [k, idx.reduce((s, i) => s + TRAIN.y[i] * f(TRAIN.X[i]), 0) / idx.reduce((s, i) => s + f(TRAIN.X[i]) ** 2, 0)]))
+  const text = JSON.stringify({ curve: 's28_mix * exp((0.20 + 0.35 p_SCM)(1 - sqrt(28/t)))', perMixS28, fallback: 'physics_fib generator (scale fitted on TRAIN)', fallbackScale: cal.fib.scale })
+  const file = path.join(DIR, 'curve_permix.json')
+  writeSame(file, text)
+  models.push({ role: 'curve_permix', kind: 'curve', file: rel(file), sha256: sha256(text), note: `per-mix fib curve, s28 fitted on each mix's TRAIN rows (${by.size} mixes); other mixes use the TRAIN-calibrated fib generator` })
+}
 // 2-3. trees, forest, log-age ridge
 for (const name of ['gbt', 'rf', 'ridge']) {
   const r = spawnSync('python3', ['-I', path.join(LAB, 'sk_models.py'), 'fit', name], { encoding: 'utf8' })
@@ -60,6 +73,7 @@ seedsModel('panel_design', PANEL, "PANEL_DESIGN, the site's physics switch")
 seedsModel('plain_physics_pretrain', { ...PLAIN, pretrain: 'physics' }, 'page default network with physics pre-training only')
 seedsModel('champion_retrained', champ.genome, `evolution champion ${champ.id} retrained from scratch`)
 seedsModel('champion_no_pretrain', { ...champ.genome, pretrain: 'none' }, `evolution champion ${champ.id} with pretrain 'none'`)
+seedsModel('random_champion_retrained', rchamp.genome, `random-search champion ${rchamp.id} retrained from scratch`)
 // 9. champions as archived, random-search champion, top-10 ensemble
 archived('champion', evo, champ, `evolution champion by the Ladder rule (${evoStop.reason})`)
 archived('random_champion', rnd, rchamp, 'random-search champion by the same Ladder rule')
@@ -76,5 +90,5 @@ for (let i = 0; i < models.length; i++) {
   const f = (s) => (s.medianOverSeeds ? `${s.medianOverSeeds.rmse.toFixed(3)} (median of 10; mean-of-seeds ${s.overall.rmse.toFixed(3)})` : s.overall.rmse.toFixed(3))
   console.log(`${m.role.padEnd(24)} REWARD RMSE ${f(rewardScores[i])}  MONITOR RMSE ${f(monitorScores[i])}  V ${(v.vAge + v.vWb).toFixed(3)} MPa, rate ${(100 * v.violationRate).toFixed(1)}%`)
 }
-writeSame(path.join(LAB, 'results', 'baselines2.json'), JSON.stringify(out, null, 1) + '\n')
-console.log('wrote lab/results/baselines2.json')
+writeSame(OUT, JSON.stringify(out, null, 1) + '\n')
+console.log(`wrote ${path.relative(LAB, OUT)}`)

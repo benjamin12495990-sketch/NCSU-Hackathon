@@ -1,0 +1,1402 @@
+{
+ "note": "Trained on TRAIN only. REWARD was used by evolution for selection (optimistic for evolved models); MONITOR was not.",
+ "champion": {
+  "id": "g008-000-428625cae26f",
+  "genome": {
+   "hidden": [
+    51,
+    18
+   ],
+   "lr": 0.000738412,
+   "decay": 0.00121539,
+   "loss": "huber",
+   "epochs": 177,
+   "features": "rich",
+   "pretrain": "physics",
+   "seed": 1036501257
+  },
+  "stop": {
+   "type": "stop",
+   "generation": 13,
+   "reason": "ladder: no new champion for 5 generations",
+   "champion": "g008-000-428625cae26f",
+   "created": "2026-11-21T06:24:12.957Z"
+  }
+ },
+ "randomChampion": {
+  "id": "g006-001-0eb67f2ec90e",
+  "genome": {
+   "hidden": [
+    18,
+    24
+   ],
+   "lr": 0.00590793,
+   "decay": 0.00385492,
+   "loss": "squared",
+   "epochs": 388,
+   "features": "rich",
+   "pretrain": "both",
+   "seed": 59409985
+  }
+ },
+ "physics": {
+  "generators": {
+   "powers": "f = s * A x^n, Powers gel-space with Mills a_u, generic tau/beta, efficiency factors k_s(t), k_f(t)",
+   "fib": "f = s * Powers28 * exp((0.20 + 0.35 p_SCM)(1 - sqrt(28/t)))"
+  },
+  "params": {
+   "A_cement_MPa": {
+    "value": 104.9,
+    "confidence": "confirmed_by_tool",
+    "citation": "Wang X.-Y., Luan Y. (2018) Int J Concr Struct Mater, doi:10.1186/s40069-018-0241-z"
+   },
+   "A_slag_MPa": {
+    "value": 151.9,
+    "confidence": "confirmed_by_tool",
+    "citation": "Wang X.-Y., Luan Y. (2018) Int J Concr Struct Mater, doi:10.1186/s40069-018-0241-z"
+   },
+   "A_flyash_MPa": {
+    "value": 104.9,
+    "confidence": "own assumption (WL2018 gives no fly-ash value; cement value used, fly ash enters through k_f)",
+    "citation": "Wang X.-Y., Luan Y. (2018) Int J Concr Struct Mater, doi:10.1186/s40069-018-0241-z"
+   },
+   "n_cement": {
+    "value": 2.21,
+    "confidence": "confirmed_by_tool",
+    "citation": "Wang X.-Y., Luan Y. (2018) Int J Concr Struct Mater, doi:10.1186/s40069-018-0241-z"
+   },
+   "n_slag": {
+    "value": 2.6,
+    "confidence": "confirmed_by_tool",
+    "citation": "Wang X.-Y., Luan Y. (2018) Int J Concr Struct Mater, doi:10.1186/s40069-018-0241-z"
+   },
+   "n_flyash": {
+    "value": 2.21,
+    "confidence": "own assumption (cement value)",
+    "citation": "Wang X.-Y., Luan Y. (2018) Int J Concr Struct Mater, doi:10.1186/s40069-018-0241-z"
+   },
+   "blend_rule": {
+    "value": "A and n = binder-mass-fraction weighted",
+    "confidence": "confirmed_by_tool",
+    "citation": "Wang X.-Y., Luan Y. (2018) Int J Concr Struct Mater, doi:10.1186/s40069-018-0241-z"
+   },
+   "gel_space_form": {
+    "value": "x = 0.68 a / (0.32 a + w/c)",
+    "confidence": "partly_confirmed_form_confirmed_constants_from_memory",
+    "citation": "Powers (1958) via Wang X.-Y., Luan Y. (2018) Int J Concr Struct Mater, doi:10.1186/s40069-018-0241-z"
+   },
+   "alpha_u": {
+    "value": "min(1, 1.031 w/b / (0.194 + w/b) + 0.50 p_FA + 0.30 p_SLAG)",
+    "confidence": "from_memory_unconfirmed",
+    "citation": "Schindler A.K., Folliard K.J. (2005) ACI Mater J 102(1), doi:10.14359/14246; Mills R.H. (1966) HRB Special Report 90"
+   },
+   "tau_h": {
+    "value": 13,
+    "range": [
+     10,
+     20
+    ],
+    "confidence": "from_memory_unconfirmed (generic OPC value)",
+    "citation": "Schindler A.K., Folliard K.J. (2005) ACI Mater J 102(1), doi:10.14359/14246; Mills R.H. (1966) HRB Special Report 90"
+   },
+   "beta": {
+    "value": 0.8,
+    "range": [
+     0.6,
+     1.1
+    ],
+    "confidence": "from_memory_unconfirmed (generic OPC value)",
+    "citation": "Schindler A.K., Folliard K.J. (2005) ACI Mater J 102(1), doi:10.14359/14246; Mills R.H. (1966) HRB Special Report 90"
+   },
+   "k_slag_t": {
+    "value": "0.95 (1 - exp(-t/6)) (1.15 - 0.6 p_SLAG) + 0.05",
+    "confidence": "own heuristic, shaped on Bougara et al. 2010 (confirmed_by_tool: k 0.7 at 5 d, 1.25 at 28 d for 50% slag)",
+    "citation": "Bougara et al. (2010) Cem Concr Compos"
+   },
+   "k_flyash_t": {
+    "value": "0.15 + 0.75 (1 - exp(-t/45)) (1.1 - p_FA)",
+    "confidence": "own heuristic, shaped on Murumi & Gupta 2015 (confirmed_by_tool: k 0.54 at 25%, 0.35 at 45%, 28 d)",
+    "citation": "Murumi & Gupta (2015); Babu & Rao (1996) doi:10.1016/0008-8846(96)00011-7"
+   },
+   "fib_curve": {
+    "value": "exp(s (1 - sqrt(28/t)))",
+    "confidence": "partly_confirmed_form_confirmed_constants_from_memory",
+    "citation": "fib Model Code 2010; EN 1992-1-1 cl. 3.1.2"
+   },
+   "fib_s": {
+    "value": "0.20 + 0.35 p_SCM",
+    "confidence": "own heuristic, untested (fitted by eye to BOxCrete 22 C age ratios, confirmed_by_tool)",
+    "citation": "Baten et al. (2026) arXiv:2603.21525"
+   },
+   "per_mix_variation": {
+    "value": "tau ~ U(10, 20) h, beta ~ U(0.65, 0.95), n +- U(-0.1, 0.1), multiplicative noise CV 5%",
+    "confidence": "design choice, following the research note: randomise so the network learns a family, not one curve",
+    "citation": "lab physics notes, section 8"
+   }
+  },
+  "calibration": {
+   "on": "TRAIN rows only (ages 1, 3, 7 d)",
+   "powersScale": 0.5891267899281203,
+   "powersTrain": {
+    "rmse": 5.992732397040434,
+    "mae": 4.460582249818799
+   },
+   "fibScale": 0.622169612817796,
+   "fibTrain": {
+    "rmse": 6.6001633568784115,
+    "mae": 5.035838417993463
+   }
+  },
+  "sampling": "convex combination of two TRAIN mixes with the same ingredients present; age log-uniform 1-365 d",
+  "crossCheck": {
+   "powers f(t)/f(28), OPC w/c 0.50": {
+    "1": 0.392,
+    "3": 0.718,
+    "7": 0.875,
+    "90": 1.04,
+    "365": 1.058
+   },
+   "powers f(t)/f(28), 50% SCM w/b 0.45": {
+    "1": 0.186,
+    "3": 0.445,
+    "7": 0.685,
+    "90": 1.14,
+    "365": 1.191
+   },
+   "fib s for that SCM mix": 0.375
+  }
+ },
+ "boxcrete": {
+  "source": "BOxCrete, Baten et al. 2026, arXiv:2603.21525, MIT (facebookresearch/SustainableConcrete)",
+  "rowsInFile": 670,
+  "rowsKept": 395,
+  "mixes": 79,
+  "ages": [
+   1,
+   3,
+   5,
+   14,
+   28
+  ],
+  "filter": "coarse aggregate > 0 and Temp (C) == 22",
+  "units": "psi / 145.04 = MPa"
+ },
+ "models": [
+  {
+   "role": "physics_powers",
+   "kind": "physics",
+   "file": "results/models2/physics_powers.json",
+   "sha256": "e017d115417e77ab13c7047d234a85376dea4e454da25e6e12e073bfbfabc058",
+   "note": "powers generator, scale 0.5891 fitted on TRAIN",
+   "reward": {
+    "role": "physics_powers",
+    "kind": "physics",
+    "file": "results/models2/physics_powers.json",
+    "sha256": "e017d115417e77ab13c7047d234a85376dea4e454da25e6e12e073bfbfabc058",
+    "overall": {
+     "rows": 321,
+     "rmse": 10.310776031590914,
+     "mae": 8.016159759721782,
+     "r2": 0.471913030809442
+    },
+    "medianOverSeeds": null,
+    "rmseCi95": [
+     9.177185838818943,
+     11.436457867262687
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": -3.444547319766615,
+     "ci95": [
+      -4.348805108656425,
+      -2.4989625178385095
+     ]
+    }
+   },
+   "monitor": {
+    "role": "physics_powers",
+    "kind": "physics",
+    "file": "results/models2/physics_powers.json",
+    "sha256": "e017d115417e77ab13c7047d234a85376dea4e454da25e6e12e073bfbfabc058",
+    "overall": {
+     "rows": 160,
+     "rmse": 9.66385989346558,
+     "mae": 7.4444319491163835,
+     "r2": 0.496657960746125
+    },
+    "medianOverSeeds": null,
+    "rmseCi95": [
+     8.291948672674286,
+     10.957729541289632
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": -2.458252191449274,
+     "ci95": [
+      -3.6968109812580403,
+      -1.2943695260164532
+     ]
+    }
+   },
+   "violations": {
+    "vAge": 0,
+    "vWb": 0,
+    "rate": 0,
+    "eligible": true
+   }
+  },
+  {
+   "role": "physics_fib",
+   "kind": "physics",
+   "file": "results/models2/physics_fib.json",
+   "sha256": "394994879e70767796547510fe1d009b18afd79c78af0bbbf1c642490ca5264e",
+   "note": "fib generator, scale 0.6222 fitted on TRAIN",
+   "reward": {
+    "role": "physics_fib",
+    "kind": "physics",
+    "file": "results/models2/physics_fib.json",
+    "sha256": "394994879e70767796547510fe1d009b18afd79c78af0bbbf1c642490ca5264e",
+    "overall": {
+     "rows": 321,
+     "rmse": 9.932903340340193,
+     "mae": 7.767916164918337,
+     "r2": 0.5099107650940611
+    },
+    "medianOverSeeds": null,
+    "rmseCi95": [
+     8.850846607126078,
+     11.020290075663922
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": -3.0666746285158943,
+     "ci95": [
+      -4.0009157103841115,
+      -2.1054174540349715
+     ]
+    }
+   },
+   "monitor": {
+    "role": "physics_fib",
+    "kind": "physics",
+    "file": "results/models2/physics_fib.json",
+    "sha256": "394994879e70767796547510fe1d009b18afd79c78af0bbbf1c642490ca5264e",
+    "overall": {
+     "rows": 160,
+     "rmse": 9.076089643730006,
+     "mae": 6.8698508791559885,
+     "r2": 0.5560239859070153
+    },
+    "medianOverSeeds": null,
+    "rmseCi95": [
+     7.76275171151514,
+     10.343481187670477
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": -1.8704819417137006,
+     "ci95": [
+      -3.1034885146148747,
+      -0.6860478907546224
+     ]
+    }
+   },
+   "violations": {
+    "vAge": 0,
+    "vWb": 0,
+    "rate": 0,
+    "eligible": true
+   }
+  },
+  {
+   "role": "curve_permix",
+   "kind": "curve",
+   "file": "results/models2/curve_permix.json",
+   "sha256": "793dca03e9a9d354ffe92431000acfc16419069f9e259a6a3ba35aecfe7d5ccf",
+   "note": "per-mix fib curve, s28 fitted on each mix's TRAIN rows (181 mixes); other mixes use the TRAIN-calibrated fib generator",
+   "reward": {
+    "role": "curve_permix",
+    "kind": "curve",
+    "file": "results/models2/curve_permix.json",
+    "sha256": "793dca03e9a9d354ffe92431000acfc16419069f9e259a6a3ba35aecfe7d5ccf",
+    "overall": {
+     "rows": 321,
+     "rmse": 8.86477764040288,
+     "mae": 7.0412778270841585,
+     "r2": 0.6096461766348936
+    },
+    "medianOverSeeds": null,
+    "rmseCi95": [
+     7.873653887322325,
+     9.909607609178991
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": -1.9985489285785807,
+     "ci95": [
+      -2.94043177721365,
+      -1.0637270872772948
+     ]
+    }
+   },
+   "monitor": {
+    "role": "curve_permix",
+    "kind": "curve",
+    "file": "results/models2/curve_permix.json",
+    "sha256": "793dca03e9a9d354ffe92431000acfc16419069f9e259a6a3ba35aecfe7d5ccf",
+    "overall": {
+     "rows": 160,
+     "rmse": 9.18343883806279,
+     "mae": 7.1887298009857785,
+     "r2": 0.5454594529492547
+    },
+    "medianOverSeeds": null,
+    "rmseCi95": [
+     7.9460483597236955,
+     10.439174604355404
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": -1.9778311360464844,
+     "ci95": [
+      -3.3336811996612603,
+      -0.6102962731159689
+     ]
+    }
+   },
+   "violations": {
+    "vAge": 0,
+    "vWb": 2.3704926116686162,
+    "rate": 0.17010758941552778,
+    "eligible": false
+   }
+  },
+  {
+   "role": "gbt",
+   "kind": "sklearn",
+   "name": "gbt",
+   "file": "results/models2/gbt.pkl",
+   "sha256": "1171aef30f65db86fd0cfc3cdaf484ce82c77d8eba8db54cd5f66b482cdcb755",
+   "note": "GradientBoostingRegressor(learning_rate=0.05, max_depth=4, n_estimators=300,\n                          random_state=42, subsample=0.8), scikit-learn 1.9.1",
+   "reward": {
+    "role": "gbt",
+    "kind": "sklearn",
+    "file": "results/models2/gbt.pkl",
+    "sha256": "1171aef30f65db86fd0cfc3cdaf484ce82c77d8eba8db54cd5f66b482cdcb755",
+    "overall": {
+     "rows": 321,
+     "rmse": 14.70338926890823,
+     "mae": 12.663642823965015,
+     "r2": -0.07388470037476691
+    },
+    "medianOverSeeds": null,
+    "rmseCi95": [
+     13.510510645676185,
+     15.908137554245526
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": -7.837160557083932,
+     "ci95": [
+      -8.702995051359576,
+      -6.949746338903865
+     ]
+    }
+   },
+   "monitor": {
+    "role": "gbt",
+    "kind": "sklearn",
+    "file": "results/models2/gbt.pkl",
+    "sha256": "1171aef30f65db86fd0cfc3cdaf484ce82c77d8eba8db54cd5f66b482cdcb755",
+    "overall": {
+     "rows": 160,
+     "rmse": 15.833740412249044,
+     "mae": 13.779556734850336,
+     "r2": -0.35122911866028894
+    },
+    "medianOverSeeds": null,
+    "rmseCi95": [
+     14.217510300815208,
+     17.489020105888873
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": -8.62813271023274,
+     "ci95": [
+      -10.17194715034961,
+      -7.1704961366748154
+     ]
+    }
+   },
+   "violations": {
+    "vAge": 0.0018802445216591392,
+    "vWb": 0.21301649828579897,
+    "rate": 0.09828438499563827,
+    "eligible": false
+   }
+  },
+  {
+   "role": "rf",
+   "kind": "sklearn",
+   "name": "rf",
+   "file": "results/models2/rf.pkl",
+   "sha256": "52490f02c7d31ffc1b44d04bb208353600a1fa722912a9ba54970dee603befad",
+   "note": "RandomForestRegressor(random_state=42), scikit-learn 1.9.1",
+   "reward": {
+    "role": "rf",
+    "kind": "sklearn",
+    "file": "results/models2/rf.pkl",
+    "sha256": "52490f02c7d31ffc1b44d04bb208353600a1fa722912a9ba54970dee603befad",
+    "overall": {
+     "rows": 321,
+     "rmse": 15.801911027430005,
+     "mae": 13.811048042822522,
+     "r2": -0.24034348240324732
+    },
+    "medianOverSeeds": null,
+    "rmseCi95": [
+     14.640367369394083,
+     16.923013436747617
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": -8.935682315605707,
+     "ci95": [
+      -9.823256233748456,
+      -8.041238321522437
+     ]
+    }
+   },
+   "monitor": {
+    "role": "rf",
+    "kind": "sklearn",
+    "file": "results/models2/rf.pkl",
+    "sha256": "52490f02c7d31ffc1b44d04bb208353600a1fa722912a9ba54970dee603befad",
+    "overall": {
+     "rows": 160,
+     "rmse": 16.747468140073007,
+     "mae": 14.767422166666663,
+     "r2": -0.5116814192185313
+    },
+    "medianOverSeeds": null,
+    "rmseCi95": [
+     15.13845728415392,
+     18.40138003751572
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": -9.541860438056702,
+     "ci95": [
+      -11.02486369768879,
+      -8.082229396782335
+     ]
+    }
+   },
+   "violations": {
+    "vAge": 0.00460066298342536,
+    "vWb": 0.1587962113771223,
+    "rate": 0.10526315789473684,
+    "eligible": false
+   }
+  },
+  {
+   "role": "ridge",
+   "kind": "sklearn",
+   "name": "ridge",
+   "file": "results/models2/ridge.pkl",
+   "sha256": "e4d0c3be5e30c85a6bfc4c32a2dbab20dd5c9a1e35c06f38e61423dfae2f4e6d",
+   "note": "Pipeline(steps=[('standardscaler', StandardScaler()), ('ridge', Ridge())]), scikit-learn 1.9.1",
+   "reward": {
+    "role": "ridge",
+    "kind": "sklearn",
+    "file": "results/models2/ridge.pkl",
+    "sha256": "e4d0c3be5e30c85a6bfc4c32a2dbab20dd5c9a1e35c06f38e61423dfae2f4e6d",
+    "overall": {
+     "rows": 321,
+     "rmse": 8.898116866928342,
+     "mae": 6.686187201078639,
+     "r2": 0.6067045198458569
+    },
+    "medianOverSeeds": null,
+    "rmseCi95": [
+     7.928082658139141,
+     9.84873927655255
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": -2.0318881551040437,
+     "ci95": [
+      -2.8742745305869777,
+      -1.2744222245404293
+     ]
+    }
+   },
+   "monitor": {
+    "role": "ridge",
+    "kind": "sklearn",
+    "file": "results/models2/ridge.pkl",
+    "sha256": "e4d0c3be5e30c85a6bfc4c32a2dbab20dd5c9a1e35c06f38e61423dfae2f4e6d",
+    "overall": {
+     "rows": 160,
+     "rmse": 8.627816127309934,
+     "mae": 6.48423427725005,
+     "r2": 0.5987974206381752
+    },
+    "medianOverSeeds": null,
+    "rmseCi95": [
+     7.158484213708364,
+     10.105701730835056
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": -1.4222084252936291,
+     "ci95": [
+      -2.238455413223459,
+      -0.5675315714469731
+     ]
+    }
+   },
+   "violations": {
+    "vAge": 0,
+    "vWb": 0,
+    "rate": 0,
+    "eligible": true
+   }
+  },
+  {
+   "role": "plain",
+   "kind": "seeds",
+   "file": "results/models2/plain.json.gz",
+   "sha256": "d3a86f81e7fbeadfcc48d2855e5e4310ffa47d81d3db5e79e2de2471cbd62eea",
+   "genome": {
+    "hidden": [
+     64,
+     32
+    ],
+    "lr": 0.004,
+    "decay": 0.001,
+    "loss": "squared",
+    "epochs": 300,
+    "features": "base",
+    "pretrain": "none",
+    "seed": 11
+   },
+   "note": "page default network (options {})",
+   "reward": {
+    "role": "plain",
+    "kind": "seeds",
+    "file": "results/models2/plain.json.gz",
+    "sha256": "d3a86f81e7fbeadfcc48d2855e5e4310ffa47d81d3db5e79e2de2471cbd62eea",
+    "overall": {
+     "rows": 321,
+     "rmse": 13.611245626977126,
+     "mae": 11.37469292310183,
+     "r2": 0.07972317149441466
+    },
+    "medianOverSeeds": {
+     "seeds": 10,
+     "rmse": 14.118992704109736,
+     "mae": 11.837934586072507,
+     "rmseRange": [
+      9.286836412995745,
+      31.69517796337552
+     ]
+    },
+    "rmseCi95": [
+     12.526820621093872,
+     14.71136777815503
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": -6.745016915152828,
+     "ci95": [
+      -8.087598421091712,
+      -5.451377657216714
+     ]
+    }
+   },
+   "monitor": {
+    "role": "plain",
+    "kind": "seeds",
+    "file": "results/models2/plain.json.gz",
+    "sha256": "d3a86f81e7fbeadfcc48d2855e5e4310ffa47d81d3db5e79e2de2471cbd62eea",
+    "overall": {
+     "rows": 160,
+     "rmse": 12.7628248985951,
+     "mae": 10.286916417510064,
+     "r2": 0.12207871955525196
+    },
+    "medianOverSeeds": {
+     "seeds": 10,
+     "rmse": 14.236702435721448,
+     "mae": 11.516425693889712,
+     "rmseRange": [
+      8.589538171798706,
+      30.717082082364758
+     ]
+    },
+    "rmseCi95": [
+     10.820133156036777,
+     14.742013582429534
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": -5.5572171965787955,
+     "ci95": [
+      -7.36114279987641,
+      -3.673882388781638
+     ]
+    }
+   },
+   "violations": {
+    "vAge": 0.01228303893553026,
+    "vWb": 0.0029672551248496586,
+    "rate": 0.0055248618784530384,
+    "eligible": true
+   }
+  },
+  {
+   "role": "panel_design",
+   "kind": "seeds",
+   "file": "results/models2/panel_design.json.gz",
+   "sha256": "1af11e7352ebc3c33561c108bbb4aeda6fc724de71465e3d90eca413f57e4ac2",
+   "genome": {
+    "hidden": [
+     64,
+     32
+    ],
+    "lr": 0.004,
+    "decay": 0.003,
+    "loss": "huber",
+    "epochs": 300,
+    "features": "physics",
+    "pretrain": "none",
+    "seed": 11
+   },
+   "note": "PANEL_DESIGN, the site's physics switch",
+   "reward": {
+    "role": "panel_design",
+    "kind": "seeds",
+    "file": "results/models2/panel_design.json.gz",
+    "sha256": "1af11e7352ebc3c33561c108bbb4aeda6fc724de71465e3d90eca413f57e4ac2",
+    "overall": {
+     "rows": 321,
+     "rmse": 8.753851979477325,
+     "mae": 6.727685118640362,
+     "r2": 0.6193541124322409
+    },
+    "medianOverSeeds": {
+     "seeds": 10,
+     "rmse": 10.403374006244139,
+     "mae": 8.19398025143137,
+     "rmseRange": [
+      9.345792226110666,
+      14.417022155922446
+     ]
+    },
+    "rmseCi95": [
+     7.787917047465722,
+     9.62994030166654
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": -1.8876232676530265,
+     "ci95": [
+      -2.4571597404339123,
+      -1.2927398532286585
+     ]
+    }
+   },
+   "monitor": {
+    "role": "panel_design",
+    "kind": "seeds",
+    "file": "results/models2/panel_design.json.gz",
+    "sha256": "1af11e7352ebc3c33561c108bbb4aeda6fc724de71465e3d90eca413f57e4ac2",
+    "overall": {
+     "rows": 160,
+     "rmse": 10.296275521728809,
+     "mae": 7.718148528357605,
+     "r2": 0.4286236433975604
+    },
+    "medianOverSeeds": {
+     "seeds": 10,
+     "rmse": 12.142793141625006,
+     "mae": 9.482705584515879,
+     "rmseRange": [
+      9.989813084890068,
+      16.628068990604344
+     ]
+    },
+    "rmseCi95": [
+     8.396307496156298,
+     12.09884793064573
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": -3.090667819712504,
+     "ci95": [
+      -3.8401081422092638,
+      -2.2825175658004246
+     ]
+    }
+   },
+   "violations": {
+    "vAge": 0.017995044102989976,
+    "vWb": 0.0030889668169575162,
+    "rate": 0.013666763594068043,
+    "eligible": true
+   }
+  },
+  {
+   "role": "plain_physics_pretrain",
+   "kind": "seeds",
+   "file": "results/models2/plain_physics_pretrain.json.gz",
+   "sha256": "1e86ca306a3209565c9a28abda8227d42c07b7b2ccc8457c61ec44520d1e2d25",
+   "genome": {
+    "hidden": [
+     64,
+     32
+    ],
+    "lr": 0.004,
+    "decay": 0.001,
+    "loss": "squared",
+    "epochs": 300,
+    "features": "base",
+    "pretrain": "physics",
+    "seed": 11
+   },
+   "note": "page default network with physics pre-training only",
+   "reward": {
+    "role": "plain_physics_pretrain",
+    "kind": "seeds",
+    "file": "results/models2/plain_physics_pretrain.json.gz",
+    "sha256": "1e86ca306a3209565c9a28abda8227d42c07b7b2ccc8457c61ec44520d1e2d25",
+    "overall": {
+     "rows": 321,
+     "rmse": 7.325835892638873,
+     "mae": 5.816117809759493,
+     "r2": 0.7334141364507711
+    },
+    "medianOverSeeds": {
+     "seeds": 10,
+     "rmse": 7.721653974332709,
+     "mae": 6.098622865286921,
+     "rmseRange": [
+      7.289916860429161,
+      8.58039265479669
+     ]
+    },
+    "rmseCi95": [
+     6.590312020604074,
+     8.111809698240169
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": -0.4596071808145741,
+     "ci95": [
+      -0.7918383513162022,
+      -0.151641637112653
+     ]
+    }
+   },
+   "monitor": {
+    "role": "plain_physics_pretrain",
+    "kind": "seeds",
+    "file": "results/models2/plain_physics_pretrain.json.gz",
+    "sha256": "1e86ca306a3209565c9a28abda8227d42c07b7b2ccc8457c61ec44520d1e2d25",
+    "overall": {
+     "rows": 160,
+     "rmse": 8.219801507262384,
+     "mae": 6.143251943359016,
+     "r2": 0.6358463939051259
+    },
+    "medianOverSeeds": {
+     "seeds": 10,
+     "rmse": 8.569411242473354,
+     "mae": 6.411473231898446,
+     "rmseRange": [
+      7.80318285867868,
+      9.020135261585128
+     ]
+    },
+    "rmseCi95": [
+     6.685579780911716,
+     9.738691855895382
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": -1.0141938052460784,
+     "ci95": [
+      -1.6376919262420726,
+      -0.3779146036144647
+     ]
+    }
+   },
+   "violations": {
+    "vAge": 0,
+    "vWb": 0.02511814514071146,
+    "rate": 0.009305030532131433,
+    "eligible": true
+   }
+  },
+  {
+   "role": "champion_retrained",
+   "kind": "seeds",
+   "file": "results/models2/champion_retrained.json.gz",
+   "sha256": "ee03d1ae6625502dd2e4ad3514b0e759e98f3b126cad39ce3617cde8773c4326",
+   "genome": {
+    "hidden": [
+     51,
+     18
+    ],
+    "lr": 0.000738412,
+    "decay": 0.00121539,
+    "loss": "huber",
+    "epochs": 177,
+    "features": "rich",
+    "pretrain": "physics",
+    "seed": 1036501257
+   },
+   "note": "evolution champion g008-000-428625cae26f retrained from scratch",
+   "reward": {
+    "role": "champion_retrained",
+    "kind": "seeds",
+    "file": "results/models2/champion_retrained.json.gz",
+    "sha256": "ee03d1ae6625502dd2e4ad3514b0e759e98f3b126cad39ce3617cde8773c4326",
+    "overall": {
+     "rows": 321,
+     "rmse": 7.503736446729355,
+     "mae": 5.890600437608865,
+     "r2": 0.7203093885064835
+    },
+    "medianOverSeeds": {
+     "seeds": 10,
+     "rmse": 7.918887439803797,
+     "mae": 6.102964840555068,
+     "rmseRange": [
+      7.623101952463862,
+      8.952101367572762
+     ]
+    },
+    "rmseCi95": [
+     6.713237004134061,
+     8.309494597566903
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": -0.6375077349050562,
+     "ci95": [
+      -1.001944043869715,
+      -0.2811137186555488
+     ]
+    }
+   },
+   "monitor": {
+    "role": "champion_retrained",
+    "kind": "seeds",
+    "file": "results/models2/champion_retrained.json.gz",
+    "sha256": "ee03d1ae6625502dd2e4ad3514b0e759e98f3b126cad39ce3617cde8773c4326",
+    "overall": {
+     "rows": 160,
+     "rmse": 7.801280821275921,
+     "mae": 5.985649313189118,
+     "r2": 0.6719849448931985
+    },
+    "medianOverSeeds": {
+     "seeds": 10,
+     "rmse": 8.30332188990042,
+     "mae": 6.223399201817206,
+     "rmseRange": [
+      7.589561899870105,
+      8.91655080871996
+     ]
+    },
+    "rmseCi95": [
+     6.532055926083098,
+     9.037567924922431
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": -0.5956731192596161,
+     "ci95": [
+      -1.0940640728931168,
+      -0.11726813110287804
+     ]
+    }
+   },
+   "violations": {
+    "vAge": 0,
+    "vWb": 0.017773387515369766,
+    "rate": 0.009014248328002326,
+    "eligible": true
+   }
+  },
+  {
+   "role": "champion_no_pretrain",
+   "kind": "seeds",
+   "file": "results/models2/champion_no_pretrain.json.gz",
+   "sha256": "21b5c75083cfe50d64d9ea32a98e51134bceac6398eabc2274faff7f8aa83465",
+   "genome": {
+    "hidden": [
+     51,
+     18
+    ],
+    "lr": 0.000738412,
+    "decay": 0.00121539,
+    "loss": "huber",
+    "epochs": 177,
+    "features": "rich",
+    "pretrain": "none",
+    "seed": 1036501257
+   },
+   "note": "evolution champion g008-000-428625cae26f with pretrain 'none'",
+   "reward": {
+    "role": "champion_no_pretrain",
+    "kind": "seeds",
+    "file": "results/models2/champion_no_pretrain.json.gz",
+    "sha256": "21b5c75083cfe50d64d9ea32a98e51134bceac6398eabc2274faff7f8aa83465",
+    "overall": {
+     "rows": 321,
+     "rmse": 9.18084207713635,
+     "mae": 7.287282034809215,
+     "r2": 0.5813146368965536
+    },
+    "medianOverSeeds": {
+     "seeds": 10,
+     "rmse": 21.64808752424797,
+     "mae": 18.95939586943978,
+     "rmseRange": [
+      12.052947659486207,
+      32.67856879957115
+     ]
+    },
+    "rmseCi95": [
+     8.278176790636849,
+     10.070843601459496
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": -2.314613365312052,
+     "ci95": [
+      -3.2632936909828345,
+      -1.4234029673237725
+     ]
+    }
+   },
+   "monitor": {
+    "role": "champion_no_pretrain",
+    "kind": "seeds",
+    "file": "results/models2/champion_no_pretrain.json.gz",
+    "sha256": "21b5c75083cfe50d64d9ea32a98e51134bceac6398eabc2274faff7f8aa83465",
+    "overall": {
+     "rows": 160,
+     "rmse": 8.785896010355968,
+     "mae": 6.308187363480098,
+     "r2": 0.5839609732338624
+    },
+    "medianOverSeeds": {
+     "seeds": 10,
+     "rmse": 20.997556227952234,
+     "mae": 18.830230387888946,
+     "rmseRange": [
+      13.044124664886462,
+      34.11813082946852
+     ]
+    },
+    "rmseCi95": [
+     7.00745808361361,
+     10.631717972492394
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": -1.5802883083396626,
+     "ci95": [
+      -2.816534598194213,
+      -0.4701382250302215
+     ]
+    }
+   },
+   "violations": {
+    "vAge": 0.006614066484425383,
+    "vWb": 0.0007953049781356766,
+    "rate": 0.00319860424542018,
+    "eligible": true
+   }
+  },
+  {
+   "role": "random_champion_retrained",
+   "kind": "seeds",
+   "file": "results/models2/random_champion_retrained.json.gz",
+   "sha256": "748ad0358d7204fc0b97ad282dc00cb6fa65cf450699d97cd555f2ba1b5f3bd4",
+   "genome": {
+    "hidden": [
+     18,
+     24
+    ],
+    "lr": 0.00590793,
+    "decay": 0.00385492,
+    "loss": "squared",
+    "epochs": 388,
+    "features": "rich",
+    "pretrain": "both",
+    "seed": 59409985
+   },
+   "note": "random-search champion g006-001-0eb67f2ec90e retrained from scratch",
+   "reward": {
+    "role": "random_champion_retrained",
+    "kind": "seeds",
+    "file": "results/models2/random_champion_retrained.json.gz",
+    "sha256": "748ad0358d7204fc0b97ad282dc00cb6fa65cf450699d97cd555f2ba1b5f3bd4",
+    "overall": {
+     "rows": 321,
+     "rmse": 7.0313019770329035,
+     "mae": 5.341914685168475,
+     "r2": 0.7544192931864244
+    },
+    "medianOverSeeds": {
+     "seeds": 10,
+     "rmse": 7.666959052606657,
+     "mae": 5.781908283960431,
+     "rmseRange": [
+      6.796922908808999,
+      7.8776609695778514
+     ]
+    },
+    "rmseCi95": [
+     6.269003739165136,
+     7.792929996020159
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": -0.16507326520860488,
+     "ci95": [
+      -0.35782867232382554,
+      0.00668961301905302
+     ]
+    }
+   },
+   "monitor": {
+    "role": "random_champion_retrained",
+    "kind": "seeds",
+    "file": "results/models2/random_champion_retrained.json.gz",
+    "sha256": "748ad0358d7204fc0b97ad282dc00cb6fa65cf450699d97cd555f2ba1b5f3bd4",
+    "overall": {
+     "rows": 160,
+     "rmse": 7.205583527109357,
+     "mae": 5.444374622603765,
+     "r2": 0.720166136723854
+    },
+    "medianOverSeeds": {
+     "seeds": 10,
+     "rmse": 7.607277605485276,
+     "mae": 5.799580106643006,
+     "rmseRange": [
+      6.749399866778259,
+      8.420500936563968
+     ]
+    },
+    "rmseCi95": [
+     5.8771432048209205,
+     8.497823864368499
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": 0.00002417490694828217,
+     "ci95": [
+      -0.25403564747682505,
+      0.24779102167061673
+     ]
+    }
+   },
+   "violations": {
+    "vAge": 0,
+    "vWb": 0.005089111689600448,
+    "rate": 0.0034893864495492877,
+    "eligible": true
+   }
+  },
+  {
+   "role": "champion",
+   "kind": "archived",
+   "id": "g008-000-428625cae26f",
+   "file": "archive/weights/g008-000-428625cae26f.json.gz",
+   "sha256": "75240fd5ddc2620b649e3b7a5c56d8e75555a8b8b6e0ab469af4d094c3f935d6",
+   "genome": {
+    "hidden": [
+     51,
+     18
+    ],
+    "lr": 0.000738412,
+    "decay": 0.00121539,
+    "loss": "huber",
+    "epochs": 177,
+    "features": "rich",
+    "pretrain": "physics",
+    "seed": 1036501257
+   },
+   "note": "evolution champion by the Ladder rule (ladder: no new champion for 5 generations)",
+   "reward": {
+    "role": "champion",
+    "kind": "archived",
+    "file": "archive/weights/g008-000-428625cae26f.json.gz",
+    "sha256": "75240fd5ddc2620b649e3b7a5c56d8e75555a8b8b6e0ab469af4d094c3f935d6",
+    "overall": {
+     "rows": 321,
+     "rmse": 6.866228711824299,
+     "mae": 5.172010907042281,
+     "r2": 0.7658148913922451
+    },
+    "medianOverSeeds": null,
+    "rmseCi95": [
+     6.107975321402062,
+     7.629363928478646
+    ],
+    "subsets": {},
+    "negativePredictions": 0
+   },
+   "monitor": {
+    "role": "champion",
+    "kind": "archived",
+    "file": "archive/weights/g008-000-428625cae26f.json.gz",
+    "sha256": "75240fd5ddc2620b649e3b7a5c56d8e75555a8b8b6e0ab469af4d094c3f935d6",
+    "overall": {
+     "rows": 160,
+     "rmse": 7.205607702016305,
+     "mae": 5.295320704220743,
+     "r2": 0.72016425902195
+    },
+    "medianOverSeeds": null,
+    "rmseCi95": [
+     5.849173114773581,
+     8.510217906953221
+    ],
+    "subsets": {},
+    "negativePredictions": 0
+   },
+   "violations": {
+    "vAge": 0,
+    "vWb": 0.004813801255921057,
+    "rate": 0.0034893864495492877,
+    "eligible": true
+   }
+  },
+  {
+   "role": "random_champion",
+   "kind": "archived",
+   "id": "g006-001-0eb67f2ec90e",
+   "file": "archive_random/weights/g006-001-0eb67f2ec90e.json.gz",
+   "sha256": "1da069f4eff33a18f65c27253148f62f29262ca53e97051c72eaac01d573e19b",
+   "genome": {
+    "hidden": [
+     18,
+     24
+    ],
+    "lr": 0.00590793,
+    "decay": 0.00385492,
+    "loss": "squared",
+    "epochs": 388,
+    "features": "rich",
+    "pretrain": "both",
+    "seed": 59409985
+   },
+   "note": "random-search champion by the same Ladder rule",
+   "reward": {
+    "role": "random_champion",
+    "kind": "archived",
+    "file": "archive_random/weights/g006-001-0eb67f2ec90e.json.gz",
+    "sha256": "1da069f4eff33a18f65c27253148f62f29262ca53e97051c72eaac01d573e19b",
+    "overall": {
+     "rows": 321,
+     "rmse": 7.084643890203408,
+     "mae": 5.287026543980501,
+     "r2": 0.750679037284421
+    },
+    "medianOverSeeds": null,
+    "rmseCi95": [
+     6.249995065929561,
+     7.930783295830734
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": -0.21841517837910907,
+     "ci95": [
+      -0.5185349313799081,
+      0.06733794619022859
+     ]
+    }
+   },
+   "monitor": {
+    "role": "random_champion",
+    "kind": "archived",
+    "file": "archive_random/weights/g006-001-0eb67f2ec90e.json.gz",
+    "sha256": "1da069f4eff33a18f65c27253148f62f29262ca53e97051c72eaac01d573e19b",
+    "overall": {
+     "rows": 160,
+     "rmse": 7.73665516990015,
+     "mae": 5.883259285694771,
+     "r2": 0.677396975150289
+    },
+    "medianOverSeeds": null,
+    "rmseCi95": [
+     6.317803814451637,
+     9.12377526700508
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": -0.5310474678838446,
+     "ci95": [
+      -0.9191659949237385,
+      -0.14518240785163083
+     ]
+    }
+   },
+   "violations": {
+    "vAge": 0,
+    "vWb": 0.0022643875115929027,
+    "rate": 0.0023262576330328583,
+    "eligible": true
+   }
+  },
+  {
+   "role": "top10_ensemble",
+   "kind": "ensemble",
+   "members": [
+    {
+     "id": "g008-000-428625cae26f",
+     "file": "archive/weights/g008-000-428625cae26f.json.gz",
+     "sha256": "75240fd5ddc2620b649e3b7a5c56d8e75555a8b8b6e0ab469af4d094c3f935d6"
+    },
+    {
+     "id": "g008-017-11eeba9f665b",
+     "file": "archive/weights/g008-017-11eeba9f665b.json.gz",
+     "sha256": "3513fbcffac6da9f641b88bdc2e406fcac38f76bd6c1334bbea759d188493b5e"
+    },
+    {
+     "id": "g012-017-b10114c4eb7b",
+     "file": "archive/weights/g012-017-b10114c4eb7b.json.gz",
+     "sha256": "6184d6432795c7e9ab641d1792d946dd95a0aadab299426c3a39302bf23d8a6f"
+    },
+    {
+     "id": "g008-004-adf820d43ca4",
+     "file": "archive/weights/g008-004-adf820d43ca4.json.gz",
+     "sha256": "21e9f547642127ff0f4308ca3e5d49d21ae3f7c4705b956151f5e69abd2ce6c1"
+    },
+    {
+     "id": "g008-007-114a11ef3bae",
+     "file": "archive/weights/g008-007-114a11ef3bae.json.gz",
+     "sha256": "c597aa34f5386eaabd90029c70b8a2d25a90d80636d10e33f020919dc88951c8"
+    },
+    {
+     "id": "g011-010-4cdc925e9130",
+     "file": "archive/weights/g011-010-4cdc925e9130.json.gz",
+     "sha256": "7cba78c036d249340edcad02ff91f74cd8377304a9e0f4831a1ee469ae07daf9"
+    },
+    {
+     "id": "g008-008-c313e8ca976a",
+     "file": "archive/weights/g008-008-c313e8ca976a.json.gz",
+     "sha256": "af9d99374bd25eb87fc9153fefe667dd6ef5b6e753b0e8552d559a9fdfb62110"
+    },
+    {
+     "id": "g012-006-78b3d8ffbe10",
+     "file": "archive/weights/g012-006-78b3d8ffbe10.json.gz",
+     "sha256": "1ca88b7a13444ca7c42971a286ed8faf72f0e4c9177458f5b0cb62d6168dad9c"
+    },
+    {
+     "id": "g009-004-ab3eb34625e6",
+     "file": "archive/weights/g009-004-ab3eb34625e6.json.gz",
+     "sha256": "ad9677de8244e930e22f6bf8970f0be23ad332176c33875768f0405370df172f"
+    },
+    {
+     "id": "g007-015-339114d0124b",
+     "file": "archive/weights/g007-015-339114d0124b.json.gz",
+     "sha256": "68329f679f10ea52a3c3c5c0f12f3d67f6ed1d46218772361b03fcca0cbaf3cb"
+    }
+   ],
+   "note": "mean prediction of the 10 eligible evolution individuals with the best fitness",
+   "reward": {
+    "role": "top10_ensemble",
+    "kind": "ensemble",
+    "file": null,
+    "sha256": null,
+    "overall": {
+     "rows": 321,
+     "rmse": 6.887093626752608,
+     "mae": 5.231359589978243,
+     "r2": 0.7643894578154001
+    },
+    "medianOverSeeds": null,
+    "rmseCi95": [
+     6.138368369462933,
+     7.649750696788341
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": -0.020864914928309553,
+     "ci95": [
+      -0.10797557178486006,
+      0.064864956595728
+     ]
+    }
+   },
+   "monitor": {
+    "role": "top10_ensemble",
+    "kind": "ensemble",
+    "file": null,
+    "sha256": null,
+    "overall": {
+     "rows": 160,
+     "rmse": 7.333682349701895,
+     "mae": 5.432163275263183,
+     "r2": 0.7101280817238621
+    },
+    "medianOverSeeds": null,
+    "rmseCi95": [
+     5.928486528848538,
+     8.704740250683631
+    ],
+    "subsets": {},
+    "negativePredictions": 0,
+    "championMinusThis": {
+     "rmse": -0.1280746476855894,
+     "ci95": [
+      -0.234007457459116,
+      0.0008629270865458949
+     ]
+    }
+   },
+   "violations": {
+    "vAge": 0,
+    "vWb": 0.004694664889480422,
+    "rate": 0.002907822041291073,
+    "eligible": true
+   }
+  }
+ ]
+}
