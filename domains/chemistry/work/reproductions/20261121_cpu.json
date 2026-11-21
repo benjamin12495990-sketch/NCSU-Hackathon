@@ -1,0 +1,245 @@
+{
+ "run_id": "20261121T210448Z",
+ "date_utc": "2026-11-21T21:04:48+00:00",
+ "what": "CPU reproduction of the AqSolDB LogS pipeline (prepare.py, nn_run.js cv/final/splits, trees.py, scaffold split, evaluate.py) plus the independent check's tuned-tree grid (trees_tuned.py)",
+ "not_new_evidence": "The main 2,000-row test split was scored in the original report; re-scoring it here only checks reproducibility.",
+ "command": "python3 domains/chemistry/work/reproduce.py",
+ "data_sha256": {
+  "data_curated.csv": "363a42a4e4ea8e6039758146d34efdd95cde2da81c665316cacc1869e0a805ed"
+ },
+ "derived_sha256": {
+  "nn_data.json": "7426a5c0466ec12e6c0d5b4c6caa86a135fd1a1777bae72d56f3388175e6a54f",
+  "nn_data.json_second_prepare": "7426a5c0466ec12e6c0d5b4c6caa86a135fd1a1777bae72d56f3388175e6a54f",
+  "all_rows.json": "afe8d44ebeb4bbac6e3ee1b7aaf107047ffb3364ac3dae6f5a756c268838606c",
+  "splits.json": "76038f4540aa65fbaeb9e9d10174ecde2e883f3cedaab3969863a03490de0a3b"
+ },
+ "prepare_is_deterministic": true,
+ "versions": {
+  "python": "3.13.18",
+  "node": "v22.23.5",
+  "numpy": "2.5.3",
+  "sklearn": "1.9.1",
+  "rdkit": "2026.09.2"
+ },
+ "machine": {
+  "cpus": 4,
+  "platform": "Linux-6.18.44-fc-v726-x86_64-with-glibc2.39"
+ },
+ "folds": {
+  "main_split": "GroupShuffleSplit 80/20 by InChIKey first block, seed 42",
+  "cv": "3-fold GroupKFold on training rows",
+  "extra_splits": "8 overlapping grouped 80/20 resamples (seeds 1001-1008)",
+  "scaffold": "Bemis-Murcko scaffold split, largest sets to train"
+ },
+ "rows": {
+  "train": 7982,
+  "test": 2000,
+  "groups": 9671
+ },
+ "original": {
+  "test_network_ensemble_mae": 0.7613,
+  "test_trees_fixed_mae": 0.8344,
+  "test_naive_mean_mae": 1.9222,
+  "cv_network_ensemble_mae": 0.7586,
+  "cv_trees_fixed_mae": 0.8237,
+  "chosen_network_settings": {
+   "epochs": 30,
+   "batch": 32,
+   "lr": 0.004,
+   "loss": "huber",
+   "log1p": "auto",
+   "clip": 5,
+   "members": 5,
+   "seed": 11,
+   "hidden": [
+    96,
+    48
+   ],
+   "decay": 0.0001
+  },
+  "eight_splits_mean_mae_network": 0.7449,
+  "eight_splits_mean_mae_trees": 0.8191,
+  "scaffold_network_mae": 1.0033,
+  "scaffold_trees_mae": 1.008,
+  "interval_90_test_coverage": 0.8925
+ },
+ "reproduced": {
+  "test_network_ensemble_mae": 0.7613,
+  "test_trees_fixed_mae": 0.8344,
+  "test_naive_mean_mae": 1.9222,
+  "cv_network_ensemble_mae": 0.7586,
+  "cv_trees_fixed_mae": 0.8237,
+  "chosen_network_settings": {
+   "epochs": 30,
+   "batch": 32,
+   "lr": 0.004,
+   "loss": "huber",
+   "log1p": "auto",
+   "clip": 5,
+   "members": 5,
+   "seed": 11,
+   "hidden": [
+    96,
+    48
+   ],
+   "decay": 0.0001
+  },
+  "eight_splits_mean_mae_network": 0.7449,
+  "eight_splits_mean_mae_trees": 0.8191,
+  "scaffold_network_mae": 1.0033,
+  "scaffold_trees_mae": 1.008,
+  "interval_90_test_coverage": 0.8925
+ },
+ "identical_to_original": {
+  "test_network_ensemble_mae": true,
+  "test_trees_fixed_mae": true,
+  "test_naive_mean_mae": true,
+  "cv_network_ensemble_mae": true,
+  "cv_trees_fixed_mae": true,
+  "chosen_network_settings": true,
+  "eight_splits_mean_mae_network": true,
+  "eight_splits_mean_mae_trees": true,
+  "scaffold_network_mae": true,
+  "scaffold_trees_mae": true,
+  "interval_90_test_coverage": true
+ },
+ "tuned_trees": {
+  "reproduced_grid": [
+   {
+    "n_estimators": 300,
+    "max_depth": 3,
+    "learning_rate": 0.1,
+    "cv_mae": 0.8299
+   },
+   {
+    "n_estimators": 300,
+    "max_depth": 4,
+    "learning_rate": 0.05,
+    "cv_mae": 0.8237
+   },
+   {
+    "n_estimators": 300,
+    "max_depth": 6,
+    "learning_rate": 0.05,
+    "cv_mae": 0.792
+   },
+   {
+    "n_estimators": 300,
+    "max_depth": 6,
+    "learning_rate": 0.1,
+    "cv_mae": 0.7956
+   },
+   {
+    "n_estimators": 600,
+    "max_depth": 4,
+    "learning_rate": 0.05,
+    "cv_mae": 0.8105
+   },
+   {
+    "n_estimators": 600,
+    "max_depth": 4,
+    "learning_rate": 0.1,
+    "cv_mae": 0.8081
+   },
+   {
+    "n_estimators": 600,
+    "max_depth": 6,
+    "learning_rate": 0.03,
+    "cv_mae": 0.7871
+   },
+   {
+    "n_estimators": 600,
+    "max_depth": 6,
+    "learning_rate": 0.05,
+    "cv_mae": 0.7835
+   }
+  ],
+  "chosen": {
+   "n_estimators": 600,
+   "max_depth": 6,
+   "learning_rate": 0.05,
+   "cv_mae": 0.7835
+  },
+  "test_mae": 0.777,
+  "original_check_test_mae": 0.777,
+  "original_check_config": "GradientBoostingRegressor(n_estimators=600, max_depth=6, learning_rate=0.05, subsample=0.8, random_state=42). It won 3-fold GroupKFold CV on the training rows with CV MAE 0.7835, out of 8 configs: (300,3,.1) .830, (300,4,.05) .824, (300,6,.05) .792, (300,6,.1) .796, (600,4,.05) .810, (600,4,.1) .808, (600,6,.03) .787, (600,6,.05) .784. On the same folds the network ensemble's CV MAE was 0.7586.",
+  "network_minus_tuned_trees_test_mae": -0.0158
+ },
+ "selected_model_note": "Network settings chosen by the original CV grid; tuned trees chosen by their own 3-fold grouped CV grid. Neither was selected on the test split.",
+ "steps": [
+  {
+   "step": "prepare",
+   "cmd": "/usr/local/bin/python3 -I prepare.py data/data_curated.csv runs/20261121T210448Z",
+   "seconds": 1.4,
+   "exit": 0
+  },
+  {
+   "step": "prepare_again",
+   "cmd": "/usr/local/bin/python3 -I prepare.py data/data_curated.csv runs/20261121T210448Z/prepare_again",
+   "seconds": 1.6,
+   "exit": 0
+  },
+  {
+   "step": "nn_cv",
+   "cmd": "node nn_run.js cv runs/20261121T210448Z/all_rows.json runs/20261121T210448Z/splits.json runs/20261121T210448Z",
+   "seconds": 85.8,
+   "exit": 0
+  },
+  {
+   "step": "nn_final",
+   "cmd": "node nn_run.js final runs/20261121T210448Z/all_rows.json runs/20261121T210448Z/splits.json runs/20261121T210448Z",
+   "seconds": 23.9,
+   "exit": 0
+  },
+  {
+   "step": "nn_splits",
+   "cmd": "node nn_run.js splits runs/20261121T210448Z/all_rows.json runs/20261121T210448Z/splits.json runs/20261121T210448Z",
+   "seconds": 156.9,
+   "exit": 0
+  },
+  {
+   "step": "trees",
+   "cmd": "/usr/local/bin/python3 -I trees.py runs/20261121T210448Z/all_rows.json runs/20261121T210448Z/splits.json runs/20261121T210448Z/trees.json",
+   "seconds": 62.2,
+   "exit": 0
+  },
+  {
+   "step": "trees_tuned",
+   "cmd": "/usr/local/bin/python3 -I trees_tuned.py runs/20261121T210448Z/all_rows.json runs/20261121T210448Z/trees_tuned.json",
+   "seconds": 101.4,
+   "exit": 0
+  },
+  {
+   "step": "scaffold_split",
+   "cmd": "/usr/local/bin/python3 -I scaffold_split.py data/data_curated.csv runs/20261121T210448Z/all_rows.json runs/20261121T210448Z/scaffold/scaffold_split.json",
+   "seconds": 3.0,
+   "exit": 0
+  },
+  {
+   "step": "scaffold_nn",
+   "cmd": "node nn_run.js splits runs/20261121T210448Z/all_rows.json runs/20261121T210448Z/scaffold/scaffold_split.json runs/20261121T210448Z/scaffold",
+   "seconds": 19.9,
+   "exit": 0
+  },
+  {
+   "step": "scaffold_eval",
+   "cmd": "/usr/local/bin/python3 -I scaffold_eval.py runs/20261121T210448Z/all_rows.json runs/20261121T210448Z/scaffold/scaffold_split.json runs/20261121T210448Z/scaffold/nn_splits.json runs/20261121T210448Z/scaffold/scaffold_result.json",
+   "seconds": 6.9,
+   "exit": 0
+  },
+  {
+   "step": "make_notes",
+   "cmd": "/usr/local/bin/python3 -I make_notes.py runs/20261121T210448Z runs/20261121T210448Z/notes.json",
+   "seconds": 0.0,
+   "exit": 0
+  },
+  {
+   "step": "evaluate",
+   "cmd": "/usr/local/bin/python3 -I evaluate.py runs/20261121T210448Z data/data_curated.csv runs/20261121T210448Z/notes.json",
+   "seconds": 1.0,
+   "exit": 0
+  }
+ ],
+ "elapsed_seconds": 465.0,
+ "run_dir_gitignored": "runs/20261121T210448Z"
+}
