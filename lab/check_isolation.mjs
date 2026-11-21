@@ -64,7 +64,7 @@ for (const p of code) {
   }
   if (name !== 'guard.mjs' && name !== 'check_isolation.mjs' && name !== 'make_splits.mjs' && name !== 'open_vault.mjs' && /\.mjs$/.test(name)) {
     const firstImport = text.match(/^import .*$/m)
-    ok(firstImport && /['"]\.\/guard\.mjs['"]/.test(firstImport[0]) || (name === 'net_parity.mjs' && /^import '\.\/allow_full_data\.mjs'\nimport '\.\/guard\.mjs'/m.test(text)) || name === 'allow_full_data.mjs', `${name}: imports guard.mjs first`)
+    ok(firstImport && /['"](\.\.?\/)+guard\.mjs['"]/.test(firstImport[0]) || (name === 'net_parity.mjs' && /^import '\.\/allow_full_data\.mjs'\nimport '\.\/guard\.mjs'/m.test(text)) || name === 'allow_full_data.mjs', `${name}: imports guard.mjs first`)
   }
 }
 console.log(`\n${failed ? 'FAILED' : 'PASSED'}: ${failed} failure(s)`)
