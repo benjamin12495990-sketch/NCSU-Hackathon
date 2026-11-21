@@ -2,3 +2,5 @@
 archive_isolation_check/
 # Weights of the smoke-test run (its lineage.jsonl is kept).
 archive_smoke/weights/
+# Pre-trained initial weights, recomputed deterministically when missing.
+cache/
