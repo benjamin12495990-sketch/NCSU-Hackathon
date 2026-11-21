@@ -170,6 +170,8 @@ number with a different search, one gathered expert objections, and one looked f
 | SciSpace | Found the CO2 factors and densities, and the published accuracy figures. |
 | Consensus | Confirmed the superplasticizer factor from a second source; expert objections. |
 | FastTrack Literature Open | Confirmed the dataset paper and resolved the DOI of the CO2 source. |
+| OpenAlex | Connected late; used to check the project's reference list (6 of 8 references matched). |
+| Wiley Scholar Gateway, Firecrawl | Connected late; not used for anything in this project. |
 | alphaXiv | Searched preprints; nothing from it is on the page. |
 | Elicit | Tried; the account's plan has no API access, so nothing came back. |
 | Claude Market and the connector registry | Searched for concrete, cement, life cycle and deployment servers. None exist for concrete. |

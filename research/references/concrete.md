@@ -13,7 +13,7 @@ were seen only in a secondary table; each entry below says which. PDFs were not 
 ### Portland cement — CO2 0.82 kgCO2e/kg, density 3150 kg/m3
 - **Used in:** `public/model/factors.json`, the app's CO2 ranking
 - **CO2 source:** Flower & Sanjayan (2007), *Int. J. Life Cycle Assessment* — https://doi.org/10.1007/s11367-007-0327-3 (confirmed by a second search)
-- **Density source:** Chandrakar & Singh (2017), specific gravity 3.15 — https://scispace.com/papers/an-experimental-study-on-high-performance-concrete-using-24q3e. **Caveat:** the paper is listed on SciSpace but we could not find it in Crossref or OpenAlex. The value 3.15 itself was confirmed in other abstracts by a second search.
+- **Density source:** Chandrakar, K. & Singh, V. (2017), "An Experimental Study on High Performance Concrete Using Mineral Fly Ash and GGBS with M-60 grade Concrete", specific gravity 3.15 — https://openalex.org/W2776940741. Matched by title in OpenAlex tonight; it has no DOI on record. The value 3.15 was also confirmed in other abstracts by a second search.
 
 ### Blast furnace slag — CO2 0.143 kgCO2e/kg, density 2880 kg/m3
 - **CO2 source:** Flower & Sanjayan (2007), as tabulated in Kubissa, Jaskulski et al. (2019), *Architecture Civil Engineering Environment*, Table 1 — the link is to the original paper: https://doi.org/10.1007/s11367-007-0327-3. **Caveat:** seen only in that secondary table, and we did not record the secondary paper's title or DOI.
@@ -39,3 +39,11 @@ were seen only in a secondary table; each entry below says which. PDFs were not 
 
 ### Dataset — UCI Concrete Compressive Strength (1,030 results)
 - **Source:** Yeh (1998), via UCI Machine Learning Repository. Used in `train/train.py`.
+
+### Reference check against OpenAlex
+Eight references were checked with the OpenAlex connector. Matched exactly: Flower & Sanjayan
+(2007), Schiefer & Plank (2023), Yeh (1998), Sudharsan, Gosh & Sood (2022), Syahyadi et al. (2026)
+and Chandrakar & Singh (2017). Not matched with the details we hold: Kubissa, Jaskulski et al.
+(2019), the secondary table for the slag and fly ash factors, and Venegas Padilla et al. (2017),
+the source of the cement oxide ranges. A failed match means we could not confirm those two records,
+not that they do not exist.

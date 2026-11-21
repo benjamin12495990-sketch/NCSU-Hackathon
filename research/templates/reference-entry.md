@@ -8,7 +8,7 @@ Copy one block per sourced number into the matching `research/references/<domain
 - **Used in:** <file / model / page where this number appears>
 - **Source:** <Author(s) (Year), Journal/Publisher>
 - **Link:** <DOI or stable URL>
-- **Retrieved via:** <OpenAlex / Scite / SciSpace / Wiley / PubMed / …>
+- **Retrieved via:** <OpenAlex / FastTrack Literature Open / SciSpace / Wiley / Consensus / …>
 - **Second check:** <independent search that confirmed it, or "not confirmed">
 - **Caveats:** <region, basis, assumptions, anything that limits the number>
 ```

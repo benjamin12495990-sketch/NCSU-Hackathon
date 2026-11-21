@@ -13,16 +13,17 @@ the biomedical connectors (PubMed, Arca, EDEN) are intentionally **not** used.
 
 ## The set
 
-Used so far, for the live concrete page: **SciSpace**, **Consensus** and **FastTrack Literature
-Open** (see the root README). The table below is the set recommended for the new domains. Of these, only
-SciSpace has been used. OpenAlex (as its own connector), Scite, Wiley Scholar Gateway and Firecrawl
-have not been used in this project yet; FastTrack Literature Open, which was used, searches the
-OpenAlex index.
+Used for numbers on the live concrete page: **SciSpace**, **Consensus** and **FastTrack Literature
+Open** (see the root README). **OpenAlex** was connected late in the hackathon and used once, to
+check the project's own reference list: 6 of 8 references matched a record, 2 did not (see
+`references/concrete.md`). **Wiley Scholar Gateway** and **Firecrawl** are connected but have not
+been used for anything in this project yet. Scite was dropped from the set because it is a paid
+service; FastTrack Literature Open takes its place for checking citations.
 
 | Connector | Best for | Notes |
 | --- | --- | --- |
 | **OpenAlex** | 250M+ papers, citations, authors across every field | Free, no account. The default broad search — start here. |
-| **Scite** | does later work *support or contradict* a claim | Ideal for validating a factor or a property relationship. |
+| **FastTrack Literature Open** | checking that a citation is real, and finding who cites it | Free. Used tonight to confirm the dataset paper. Replaces Scite, which is paid. |
 | **SciSpace** | paper discovery + structured extraction | Already used for the concrete factors. |
 | **Wiley Scholar Gateway** | full text of Wiley journals | Strong on polymers, cement, physical chemistry. |
 | **Firecrawl (research)** | read a specific paper / open a page a crawler can reach | For PDFs and pages other tools can't open. |
@@ -30,7 +31,7 @@ OpenAlex index.
 ## How to use them (every domain, every agent)
 
 1. **Broad first:** OpenAlex to find the relevant papers and datasets.
-2. **Verify the number:** Scite (or a second OpenAlex query) to confirm a factor is supported and
+2. **Verify the number:** FastTrack Literature Open (or a second OpenAlex query) to confirm a factor is supported and
    not contradicted by later work.
 3. **Read the source:** Wiley / Firecrawl for the actual text where the number lives.
 4. **Record it:** add the citation to `research/references/<domain>.md` using
