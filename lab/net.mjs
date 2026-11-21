@@ -1,7 +1,8 @@
 // One network trainer for the lab. seeded() and Mlp are copied unchanged from src/lib/nnFamily.js (itself a
 // copy of src/lib/nn.js); inputs() is copied from nn.js createTrainer, so with options {} this trainer gives
 // exactly the page's predictions (npm run lab:parity proves it). Added: getWeights()/setWeights() for warm
-// starts, a self-contained weights object (fromWeights) for scoring later, and a pretrain(rows) seam.
+// starts, a self-contained weights object (fromWeights) for scoring later, pretrain(rows, hp) on extra rows with a
+// shared input scaling (createNet's extra.scaleWith), and the 'mae' loss.
 import './guard.mjs'
 
 // Seeded random numbers, so the same press gives the same training run.
@@ -131,17 +132,23 @@ export function makeInputs(opts) {
 // Trains one network on train = { X: rows of the nine features, y: MPa }. Same loop as nn.js createTrainer:
 // standardise with the training rows, He init from seeded(seed), shuffle each epoch, Adam, lr decays to 10%.
 // options.features: 'base' | 'rich' | 'physics'; options.loss: 'squared' | 'huber' (clip at 1 sd).
-export function createNet(train, options = {}) {
+// options.loss may also be 'mae' (gradient = sign of the error).
+// extra.scaleWith = { X, y }: rows that join TRAIN when the input and target scaling is computed. A network that
+// will be pre-trained passes its pre-training rows here, so pre-training and fine-tuning share ONE scaling,
+// computed from TRAIN plus those rows (mean and sd per input, divide by n). Without it (options {}), the scaling
+// is TRAIN only, exactly as in nn.js.
+export function createNet(train, options = {}, extra = {}) {
   const opts = { ...DEFAULTS, ...options }
   const inputs = makeInputs(opts)
-  const rawX = train.X.map(inputs)
+  const sw = extra.scaleWith
+  const rawX = (sw ? [...train.X, ...sw.X] : train.X).map(inputs), ys = sw ? [...train.y, ...sw.y] : train.y
   const n = rawX.length, d = rawX[0].length
   const mean = new Float64Array(d), sd = new Float64Array(d)
   for (const x of rawX) for (let i = 0; i < d; i++) mean[i] += x[i] / n
   for (const x of rawX) for (let i = 0; i < d; i++) sd[i] += (x[i] - mean[i]) ** 2 / n
   for (let i = 0; i < d; i++) sd[i] = Math.sqrt(sd[i]) || 1
-  const yMean = train.y.reduce((s, v) => s + v, 0) / n
-  const ySd = Math.sqrt(train.y.reduce((s, v) => s + (v - yMean) ** 2, 0) / n)
+  const yMean = ys.reduce((s, v) => s + v, 0) / n
+  const ySd = Math.sqrt(ys.reduce((s, v) => s + (v - yMean) ** 2, 0) / n)
   return build(opts, { mean: [...mean], sd: [...sd], yMean, ySd }, train)
 }
 
@@ -165,12 +172,34 @@ function build(opts, sc, train) {
   const net = new Mlp(sizes, rand)
   const order = Array.from({ length: n }, (_, i) => i)
   const predictScaled = (x) => net.forward(x) * ySd + yMean
+  const resetAdam = () => {
+    for (let l = 0; l < net.L; l++) { net.mW[l].fill(0); net.vW[l].fill(0); net.mb[l].fill(0); net.vb[l].fill(0) }
+    net.t = 0
+  }
   const trainer = {
     options: opts, layers: sizes, epoch: 0, totalEpochs: opts.epochs, warmStarted: false,
     weightCount: net.W.reduce((s, w) => s + w.length, 0) + net.b.reduce((s, b) => s + b.length, 0),
-    // Seam for physics pre-training on synthetic rows (planned). For now it does nothing: it does not touch
-    // the weights or draw from the random stream, so runs with and without it are identical.
-    pretrain(rows) { return { rows: rows ? rows.length : 0, applied: false } },
+    // Pre-training on extra rows (synthetic physics or BOxCrete) before the TRAIN fit. It uses the shared scaling
+    // (see createNet extra.scaleWith), squared loss and its own random stream seeded(hp.seed), so the later
+    // fine-tuning shuffles are the same whether the pre-trained weights were computed here or loaded from a cache.
+    // Adam's moments are reset afterwards. Called with no rows it does nothing (the phase-1 behaviour).
+    pretrain(rows, hp = {}) {
+      if (!rows || !rows.X || !rows.X.length) return { rows: 0, applied: false }
+      const h = { epochs: 40, lr: 0.004, decay: 1e-4, batch: 32, seed: 1, ...hp }
+      const PX = rows.X.map((r) => scale(inputs(r))), Py = rows.y.map((v) => (v - yMean) / ySd)
+      const prng = seeded(h.seed), m = PX.length, ord = Array.from({ length: m }, (_, i) => i)
+      for (let e = 0; e < h.epochs; e++) {
+        for (let i = m - 1; i > 0; i--) { const j = Math.floor(prng() * (i + 1)); [ord[i], ord[j]] = [ord[j], ord[i]] }
+        const lr = h.lr * (1 - 0.9 * (e / h.epochs))
+        for (let start = 0; start < m; start += h.batch) {
+          const end = Math.min(m, start + h.batch)
+          for (let k = start; k < end; k++) net.backward(net.forward(PX[ord[k]]) - Py[ord[k]])
+          net.step(lr, end - start, h.decay)
+        }
+      }
+      resetAdam()
+      return { rows: m, applied: true, ...h }
+    },
     runEpochs(count) {
       let loss = 0
       for (let c = 0; c < count && trainer.epoch < opts.epochs; c++) {
@@ -185,7 +214,7 @@ function build(opts, sc, train) {
             const idx = order[k]
             const error = net.forward(X[idx]) - y[idx]
             loss += error * error
-            net.backward(opts.loss === 'huber' ? Math.max(-1, Math.min(1, error)) : error)
+            net.backward(opts.loss === 'huber' ? Math.max(-1, Math.min(1, error)) : opts.loss === 'mae' ? Math.sign(error) : error)
           }
           net.step(lr, end - start, opts.decay)
         }
