@@ -224,7 +224,7 @@ export default function App() {
             </select>
           </div>
           <button type="submit" disabled={!data}>{data ? 'Design mixes' : 'Loading model…'}</button>
-          <button type="button" disabled={!data || serverLoading} onClick={() => runServer()}>
+          <button type="button" className="quiet" disabled={!data || serverLoading} onClick={() => runServer()}>
             {serverLoading ? 'Pinging server…' : 'Ping server for a new batch'}
           </button>
         </div>
