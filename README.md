@@ -1,4 +1,4 @@
-# Low-Carbon Concrete Mix Designer
+# Formulation Designer: low-carbon concrete mixes
 
 A one-page web app that proposes new concrete mixes for a strength you choose and ranks them by
 embodied CO2. Built from scratch at TRIANGULATE, an AI hackathon at NC State.
