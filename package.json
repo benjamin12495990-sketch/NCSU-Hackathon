@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "parity": "node scripts/parity.mjs"
+    "parity": "node scripts/parity.mjs",
+    "sweep": "node scripts/sweep.mjs"
   },
   "dependencies": {
     "react": "^19.3.1",

@@ -162,6 +162,12 @@ standard itself. The page says that and marks how many sources saw each rule.
 3-day slag mix that measured 41.1 MPa and the network predicted 26.0, a 15 MPa miss. Early-age
 results are its weak spot, and that is one more reason the trees are the main model.
 
+**Does the network know chemistry?** No. After training, the panel runs a sweep test: on 26 tested
+mixes, more water lowered its prediction on 23 and more age raised it on all 26, so it has picked up
+both trends from the lab results. But on 6 of them it predicted a strength below zero at one day
+old, which is impossible. It follows patterns; it does not understand them. Its 90% interval is
+± 11.1 MPa, and on the held-out results that held for 93 in 100.
+
 **Is the network as good as the trees?** On the page's held-out mixes the trees are ahead, 3.3
 against 3.9 MPa. We also ran both on eight other held-out splits: an ensemble of five of these
 networks averaged 4.2 MPa and the trees 4.3. The ensemble won four splits, lost three and tied one,

@@ -45,8 +45,14 @@
  "ensemble_vs_trees": {
   "ensemble_better": 4,
   "trees_better": 3,
-  "ties": 1
+  "ties": 1,
+  "mean_difference_MPa": -0.085,
+  "ci95_MPa": [
+   -0.48,
+   0.31
+  ],
+  "how": "paired differences (ensemble minus trees) over the eight splits; t interval with 7 degrees of freedom"
  },
  "how_the_ensemble_was_chosen": "By three-fold cross-validation on the 786 training rows only (whole mixes kept together): ensemble 4.48 MPa, trees 4.75 MPa on the same folds. It was then scored once on the page's held-out mixes: 3.92 MPa, against 3.29 MPa for the trees.",
- "reading": "A tie. The ensemble's average is 2% lower than the trees', it wins four splits, loses three and ties one, and the gap is far smaller than the spread between splits. On the page's own held-out split the trees are ahead."
+ "reading": "A tie. The ensemble's average is 0.085 MPa (2%) lower than the trees', with a 95% confidence interval of -0.48 to +0.31 MPa, which includes zero. It wins four splits, loses three and ties one. On the page's own held-out split the trees are ahead."
 }

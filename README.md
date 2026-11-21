@@ -130,6 +130,25 @@ weights, the Adam optimiser and squared-error loss. Nothing pre-trained is downl
   settings were chosen after seven trial runs scored on the same held-out mixes, so 3.9 MPa is
   slightly flattering. Other seeds we tried ended between 4.0 and 4.6 MPa.
 
+### How sure is it, and did it learn the physics?
+
+After training, the page does two more things with the network it just trained.
+
+- **A 90% interval.** The same design is trained three more times, each time leaving out a third
+  of the training mixes and scoring on them. The interval is the size of miss that nine in ten of
+  those 786 unseen results stayed inside: **± 11.1 MPa**. On the 219 held-out results it held for
+  93 in 100. It is the same width everywhere, which is crude: misses are larger for young concrete.
+- **A sweep test.** One mix is changed one thing at a time: more water for the same binder, then
+  more curing time. Concrete should get weaker with the first and stronger with the second. The
+  page plots the network and the trees and counts the steps that go the right way.
+- **What the sweep shows** (`npm run sweep`, 26 tested mixes spread through the dataset): more
+  water lowered the network's prediction on 23 of 26 mixes and more age raised it on 26 of 26. The
+  trees got both right on all 26. On 6 mixes the network predicted a strength below zero at one
+  day old, which is impossible; nothing in the network prevents it.
+- **What that means.** The network has picked up both trends from the lab results alone. It does
+  not understand them: it has no notion of water, cement or a reaction, and it breaks a physical
+  limit that any engineer knows.
+
 ### Is the network as accurate as the trees?
 
 About the same. We tried to make it better and report what we found, not what we hoped for.
@@ -143,7 +162,8 @@ About the same. We tried to make it better and report what we found, not what we
 - The ensemble was chosen by cross-validation on training rows only (4.48 MPa against 4.75 MPa
   for the trees on the same folds), then scored once on the page's held-out mixes.
 - Over the eight other splits it beats the trees on four, loses on three and ties one. Its average
-  is 2% lower, which is far smaller than the spread between splits. That is a tie.
+  is 0.085 MPa (2%) lower, with a 95% confidence interval of −0.48 to +0.31 MPa for the difference.
+  The interval includes zero, so this is a tie.
 - The trees' 3.29 MPa comes from one split that happens to suit them: on the eight others they
   range from 3.7 to 5.3 MPa.
 - Per-split numbers are in `research/nn_vs_trees.json`; the scripts are in `scripts/experiments/`
@@ -261,6 +281,8 @@ train/test split and several wording changes.
 | `src/lib/design.js` | Generates, filters, ranks and checks the candidates. |
 | `src/lib/name.js` | Builds each mix's formula name from its recipe. |
 | `src/lib/nn.js` | The neural network: forward pass, backpropagation and Adam, written from scratch. |
+| `src/lib/sweep.js` | The sweep test: vary water or age alone and count which way the prediction moves. |
+| `scripts/sweep.mjs` | `npm run sweep`: trains the network and runs the sweep test on 26 tested mixes. |
 | `src/components/NeuralNet.jsx` | The training panel: button, learning curve and the two prediction tables. |
 | `public/model/nn_data.json` | The training and held-out rows the network uses, the same split as the trees. |
 | `train/export_nn_data.py` | Writes `nn_data.json` from the same loading, features and split as `train/train.py`. |

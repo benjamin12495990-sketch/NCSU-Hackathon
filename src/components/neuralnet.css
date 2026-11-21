@@ -16,3 +16,9 @@
 .nncurve .line { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linejoin: round; }
 .nncurve .dot { fill: var(--accent); }
 @media (max-width: 860px) { .nnbody { grid-template-columns: minmax(0, 1fr); } }
+.nncurve .band { fill: var(--muted); fill-opacity: 0.16; stroke: none; }
+.nnsweep { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+.nnsweep h3 { margin: 0 0 6px; font-size: 1rem; }
+.nnsweeps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin: 10px 0; }
+.nnsweeps figure { margin: 0; }
+@media (max-width: 860px) { .nnsweeps { grid-template-columns: minmax(0, 1fr); } }
