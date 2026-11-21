@@ -58,14 +58,22 @@ has TRAIN rows.
 2. **Evolve.** Every lab script except `open_vault.mjs` imports `guard.mjs` first. The guard makes
    every `node:fs` read of `lab/vault/` throw, and also every read of the full dataset files that
    contain FUTURE rows (only `net_parity.mjs` may read `nn_data.json`, to prove parity).
-3. **Pre-register.** `preregister.mjs` writes `lab/preregistration.json` once. It names the champion by
-   reward, the best individual without physics inputs, the best individual that did not inherit
-   weights, and every baseline. Each model's SHA-256 is recorded, together with the vault's SHA-256,
-   the lineage hash and the git commit.
-4. **Open once.** `open_vault.mjs` refuses to start unless the pre-registration exists and every hash
-   matches. It writes the marker `results/VAULT_OPENED` before scoring, then scores each listed model
-   once on FUTURE: overall, seen and unseen mixes, mix groups, and age bands. The result goes to
-   `results/vault_opening.json`. Any later run only prints that stored result. **It has not been run.**
+3. **Pre-register.** `preregister.mjs` writes `lab/preregistration.json`. It names every model to
+   be scored, each model's SHA-256, the vault's SHA-256, the lineage hashes, the git commit and the
+   code manifest. The current file is format 3; the first one is kept unchanged as
+   `preregistration_v1.json`.
+4. **Open once.** `open_vault.mjs` runs these steps in order:
+   1. It refuses if `results/OPENING_STARTED.json`, the result or the marker already exists.
+   2. It checks the pre-registration, the code manifest, the versions and every model file.
+   3. It writes `results/OPENING_STARTED.json` **before** reading the vault.
+   4. It scores each model once.
+   5. It writes `results/vault_opening.json` as soon as scoring ends, and only then the marker
+      `results/VAULT_OPENED`.
+
+   Any later run only prints what exists. **The person who runs the real opening must commit
+   `lab/results/OPENING_STARTED.json`, `vault_opening.json` and `VAULT_OPENED` immediately after the
+   run (and push them)**, so the opening counts as done in every clone. The real opening has not been
+   run.
 
 ## Files
 
@@ -229,23 +237,83 @@ because evolution selected on REWARD.
 - **The champion does not retrain to its archived score** (7.92 against 7.12 on REWARD). That is the
   gap Real et al.'s criterion warns about.
 
-## Pre-registration and the dry run
+## Pre-registration and the dry run (registration 2, after the audit)
 
-- **Pre-registration.** `lab/preregistration.json` has SHA-256
-  `4b67533ec706c4ecf3f70d70d5f855e388404a6cbf7f7b98c969344e9b1ae6b8`. It lists all 13 models with
-  their hashes, the FUTURE hash, both lineage hashes, the champion rule, the metrics, and the
-  success criterion. The criterion is that champion_retrained beats the best of: physics_powers,
-  physics_fib, gbt, rf, ridge, plain and random_champion, with a paired mix-grouped bootstrap 95%
-  interval below zero.
-- **Dry run.** `npm run lab:dry-run` runs the whole opening on a decoy vault of MONITOR rows in a
-  temporary folder, with the guard loaded. It checks the hashes, scores the models, writes the
-  result and then the marker, shows that a second run only prints the stored result, and confirms
-  that `lab/vault/future.json` throws. The output is in `results/vault_dry_run.txt`.
-  - On the decoy, the primary difference is +0.07 MPa with a 95% interval of [−0.49, 0.69] against
-    the random-search champion. That is not a success.
-  - That is a MONITOR number, not a FUTURE one.
-- **The real opening** (`node lab/open_vault.mjs`) has not been run. It now writes the marker only
-  after the result is saved.
+### Pre-registration
+
+- `lab/preregistration.json` (format 3) supersedes `preregistration_v1.json`, which is kept unchanged.
+  Its SHA-256 is `41be8692d8ddcd319aa3f2a03f3deac71d5ce24eafb2deeeba0d1f993a0dabe1`.
+- **Models.** It lists 15 models with their hashes.
+  - The primary champion is `champion_retrained`: the champion genome with seed indices 0-9,
+    retrained from scratch, scored as the mean of the 10 seeds.
+  - The comparison set ("against") is `physics_powers`, `physics_fib`, `curve_permix`, `gbt`, `rf`,
+    `ridge`, `plain`, `panel_design`, `plain_physics_pretrain` and `random_champion_retrained`. The
+    last one is the random-search champion's genome, retrained exactly like `champion_retrained`.
+  - Descriptive only: `champion_no_pretrain`, the archived `champion`, the archived
+    `random_champion` and `top10_ensemble`.
+- **Code manifest.** It records the SHA-256 of all 20 lab files in the import closure of the
+  training, scoring and opening scripts (`codehash.mjs`), the data tiers, the BOxCrete file, the
+  seal receipt, and the Node, Python, scikit-learn, NumPy and SciPy versions. `open_vault.mjs`
+  recomputes all of it and refuses on any difference.
+- **Criterion.**
+  - "Best" is the model in "against" with the lowest point RMSE on all FUTURE rows.
+  - The paired bootstrap draws 2,000 resamples of FUTURE mix groups g, with the random stream
+    `seeded(909)`.
+  - The 95% percentile interval is taken of RMSE(champion_retrained) − RMSE(best).
+  - Success means its upper end is below 0.
+  - The same interval against every model in "against" is reported as a secondary result.
+- **Disclosures** are listed in the file and under Limits below.
+
+### New baselines
+
+| Model | REWARD RMSE | MONITOR RMSE |
+| --- | --- | --- |
+| curve_permix | 8.87 | 9.18 |
+| random_champion_retrained, median of 10 (mean of seeds) | 7.67 (7.03) | 7.61 (7.21) |
+
+- **curve_permix:** s28 of each TRAIN mix comes from its own TRAIN rows, times
+  exp((0.20 + 0.35 p_SCM)(1 − √(28/t))). Mixes with no TRAIN rows fall back to the TRAIN-calibrated
+  fib generator.
+- `plain_physics_pretrain` (7.72 / 8.57) and `panel_design` (10.40 / 12.14), medians of 10 seeds,
+  are now in the comparison set.
+
+### Dry run
+
+`npm run lab:dry-run` (output in `results/vault_dry_run_v2.txt`) loads the guard first and works only
+on decoy vaults of MONITOR rows in a temporary folder. It checks:
+
+- (A) the full opening, with the manifest, model hashes, OPENING_STARTED.json, scoring, the result
+  and then the marker;
+- (B) that a second run is refused and prints the stored result;
+- (C) that an OPENING_STARTED.json left by a simulated crash is refused without reading any vault;
+- (D) that a changed code hash is refused before OPENING_STARTED.json is written;
+- (E) that reading `lab/vault/future.json` throws.
+
+All checks pass. On the decoy (MONITOR, not FUTURE):
+
+- The best model in "against" is `random_champion_retrained`, at 7.21 MPa.
+- `champion_retrained` is **worse** than it by +0.60 MPa, with a 95% interval of [0.12, 1.08].
+- So the primary criterion fails on the decoy.
+
+## Limits
+
+- **Earlier design used the full data.** The input sets base, rich and physics, PANEL_DESIGN and the
+  page network's default settings were designed earlier in the project on the full UCI data. That
+  data includes ages over 28 days, so prior knowledge of those ages entered the design of the search
+  space and of several baselines. It did not enter at row level: no lab code read a FUTURE row.
+- **The comparison set was chosen with MONITOR known.** The REWARD and MONITOR scores of every model
+  were known when the comparison set and the criterion were written. This includes the second
+  registration, written after the audit.
+- **The seal is procedural.** The page's data file and the sealed file are both in git, so anyone
+  could read FUTURE. The seal and the guard prove only that no lab code read the vault before the
+  opening.
+- **Trees and forest are weak by construction.** Gradient-boosted trees and the random forest cannot
+  extrapolate in age beyond 7 days.
+- **The headline is about known mixes.** 263 of 271 FUTURE rows come from mixes already tested at
+  earlier ages, so the headline is about predicting later ages of known mixes. The 8 unseen-mix rows
+  are descriptive only.
+- **The per-mix curve's violations are mostly an artefact.** Changing w/b changes the mix, which
+  switches `curve_permix` to its fallback. Its 17% w/b violation rate mostly reflects that switch.
 
 ## Departures from the research note
 
@@ -256,3 +324,16 @@ because evolution selected on REWARD.
 | Champion must retrain well (5 seeds) | Not used to choose the champion. Pre-registered instead as champion_retrained over 10 seeds, which is the primary model. |
 | Ladder compares RMSE | It compares RMSE + 1 × (V_age + V_wb), with the SE of the RMSE difference. |
 | Fit A and n on UCI 28-day rows | Only one scale per generator, fitted on TRAIN (1 to 7 days), as instructed for this lab. |
+
+## Phase-2 files
+
+| File | What it does |
+| --- | --- |
+| `physics/synthetic.mjs`, `physics/boxcrete.mjs`, `external/` | The Powers and fib generators, each calibrated on TRAIN, and the BOxCrete rows with their licence note. |
+| `split_select.mjs` | Splits SELECT by mix group into REWARD and MONITOR. |
+| `genome2.mjs`, `reward2.mjs` | The phase-2 genome with one mutation per child, and the fitness with V_age, V_wb and the 5% filter. |
+| `evo2_core.mjs`, `evo2_worker.mjs`, `evolve2.mjs` | Pre-training rows and cache, training one individual over 2 seeds, the worker processes, the evolution and the random search. |
+| `sk_models.py`, `baselines2.mjs` | The scikit-learn baselines and every registered model, scored on REWARD and MONITOR (`results/baselines2_v2.json`). |
+| `scoring2.mjs` | Scoring on any set, with the pre-registered 2,000-resample mix-group bootstrap. |
+| `codehash.mjs` | The code manifest, built from builtins only, so the opener can check it before it reads the vault. |
+| `preregister.mjs`, `open_vault.mjs` | Pre-registration format 3 and the one-time opening, with `--dry-run`. |

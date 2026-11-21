@@ -1,7 +1,14 @@
 {
- "version": 2,
- "created": "2026-11-21T06:27:58.690Z",
- "commit": "53942d568603458ef808a50a4983b384192bb143",
+ "formatVersion": 3,
+ "registration": 2,
+ "supersedes": {
+  "file": "preregistration_v1.json",
+  "sha256": "4b67533ec706c4ecf3f70d70d5f855e388404a6cbf7f7b98c969344e9b1ae6b8",
+  "why": "an independent audit found the strongest baselines missing from the comparison, an unfair random-search comparison, unpinned code and missing disclosures"
+ },
+ "created": "2026-11-21T06:40:42.922Z",
+ "commit": "985fa9ad29a8a8f998c3480eac9bb5479ef4db81",
+ "workingTreeClean": true,
  "vault": {
   "sha256": "28a4e3e876e5a1f45a849960562abf4526327f0e1ea80b514bfa02844a1b69ed",
   "rows": 271,
@@ -9,10 +16,58 @@
   "seenMixRows": 263,
   "unseenMixRows": 8
  },
- "data": {
-  "train": "a2e9943129850186826ee1a95f1b493c5f5ab08ece0e7e6f476e38518a31d3c4",
-  "reward": "932727126b7561216ef9001ffb91fea9964432ebe02ea0a1d12fb9ffdb9a1a08",
-  "monitor": "7ee840341fbacffbcbbf265ed54a9a929221ffcf51ab086d88cc5b5b3beb20ad"
+ "code": {
+  "roots": [
+   "open_vault.mjs",
+   "scoring2.mjs",
+   "preregister.mjs",
+   "baselines2.mjs",
+   "evolve2.mjs",
+   "evo2_worker.mjs",
+   "split_select.mjs",
+   "make_splits.mjs",
+   "codehash.mjs",
+   "sk_models.py",
+   "trees.py"
+  ],
+  "files": {
+   "archive.mjs": "04ef8ee3cf6216558d142dcf9331203603021a075ac8f67215c278f18d4022ba",
+   "baselines2.mjs": "813625b1db9be5bbaafa5b55c1115a2dce3a30d98cf49c71a2375179c3aed92a",
+   "codehash.mjs": "0c2bfd8b3972b26c79098ed9a4d5d65c84b96da8694a6934537f3187107da3f7",
+   "evo2_core.mjs": "c189ed388908c911fd1368a36a8754d789283316f4fb85069b430a6b5bab7952",
+   "evo2_worker.mjs": "f26575e2ddfeb0d545f1bc6ad0320e78a280e629f0d75962ee17dd0efdcd0724",
+   "evolve2.mjs": "8e747659b03555e57c9173fac5e8635f698181a48f7a54b340cd36db36c1d1f9",
+   "genome2.mjs": "3b19dbc16d38bac9616fd4c1bb32eb7ce7088474929ab88802ac5071fa0e59d0",
+   "guard.mjs": "a9043e3aba944a0de2a1447bd3dd9a15864d52509bb1d04203885fff2d8656dd",
+   "io.mjs": "f146480d1f2aa2121b9a0976d6481a4c9849fe48a6c5230111cf838c7e3cff9b",
+   "make_splits.mjs": "f6bfcc307ea97e625b8b3ff1d004aa6b4c71979649316fca0c65ba7770cac95d",
+   "net.mjs": "cb2fcc87717114af5784b9f142b999a843fa73a16dc4ba9e366b7a24aae3b2f2",
+   "open_vault.mjs": "0c8d2098a499c5c57dc1763ddd1fb2ce4f4c6b5169f1d64a8b0644a016b633df",
+   "physics/boxcrete.mjs": "90de0b5ab3074eabb85a1e4a75937885d730ca898dbc7251fdbc351ebd3206f7",
+   "physics/synthetic.mjs": "deb92f5db1bca43e39f5f958e09617cc7de74094adcb7cce5e848255f4380368",
+   "preregister.mjs": "f9b8c7f0aac4c2ef27f27731535051ab92af90b188bcbc8fcba82f1f9875f97e",
+   "reward2.mjs": "9e8e510aa88c6851230e4cc40c8f7e44a9dcf4304ccc72f73db573ee2980b140",
+   "scoring2.mjs": "a0f0fa3b0f1ad6edd86f1da58ba41557c0e68464b973f7f190c4f1070ec35370",
+   "sk_models.py": "98f169c880b36198959bab9463a50296ab712645a26cb54f25e5612cd188af07",
+   "split_select.mjs": "af6da984f32b49c3631c2f29160a50e034bb59f6d0d29a17b0a6543f96d36c5d",
+   "trees.py": "c46156e9a9645d23ba1e169d5141c5095014d5c4af26f1d78b4dbf92a5068001"
+  },
+  "data": {
+   "data/train.json": "a2e9943129850186826ee1a95f1b493c5f5ab08ece0e7e6f476e38518a31d3c4",
+   "data/select.json": "b42b5fbb92181e68b45d53b4512a20832fb2a449c57dd0f3fb6191f9346812bb",
+   "data/reward.json": "932727126b7561216ef9001ffb91fea9964432ebe02ea0a1d12fb9ffdb9a1a08",
+   "data/monitor.json": "7ee840341fbacffbcbbf265ed54a9a929221ffcf51ab086d88cc5b5b3beb20ad",
+   "external/boxcrete_data.csv": "8cf705f4558b941e049b997ff97122c06d4d4420f972f9ba2aec49ca09649402",
+   "seal_receipt.json": "1e7e9f3c4335d0f603139e8ebd8cff486a5cf1c5c0d8a4c86f37235be0bb81fb"
+  },
+  "versions": {
+   "node": "v22.23.5",
+   "python": "3.13.18",
+   "sklearn": "1.9.1",
+   "numpy": "2.5.3",
+   "scipy": "1.18.1"
+  },
+  "codeSha256": "934717087c98ca290255e0ec4b0ea57fe31c1c58cbab6ad3c84d130c7ef0d852"
  },
  "archives": {
   "evolution": {
@@ -41,22 +96,41 @@
    }
   }
  },
- "championRule": "The evolution champion is the individual holding the Ladder title when evolve2.mjs stopped (eligible individuals only; a challenger must beat REWARD RMSE + 1 x (V_age + V_wb) of the champion by more than the paired bootstrap SE of their RMSE difference). champion_retrained is that genome trained from scratch with seed indices 0-9.",
+ "championRule": "The evolution champion is the individual holding the Ladder title when evolve2.mjs stopped (eligible individuals only; a challenger must beat REWARD RMSE + 1 x (V_age + V_wb) of the champion by more than the paired bootstrap SE of their RMSE difference). champion_retrained is that genome trained from scratch with seed indices 0-9; its prediction is the mean of the 10 seeds.",
  "primary": {
   "championRole": "champion_retrained",
   "against": [
    "physics_powers",
    "physics_fib",
+   "curve_permix",
    "gbt",
    "rf",
    "ridge",
    "plain",
-   "random_champion"
+   "panel_design",
+   "plain_physics_pretrain",
+   "random_champion_retrained"
   ],
-  "successCriterion": "Success if the RMSE on FUTURE of champion_retrained (mean prediction of its 10 seeds) minus the RMSE of the best model in \"against\" has a 95% mix-grouped paired bootstrap interval (1,000 resamples of FUTURE mix groups, seed 909) entirely below zero. Otherwise the headline is that evolution did not beat the best simple baseline."
+  "successCriterion": "\"Best\" is the model in \"against\" with the lowest point RMSE (mean prediction of its seeds, for multi-seed models) on all 271 FUTURE rows. The paired bootstrap resamples FUTURE mix groups g (near-identical recipes) with replacement, 2000 resamples, random stream seeded(909) as in lab/scoring2.mjs; in each resample both models are scored on the same rows. The 95% interval is the percentile interval of RMSE(champion_retrained) - RMSE(best): the sorted values at 0-based positions floor(0.025 B) and ceil(0.975 B) - 1. Success if and only if its upper end is below 0. The same interval is reported against every model in \"against\" as secondary results. Otherwise the headline is that evolution did not beat the best baseline."
  },
- "metrics": "For every model, once: RMSE (primary), MAE and R2 on all FUTURE rows; for multi-seed models also the median and range over seeds; mix-grouped bootstrap 95% CI of RMSE; the same on rows whose exact mix was or was not tested in TRAIN or SELECT, by mix group, and by age bucket (56 d, 90-100 d, 120-180 d, 270-365 d); paired RMSE difference to champion_retrained with its CI; physics violations (V_age, V_wb, rate) on the query grid of FUTURE mixes (inputs only).",
- "honestReporting": "REWARD scores of evolved models are optimistic (they were selected on REWARD). Every result is published, including failures. The vault is opened exactly once.",
+ "descriptiveOnly": [
+  "champion_no_pretrain",
+  "champion",
+  "random_champion",
+  "top10_ensemble"
+ ],
+ "metrics": "For every model, once: RMSE (primary), MAE and R2 on all FUTURE rows; for multi-seed models also the median and range over seeds; mix-group bootstrap 95% percentile interval of RMSE; the same on rows whose exact mix was or was not tested in TRAIN or SELECT, by mix group, and by age (56 d, 90-100 d, 120-180 d, 270-365 d); RMSE(champion_retrained) - RMSE(model) with its paired interval; physics violations (V_age, V_wb, rate) on the query grid of FUTURE mixes (inputs only).",
+ "disclosures": [
+  "The input sets base, rich and physics, PANEL_DESIGN and the page network's default settings (64-32, lr 0.004, decay 1e-3, 300 epochs) were designed earlier in this project on the full UCI data, which includes ages over 28 days. Prior knowledge of those ages therefore entered the design of the search space and of several baselines, although no FUTURE row was used by any lab code.",
+  "The REWARD and MONITOR scores of every model were known when this comparison set and criterion were written (they are listed under selectionSetScores). This registration was written after an audit of the first one, also with those scores known.",
+  "The seal is procedural. The page data file (nn_data in public/model) and the sealed FUTURE file in the lab vault folder are both in git, so anyone could have read FUTURE. The seal and the guard prove only that no lab code read the vault before the opening.",
+  "Gradient-boosted trees and the random forest cannot extrapolate in age beyond the 7-day TRAIN rows, so they are weak baselines by construction.",
+  "263 of 271 FUTURE rows come from mixes already tested at earlier ages (in TRAIN or SELECT). The headline is therefore about predicting later ages of known mixes. The 8 unseen-mix rows are descriptive only.",
+  "The per-mix curve uses the fallback (the TRAIN-calibrated fib generator) for mixes with no TRAIN rows; changing w/b changes the mix, so its w/b violation rate (17% on the TRAIN query grid) mostly reflects that switch.",
+  "The REWARD scores of evolved models are optimistic: evolution selected on REWARD."
+ ],
+ "openingProtocol": "Run node lab/open_vault.mjs once. It writes lab/results/OPENING_STARTED.json before reading the vault; the opener must commit OPENING_STARTED.json, vault_opening.json and VAULT_OPENED immediately after the run, so the opening counts as done in every clone.",
+ "honestReporting": "Every result is published, including failures. The vault is opened exactly once.",
  "models": [
   {
    "role": "physics_powers",
@@ -64,11 +138,13 @@
    "file": "results/models2/physics_powers.json",
    "sha256": "e017d115417e77ab13c7047d234a85376dea4e454da25e6e12e073bfbfabc058",
    "note": "powers generator, scale 0.5891 fitted on TRAIN",
+   "use": "primary comparison (\"against\")",
    "selectionSetScores": {
     "rewardRmse": 10.310776031590914,
     "monitorRmse": 9.66385989346558,
     "rewardMedianOverSeeds": null,
-    "monitorMedianOverSeeds": null
+    "monitorMedianOverSeeds": null,
+    "violationRate": 0
    }
   },
   {
@@ -77,11 +153,28 @@
    "file": "results/models2/physics_fib.json",
    "sha256": "394994879e70767796547510fe1d009b18afd79c78af0bbbf1c642490ca5264e",
    "note": "fib generator, scale 0.6222 fitted on TRAIN",
+   "use": "primary comparison (\"against\")",
    "selectionSetScores": {
     "rewardRmse": 9.932903340340193,
     "monitorRmse": 9.076089643730006,
     "rewardMedianOverSeeds": null,
-    "monitorMedianOverSeeds": null
+    "monitorMedianOverSeeds": null,
+    "violationRate": 0
+   }
+  },
+  {
+   "role": "curve_permix",
+   "kind": "curve",
+   "file": "results/models2/curve_permix.json",
+   "sha256": "793dca03e9a9d354ffe92431000acfc16419069f9e259a6a3ba35aecfe7d5ccf",
+   "note": "per-mix fib curve, s28 fitted on each mix's TRAIN rows (181 mixes); other mixes use the TRAIN-calibrated fib generator",
+   "use": "primary comparison (\"against\")",
+   "selectionSetScores": {
+    "rewardRmse": 8.86477764040288,
+    "monitorRmse": 9.18343883806279,
+    "rewardMedianOverSeeds": null,
+    "monitorMedianOverSeeds": null,
+    "violationRate": 0.17010758941552778
    }
   },
   {
@@ -91,11 +184,13 @@
    "file": "results/models2/gbt.pkl",
    "sha256": "1171aef30f65db86fd0cfc3cdaf484ce82c77d8eba8db54cd5f66b482cdcb755",
    "note": "GradientBoostingRegressor(learning_rate=0.05, max_depth=4, n_estimators=300,\n                          random_state=42, subsample=0.8), scikit-learn 1.9.1",
+   "use": "primary comparison (\"against\")",
    "selectionSetScores": {
     "rewardRmse": 14.70338926890823,
     "monitorRmse": 15.833740412249044,
     "rewardMedianOverSeeds": null,
-    "monitorMedianOverSeeds": null
+    "monitorMedianOverSeeds": null,
+    "violationRate": 0.09828438499563827
    }
   },
   {
@@ -105,11 +200,13 @@
    "file": "results/models2/rf.pkl",
    "sha256": "52490f02c7d31ffc1b44d04bb208353600a1fa722912a9ba54970dee603befad",
    "note": "RandomForestRegressor(random_state=42), scikit-learn 1.9.1",
+   "use": "primary comparison (\"against\")",
    "selectionSetScores": {
     "rewardRmse": 15.801911027430005,
     "monitorRmse": 16.747468140073007,
     "rewardMedianOverSeeds": null,
-    "monitorMedianOverSeeds": null
+    "monitorMedianOverSeeds": null,
+    "violationRate": 0.10526315789473684
    }
   },
   {
@@ -119,11 +216,13 @@
    "file": "results/models2/ridge.pkl",
    "sha256": "e4d0c3be5e30c85a6bfc4c32a2dbab20dd5c9a1e35c06f38e61423dfae2f4e6d",
    "note": "Pipeline(steps=[('standardscaler', StandardScaler()), ('ridge', Ridge())]), scikit-learn 1.9.1",
+   "use": "primary comparison (\"against\")",
    "selectionSetScores": {
     "rewardRmse": 8.898116866928342,
     "monitorRmse": 8.627816127309934,
     "rewardMedianOverSeeds": null,
-    "monitorMedianOverSeeds": null
+    "monitorMedianOverSeeds": null,
+    "violationRate": 0
    }
   },
   {
@@ -145,11 +244,13 @@
     "seed": 11
    },
    "note": "page default network (options {})",
+   "use": "primary comparison (\"against\")",
    "selectionSetScores": {
     "rewardRmse": 13.611245626977126,
     "monitorRmse": 12.7628248985951,
     "rewardMedianOverSeeds": 14.118992704109736,
-    "monitorMedianOverSeeds": 14.236702435721448
+    "monitorMedianOverSeeds": 14.236702435721448,
+    "violationRate": 0.0055248618784530384
    }
   },
   {
@@ -171,11 +272,13 @@
     "seed": 11
    },
    "note": "PANEL_DESIGN, the site's physics switch",
+   "use": "primary comparison (\"against\")",
    "selectionSetScores": {
     "rewardRmse": 8.753851979477325,
     "monitorRmse": 10.296275521728809,
     "rewardMedianOverSeeds": 10.403374006244139,
-    "monitorMedianOverSeeds": 12.142793141625006
+    "monitorMedianOverSeeds": 12.142793141625006,
+    "violationRate": 0.013666763594068043
    }
   },
   {
@@ -197,11 +300,13 @@
     "seed": 11
    },
    "note": "page default network with physics pre-training only",
+   "use": "primary comparison (\"against\")",
    "selectionSetScores": {
     "rewardRmse": 7.325835892638873,
     "monitorRmse": 8.219801507262384,
     "rewardMedianOverSeeds": 7.721653974332709,
-    "monitorMedianOverSeeds": 8.569411242473354
+    "monitorMedianOverSeeds": 8.569411242473354,
+    "violationRate": 0.009305030532131433
    }
   },
   {
@@ -223,11 +328,13 @@
     "seed": 1036501257
    },
    "note": "evolution champion g008-000-428625cae26f retrained from scratch",
+   "use": "primary champion",
    "selectionSetScores": {
     "rewardRmse": 7.503736446729355,
     "monitorRmse": 7.801280821275921,
     "rewardMedianOverSeeds": 7.918887439803797,
-    "monitorMedianOverSeeds": 8.30332188990042
+    "monitorMedianOverSeeds": 8.30332188990042,
+    "violationRate": 0.009014248328002326
    }
   },
   {
@@ -249,11 +356,41 @@
     "seed": 1036501257
    },
    "note": "evolution champion g008-000-428625cae26f with pretrain 'none'",
+   "use": "descriptive only",
    "selectionSetScores": {
     "rewardRmse": 9.18084207713635,
     "monitorRmse": 8.785896010355968,
     "rewardMedianOverSeeds": 21.64808752424797,
-    "monitorMedianOverSeeds": 20.997556227952234
+    "monitorMedianOverSeeds": 20.997556227952234,
+    "violationRate": 0.00319860424542018
+   }
+  },
+  {
+   "role": "random_champion_retrained",
+   "kind": "seeds",
+   "file": "results/models2/random_champion_retrained.json.gz",
+   "sha256": "748ad0358d7204fc0b97ad282dc00cb6fa65cf450699d97cd555f2ba1b5f3bd4",
+   "genome": {
+    "hidden": [
+     18,
+     24
+    ],
+    "lr": 0.00590793,
+    "decay": 0.00385492,
+    "loss": "squared",
+    "epochs": 388,
+    "features": "rich",
+    "pretrain": "both",
+    "seed": 59409985
+   },
+   "note": "random-search champion g006-001-0eb67f2ec90e retrained from scratch",
+   "use": "primary comparison (\"against\")",
+   "selectionSetScores": {
+    "rewardRmse": 7.0313019770329035,
+    "monitorRmse": 7.205583527109357,
+    "rewardMedianOverSeeds": 7.666959052606657,
+    "monitorMedianOverSeeds": 7.607277605485276,
+    "violationRate": 0.0034893864495492877
    }
   },
   {
@@ -276,11 +413,13 @@
     "seed": 1036501257
    },
    "note": "evolution champion by the Ladder rule (ladder: no new champion for 5 generations)",
+   "use": "descriptive only",
    "selectionSetScores": {
     "rewardRmse": 6.866228711824299,
     "monitorRmse": 7.205607702016305,
     "rewardMedianOverSeeds": null,
-    "monitorMedianOverSeeds": null
+    "monitorMedianOverSeeds": null,
+    "violationRate": 0.0034893864495492877
    }
   },
   {
@@ -303,11 +442,13 @@
     "seed": 59409985
    },
    "note": "random-search champion by the same Ladder rule",
+   "use": "descriptive only",
    "selectionSetScores": {
     "rewardRmse": 7.084643890203408,
     "monitorRmse": 7.73665516990015,
     "rewardMedianOverSeeds": null,
-    "monitorMedianOverSeeds": null
+    "monitorMedianOverSeeds": null,
+    "violationRate": 0.0023262576330328583
    }
   },
   {
@@ -366,11 +507,13 @@
     }
    ],
    "note": "mean prediction of the 10 eligible evolution individuals with the best fitness",
+   "use": "descriptive only",
    "selectionSetScores": {
     "rewardRmse": 6.887093626752608,
     "monitorRmse": 7.333682349701895,
     "rewardMedianOverSeeds": null,
-    "monitorMedianOverSeeds": null
+    "monitorMedianOverSeeds": null,
+    "violationRate": 0.002907822041291073
    }
   }
  ]

@@ -1,0 +1,61 @@
+dry run in /tmp/lab-vault-dry-run-SDFBOd (decoy vaults of MONITOR rows; the real vault stays unreadable)
+
+[A] opened 160 rows:
+  physics_powers             RMSE 9.664 [8.29, 10.96]  seen 8.845 (82)  unseen 10.456 (78)
+  physics_fib                RMSE 9.076 [7.76, 10.34]  seen 8.056 (82)  unseen 10.038 (78)
+  curve_permix               RMSE 9.183 [7.95, 10.44]  seen 8.290 (82)  unseen 10.038 (78)
+  gbt                        RMSE 15.834 [14.22, 17.49]  seen 15.023 (82)  unseen 16.643 (78)
+  rf                         RMSE 16.747 [15.14, 18.40]  seen 15.635 (82)  unseen 17.843 (78)
+  ridge                      RMSE 8.628 [7.16, 10.11]  seen 6.560 (82)  unseen 10.366 (78)
+  plain                      RMSE 12.763 [10.82, 14.74]  median of 10 seeds 14.237  seen 9.086 (82)  unseen 15.727 (78)
+  panel_design               RMSE 10.296 [8.40, 12.10]  median of 10 seeds 12.143  seen 10.315 (82)  unseen 10.276 (78)
+  plain_physics_pretrain     RMSE 8.220 [6.69, 9.74]  median of 10 seeds 8.569  seen 7.055 (82)  unseen 9.288 (78)
+  champion_retrained         RMSE 7.801 [6.53, 9.04]  median of 10 seeds 8.303  seen 7.155 (82)  unseen 8.428 (78)
+  champion_no_pretrain       RMSE 8.786 [7.01, 10.63]  median of 10 seeds 20.998  seen 6.098 (82)  unseen 10.920 (78)
+  random_champion_retrained  RMSE 7.206 [5.88, 8.50]  median of 10 seeds 7.607  seen 6.323 (82)  unseen 8.029 (78)
+  champion                   RMSE 7.206 [5.85, 8.51]  seen 6.368 (82)  unseen 7.992 (78)
+  random_champion            RMSE 7.737 [6.32, 9.12]  seen 6.586 (82)  unseen 8.785 (78)
+  top10_ensemble             RMSE 7.334 [5.93, 8.70]  seen 6.472 (82)  unseen 8.142 (78)
+  primary: champion_retrained - random_champion_retrained = 0.596 MPa, 95% CI [0.117, 1.077], success false
+  secondary: champion_retrained - plain_physics_pretrain = -0.419 [-1.065, 0.241]
+  secondary: champion_retrained - ridge = -0.827 [-1.807, 0.174]
+  secondary: champion_retrained - physics_fib = -1.275 [-2.265, -0.352]
+  secondary: champion_retrained - curve_permix = -1.382 [-2.526, -0.291]
+  secondary: champion_retrained - physics_powers = -1.863 [-2.929, -0.865]
+  secondary: champion_retrained - panel_design = -2.495 [-3.496, -1.376]
+  secondary: champion_retrained - plain = -4.962 [-6.781, -3.144]
+  secondary: champion_retrained - gbt = -8.032 [-9.642, -6.499]
+  secondary: champion_retrained - rf = -8.946 [-10.498, -7.432]
+  wrote /tmp/lab-vault-dry-run-SDFBOd/A/results/vault_opening.json, then the marker
+[B] refused: the vault counts as opened. What exists:
+  OPENING_STARTED.json: {"startedAt":"2026-11-21T06:40:50.421Z","preregistrationSha256":"41be8692d8ddcd319aa3f2a03f3deac71d5ce24eafb2deeeba0d1f993a0dabe1","codeSha256":"934717087c98ca290255e0ec4b0ea57fe31c1c58cbab6ad3c84d130c7ef0d852","dryRun":true}
+  marker: opened 2026-11-21T06:41:07.313Z with pre-registration sha256 41be8692d8ddcd319aa3f2a03f3deac71d5ce24eafb2deeeba0d1f993a0dabe1 (DRY RUN on a decoy)
+  physics_powers: RMSE 9.664 MPa
+  physics_fib: RMSE 9.076 MPa
+  curve_permix: RMSE 9.183 MPa
+  gbt: RMSE 15.834 MPa
+  rf: RMSE 16.747 MPa
+  ridge: RMSE 8.628 MPa
+  plain: RMSE 12.763 MPa
+  panel_design: RMSE 10.296 MPa
+  plain_physics_pretrain: RMSE 8.220 MPa
+  champion_retrained: RMSE 7.801 MPa
+  champion_no_pretrain: RMSE 8.786 MPa
+  random_champion_retrained: RMSE 7.206 MPa
+  champion: RMSE 7.206 MPa
+  random_champion: RMSE 7.737 MPa
+  top10_ensemble: RMSE 7.334 MPa
+  primary: {"champion":"champion_retrained","best":"random_champion_retrained","difference":0.5956972941665644,"ci95":[0.11656709488362083,1.0769834642851457],"success":false}
+[C] refused: the vault counts as opened. What exists:
+  OPENING_STARTED.json: {"startedAt":"simulated crash after step 4"}
+  (no result file: the opening started but did not finish; by protocol it is not repeated)
+[D] refused: code or versions differ from the pre-registration:
+  files/net.mjs: registered 0000000000000000000000000000000000000000000000000000000000000000, now cb2fcc87717114af5784b9f142b999a843fa73a16dc4ba9e366b7a24aae3b2f2
+
+dry-run checks:
+ok   A: full opening on a decoy
+ok   A: OPENING_STARTED.json, result and marker written
+ok   B: a second run on the same results folder is refused and prints the stored result
+ok   C: OPENING_STARTED.json without a result (crash) is refused without reading any vault
+ok   D: a changed code file is refused before OPENING_STARTED.json is written
+ok   E: reading lab/vault/future.json throws during the dry run (guard active)
