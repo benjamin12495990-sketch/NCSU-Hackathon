@@ -201,6 +201,22 @@ def main():
         return (f"{what}: val MAE {res['cgcnn']['val']['mae']:.3f} vs mean {res['baselines']['mean']['val']['mae']:.3f}, "
                 f"{res['timing']['train_structures_per_second']:.0f} structures/s")
 
+    @check('pipeline: plan builds; orchestrator fake-job tests (retry, resume, STOP, budget, thermal)')
+    def _():
+        from gpu.pipeline import plan as pl
+        from gpu.pipeline.tests import test_orchestrator as to
+        for prof in ('smoke', 'standard'):
+            plan = pl.build_plan(prof, device='cpu')
+            assert plan['jobs'] and pl.describe(plan)
+            ids = [j['id'] for j in plan['jobs']]
+            assert len(ids) == len(set(ids)), 'duplicate job ids'
+        n = 0
+        for name, fn in sorted(vars(to).items()):
+            if name.startswith('test_') and callable(fn):
+                fn()
+                n += 1
+        return f'{n} orchestrator tests passed'
+
     print('\nsummary')
     for name, status, msg in RESULTS:
         print(f'  {status:4s} {name}: {msg}')

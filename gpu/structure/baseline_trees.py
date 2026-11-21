@@ -1,4 +1,4 @@
-"""Tree baselines for the JARVIS bulk-modulus task, on the same records, target and split as train_structure.py.
+"""Tree baselines for a JARVIS-DFT target (default bulk modulus), on the same records, target and split as train_structure.py.
 
   python -m gpu.structure.baseline_trees --output gpu/runs/structure/trees_<tag>.json
 
@@ -20,12 +20,13 @@ from types import SimpleNamespace
 import numpy as np
 
 from gpu.common import hardware, now_iso, write_json_new
-from gpu.structure.train_structure import DEFAULT_ZIP, element_fractions, load_records, metrics, split_of
+from gpu.structure.train_structure import DEFAULT_ZIP, TARGETS, element_fractions, load_records, metrics, split_of
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--data', default=str(DEFAULT_ZIP))
+    ap.add_argument('--target', default='bulk_modulus_kv', choices=sorted(TARGETS))
     ap.add_argument('--threads', type=int, default=2)
     ap.add_argument('--seed', type=int, default=11)
     ap.add_argument('--limit', type=int, default=0, help='first N kept records (same rule as train_structure.py), for small tests')
@@ -33,7 +34,7 @@ def main(argv=None):
     a = ap.parse_args(argv)
     from sklearn.ensemble import ExtraTreesRegressor, HistGradientBoostingRegressor
 
-    recs, source, counts = load_records(SimpleNamespace(synthetic=0, data=a.data, limit=a.limit, seed=a.seed))
+    recs, source, counts = load_records(SimpleNamespace(synthetic=0, data=a.data, limit=a.limit, seed=a.seed, target=a.target))
     parts = np.array([split_of(r['formula']) for r in recs])
     idx = {p: np.where(parts == p)[0] for p in ('train', 'val', 'test')}
     y = np.array([r['y'] for r in recs])
@@ -51,7 +52,7 @@ def main(argv=None):
         sys.exit(f'{pred_path} exists; refusing to overwrite')
     test_preds = {}
     ytr = y[idx['train']]
-    out = {'task': 'log10(bulk_modulus_kv / GPa), JARVIS-DFT 3D (DFT-calculated)', 'counts': counts, 'source': {k: v for k, v in source.items() if k != 'zip'},
+    out = {'task': TARGETS[a.target]['label'] + ' (DFT-calculated)', 'target': a.target, 'counts': counts, 'source': {k: v for k, v in source.items() if k != 'zip'},
            'split_sizes': {p: int(len(v)) for p, v in idx.items()}, 'split_rule': "sha256('split-v1:' + reduced formula) % 100: <80 train, <90 val, else test",
            'mean': {p: metrics(np.full(len(idx[p]), ytr.mean()), y[idx[p]]) for p in ('val', 'test')}, 'feature_sets': {}, 'created': now_iso(),
            'hardware': hardware(), 'selection': 'by validation MAE within each feature set; test scored once for the selected model'}

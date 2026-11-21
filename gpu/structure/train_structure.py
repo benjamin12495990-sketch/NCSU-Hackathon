@@ -1,7 +1,8 @@
-"""Structure-aware GPU workload: a CGCNN on JARVIS-DFT bulk modulus (computed, OptB88vdW DFT; not measured).
+"""Structure-aware GPU workload: a CGCNN on a JARVIS-DFT 3D property (computed, OptB88vdW DFT; not measured).
 
-Target: log10(bulk_modulus_kv / GPa), the Voigt bulk modulus in JARVIS-DFT 3D. Records whose value is
-missing ('na') or not positive are dropped; the counts are reported. Split: grouped by reduced formula, each
+Target (--target, default bulk_modulus_kv): the Voigt bulk or shear modulus as log10(GPa), the formation energy per atom
+or the band gap as they are. Records whose value is missing ('na') or, for log targets, not positive are dropped; the
+counts are reported. Split: grouped by reduced formula, each
 formula assigned by SHA-256 to train (80%), val (10%) or test (10%), so no formula is on both sides and the
 split does not depend on file order or --limit; the split list and its SHA-256 are saved with the run.
 Baselines on the same split: the training mean, and ridge regression on element fractions.
@@ -31,7 +32,15 @@ from gpu.common import CACHE, RUNS, git_info, hardware, new_run_dir, now_iso, pe
 from gpu.structure.graph import SYMBOLS, Z_OF, build_graph, collate
 
 DEFAULT_ZIP = CACHE / 'jarvis' / 'jdft_3d-9-24-2025.json.zip'
-TARGET = 'bulk_modulus_kv'
+TARGET = 'bulk_modulus_kv'  # the default target
+# JARVIS-DFT 3D properties (all DFT-calculated). 'log10' targets must be positive and are modelled as log10(value);
+# 'identity' targets are modelled as they are (the error is then in the property's own unit).
+TARGETS = {
+    'bulk_modulus_kv': {'transform': 'log10', 'label': 'log10(bulk modulus Kv / GPa), Voigt, OptB88vdW', 'unit': 'log10 GPa'},
+    'shear_modulus_gv': {'transform': 'log10', 'label': 'log10(shear modulus Gv / GPa), Voigt, OptB88vdW', 'unit': 'log10 GPa'},
+    'formation_energy_peratom': {'transform': 'identity', 'label': 'formation energy per atom, eV/atom, OptB88vdW', 'unit': 'eV/atom'},
+    'optb88vdw_bandgap': {'transform': 'identity', 'label': 'band gap, eV, OptB88vdW (a known underestimate of real gaps)', 'unit': 'eV'},
+}
 
 
 def reduced_formula(elements):
@@ -55,17 +64,20 @@ def load_records(a):
             name = [n for n in z.namelist() if n.endswith('.json')][0]
             recs = json.loads(z.read(name))
         source = {'zip': str(zp), 'zip_sha256': sha256_file(zp), 'json_name': name}
-    counts = {'records': len(recs), 'missing_or_non_numeric': 0, 'non_positive': 0}
+    target = getattr(a, 'target', TARGET) or TARGET
+    spec = TARGETS[target]
+    counts = {'records': len(recs), 'missing_or_non_numeric': 0, 'non_positive': 0, 'target': target}
     kept = []
     for r in recs:
-        v = r.get(TARGET)
+        v = r.get(target)
         if not isinstance(v, (int, float)) or isinstance(v, bool) or not math.isfinite(v):
             counts['missing_or_non_numeric'] += 1
             continue
-        if v <= 0:
+        if spec['transform'] == 'log10' and v <= 0:
             counts['non_positive'] += 1
             continue
-        kept.append({'jid': r['jid'], 'formula': reduced_formula(r['atoms']['elements']), 'atoms': r['atoms'], 'y': math.log10(v)})
+        kept.append({'jid': r['jid'], 'formula': reduced_formula(r['atoms']['elements']), 'atoms': r['atoms'],
+                     'y': math.log10(v) if spec['transform'] == 'log10' else float(v)})
     counts['kept'] = len(kept)
     kept.sort(key=lambda r: hashlib.sha256(r['jid'].encode()).hexdigest())  # file-order independent
     if a.limit:
@@ -145,6 +157,7 @@ def main(argv=None):
     ap.add_argument('--data', default=str(DEFAULT_ZIP))
     ap.add_argument('--synthetic', type=int, default=0, help='use N synthetic crystals instead of JARVIS (tests)')
     ap.add_argument('--limit', type=int, default=0, help='use the first N kept records (in SHA-256-of-jid order)')
+    ap.add_argument('--target', default=TARGET, choices=sorted(TARGETS), help='JARVIS-DFT property to predict (default bulk_modulus_kv)')
     ap.add_argument('--device', default='auto')
     ap.add_argument('--epochs', type=int, default=60)
     ap.add_argument('--batch', type=int, default=64)
@@ -178,7 +191,7 @@ def main(argv=None):
     y = np.array([r['y'] for r in recs])
     ident_src = {k: v for k, v in source.items() if k != 'zip'}  # the file's hash, not where it sits on disk
     data_sha = sha256_bytes(json.dumps(ident_src, sort_keys=True), split_sha, y.tobytes())
-    cfg = {k: getattr(a, k) for k in ('synthetic', 'limit', 'epochs', 'batch', 'lr', 'weight_decay', 'atom_features', 'conv',
+    cfg = {k: getattr(a, k) for k in ('target', 'synthetic', 'limit', 'epochs', 'batch', 'lr', 'weight_decay', 'atom_features', 'conv',
                                       'hidden', 'cutoff', 'max_neighbors', 'seed', 'amp')}
     ident = sha256_bytes(json.dumps(cfg, sort_keys=True), data_sha)
     print(f'records {counts["records"]}, missing/non-numeric {counts["missing_or_non_numeric"]}, non-positive {counts["non_positive"]}, '
@@ -290,7 +303,7 @@ def main(argv=None):
     res_model = {p: metrics(preds[p], y[idx[p]]) for p in ('val', 'test')}
     result = {'created': now_iso(), 'git': git_info(), 'device': str(device), 'hardware': hardware(device), 'threads': torch.get_num_threads(),
               'argv': sys.argv, 'config': cfg, 'source': source, 'counts': counts,
-              'target': 'log10(bulk_modulus_kv / GPa), JARVIS-DFT OptB88vdW computed Voigt bulk modulus' if not a.synthetic else 'synthetic (pipeline check)',
+              'target': TARGETS[a.target]['label'] + ' (DFT-calculated)' if not a.synthetic else 'synthetic (pipeline check)',
               'split': {'sha256': split_sha, 'sizes': {p: int(len(v)) for p, v in idx.items()},
                         'formulas': {p: int(len({recs[i]['formula'] for i in v})) for p, v in idx.items()}},
               'graphs': {'crystals': len(graphs), 'edges': n_edges, 'build_seconds': t_graph, 'from_cache': cached,
@@ -305,7 +318,7 @@ def main(argv=None):
     write_json_new(run / 'result.json', result)
     torch.save(best_state, run / 'best_model.pt')
     save_predictions(run / 'predictions.npz', recs, idx, y, preds)
-    print('\nlog10(K/GPa)          val MAE   test MAE   test R2')
+    print(f'\n{TARGETS[a.target]["unit"]:<21s} val MAE   test MAE   test R2')
     print(f'mean baseline         {base["mean"]["val"]["mae"]:.4f}    {base["mean"]["test"]["mae"]:.4f}     {base["mean"]["test"]["r2"]:.3f}')
     rb = base['ridge_element_fractions']
     print(f'ridge (fractions)     {rb["val"]["mae"]:.4f}    {rb["test"]["mae"]:.4f}     {rb["test"]["r2"]:.3f}')

@@ -19,6 +19,8 @@ first time this code meets a GPU, so run the checks below in order.
 | `structure/` | The first structure-aware workload: JARVIS-DFT download (`fetch_jarvis.py`), periodic neighbour graphs (`graph.py`), a CGCNN in plain PyTorch (`model.py`), and the bulk-modulus trainer (`train_structure.py`). |
 | `grids/` | Example configuration grids for `train_tabular.py --grid`. |
 | `laptop_suite.py` | Runs the whole first-day sequence below and gathers the JSONs to share, with a comparison against `reference_cpu/`. |
+| `run_pipeline.py`, `run_overnight.ps1` | **The unattended pipeline (section 5).** One command trains every model family, runs strong CPU baselines beside it, survives crashes and reboots, and writes `REPORT.md` + `share.zip`. Start here if you do not want to run the steps by hand. |
+| `pipeline/` | Its parts: `orchestrator.py` (job runner, resume, thermal guard), `plan.py` (what runs), `analyze.py` (cross-fitted comparisons), `report.py`. `baselines_tabular.py` (next to this file) is the tuned tree/linear baseline for each table-based family. |
 | `tests/smoke.py` | CPU end-to-end test of every piece on tiny settings: `python -m gpu.tests.smoke`. `tests/test_guard.py` tests the sealed-data guard on its own. |
 | `reference_cpu/` | Compact CPU results from the build machine, to compare the laptop against. |
 
@@ -243,3 +245,41 @@ python -m gpu.structure.compare_structure --runs gpu/runs/structure/<run1> gpu/r
 (Each command is one line. On Windows use backslashes in paths.) A negative difference favours the network; the interval is
 the 95% bootstrap range. "Not distinguishable" means the intervals include zero. Do not claim the network is better than
 trees unless the interval lies below zero against the cell-feature tree baseline too.
+
+
+## 5. Unattended pipeline (start it, leave, read the report)
+
+Everything above can be run by hand. This section runs all of it, in order, and tells you at the end what happened.
+
+**Before you leave the laptop** (Windows):
+1. Plugged in, on a hard surface with free air under it. A long GPU run heats a laptop; the pipeline watches the GPU temperature
+   (stops a job at 92 C, waits for 75 C, retries; waits between jobs if the card is at 82 C or more) but cannot cool the room.
+2. Lid open, or set *Settings > System > Power > Lid, power and sleep > When I close the lid > Plugged in: Do nothing*. The pipeline
+   asks Windows not to sleep while it runs, but a **closed lid sleeps the laptop whatever a program asks**. Optional command for the
+   same setting (not tested by the author): `powercfg /setacvalueindex SCHEME_CURRENT SUB_BUTTONS LIDACTION 0` then `powercfg /setactive SCHEME_CURRENT`.
+3. Pause Windows Update for the night (Settings > Windows Update > Pause), or it may restart the machine. If that happens anyway, nothing is lost beyond the running job's last checkpoint: run the resume command below.
+4. At least 10 GB of free disk (the preflight stops with a message below 3 GB).
+
+```
+git pull
+.\gpu\run_overnight.ps1 -Rehearsal        # 3-10 minutes on the GPU: proves the whole chain works; its numbers mean nothing
+.\gpu\run_overnight.ps1                   # the real run, default time budget 10 hours
+python -m gpu.run_pipeline --profile standard --dry-run     # just list the jobs and guessed times
+```
+(Same thing without the launcher: `python -m gpu.run_pipeline --profile standard --device cuda --tag overnight`.)
+
+**What the standard profile runs** (GPU jobs one at a time; CPU baselines beside them, 2 threads each):
+- Crystal-graph networks on JARVIS-DFT for bulk modulus and shear modulus (3 seeds each), formation energy per atom and band gap (2 seeds each; capped at 40,000 crystals if the computer reports under 24 GB of RAM), each with tree baselines on the same split.
+- For each table-based family (alloys, polymers, solid electrolytes, insulators/dielectric, concrete, chemistry): a 288-setting network sweep, 5 seeds each, plus tuned tree and linear baselines on the same folds.
+- Order puts the cheapest, most informative GPU work first, so a run cut short by the time budget still leaves a useful report.
+
+**While it runs**: `gpu\runs\pipeline\<folder>\STATUS.txt` is refreshed every 30 s (jobs done, current job, GPU temperature, ETA guess). To stop politely, create an empty file named `STOP` in that folder: the running job finishes, nothing new starts. `STOP_NOW` (or Ctrl+C) interrupts the running jobs, which can be resumed from their last checkpoint.
+
+**If it is interrupted** (reboot, power cut, closed lid, Ctrl+C, a crash): `.\gpu\run_overnight.ps1 -Resume`. Finished jobs are skipped, interrupted ones continue from their checkpoint, failed jobs are not retried unless you add `--retry-failed`. A job that fails is retried once before the pipeline moves on, so one bad job cannot stop the rest.
+
+**What you get** in `gpu\runs\pipeline\<folder>\`: `REPORT.md` (plain-language results and what they do not show), `summary.json`, `telemetry.csv` (GPU temperature/power/utilisation every 10 seconds), `logs\` (one per job), and **`share.zip`** (the report, summary, log, plan and every result file; send this one file back). Rebuild the report at any time from what finished: `python -m gpu.pipeline.report --pipeline gpu\runs\pipeline\<folder>`.
+
+**How the comparisons are made** (so the report is not fooled by its own sweep): for each cross-validation fold, the network setting (and each baseline) is picked using only the *other* folds' errors, then scored on the fold it did not see ("cross-fitted"). The difference between network and tuned trees is a paired bootstrap over whole groups (mixes, alloy systems, papers; 2,000 resamples). Concrete has no grouped folds, so it is selected on REWARD and scored on MONITOR and labelled exploratory.
+
+**What it cannot tell you**: every label is a historical measurement or a DFT calculation, so a win here is not a new material; the crystal split is by exact formula (not by chemical system); time estimates in the plan are guesses made on a different machine (the report records the real ones); the pipeline has been exercised end to end on CPU (rehearsal profile, with injected failures and interrupts) but not yet on the RTX GPU or on Windows.
+The pipeline reads data only through `gpu/data.py`, which refuses the sealed concrete folder; it never writes to `lab/`, `src/` or `public/`, and it checks at the end that `lab/vault/` is byte-for-byte unchanged in size and modification time.

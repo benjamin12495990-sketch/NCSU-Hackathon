@@ -37,46 +37,56 @@ def _paired(err_a, err_b, formulas):
     return float(d), float(np.percentile(diffs, 2.5)), float(np.percentile(diffs, 97.5)), better
 
 
-def main(argv=None):
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--runs', nargs='+', required=True)
-    ap.add_argument('--trees', required=True)
-    ap.add_argument('--output', help='optional new JSON path')
-    a = ap.parse_args(argv)
-    t = np.load(a.trees)
-    runs = [_load_run(r) for r in a.runs]
+def compare(run_dirs, trees_path):
+    """Returns (result dict, printable lines). Raises ValueError if the runs and the tree baseline are on different rows."""
+    t = np.load(trees_path)
+    runs = [_load_run(r) for r in run_dirs]
     order = {j: i for i, j in enumerate(t['jid'])}
-    for r, path in zip(runs, a.runs):
-        miss = [j for j in r['jid'] if j not in order]
-        if miss or len(r['jid']) != len(t['jid']):
-            sys.exit(f'{path}: test rows do not match the tree baseline (different data, split or --limit)')
-    base = runs[0]
+    for r, path in zip(runs, run_dirs):
+        if any(j not in order for j in r['jid']) or len(r['jid']) != len(t['jid']):
+            raise ValueError(f'{path}: test rows do not match the tree baseline (different data, split or --limit)')
     idx = [np.array([order[j] for j in r['jid']]) for r in runs]
     y = t['y']
     preds = [np.empty(len(y)) for _ in runs]
     for p, r, ix in zip(preds, runs, idx):
         p[ix] = r['pred']
     formulas = np.empty(len(y), dtype=object)
-    formulas[idx[0]] = base['formula']
-    models = {f'network run {i + 1} ({Path(path).name})': p for i, (p, path) in enumerate(zip(preds, a.runs))}
+    formulas[idx[0]] = runs[0]['formula']
+    models = {f'network run {i + 1} ({Path(path).name})': p for i, (p, path) in enumerate(zip(preds, run_dirs))}
     if len(runs) > 1:
         models[f'network average of {len(runs)} runs'] = np.mean(preds, axis=0)
-    out = {'test_rows': int(len(y)), 'formulas': int(len(set(formulas))), 'bootstrap': f'{B} resamples of whole formulas, seed 909', 'comparisons': {}}
+    out = {'test_rows': int(len(y)), 'formulas': int(len(set(formulas))), 'bootstrap': f'{B} resamples of whole formulas, seed 909',
+           'n_runs': len(runs), 'comparisons': {}}
+    lines = []
     maes = [float(np.abs(p - y).mean()) for p in preds]
+    out['network_single_run_mae'] = {'mean': float(np.mean(maes)), 'sd': float(np.std(maes, ddof=1)) if len(maes) > 1 else None, 'runs': maes}
     if len(runs) > 1:
-        out['network_single_run_mae'] = {'mean': float(np.mean(maes)), 'sd': float(np.std(maes, ddof=1)), 'runs': maes}
-        print(f'network single-run test MAE over {len(runs)} runs: mean {np.mean(maes):.4f}, sd {np.std(maes, ddof=1):.4f}')
-    print(f'{len(y)} test rows, {len(set(formulas))} formulas; difference = MAE(network) - MAE(trees); negative favours the network\n')
+        lines.append(f'network single-run test MAE over {len(runs)} runs: mean {np.mean(maes):.4f}, sd {np.std(maes, ddof=1):.4f}')
+    lines.append(f'{len(y)} test rows, {len(set(formulas))} formulas; difference = MAE(network) - MAE(trees); negative favours the network\n')
     for key in [k for k in t.files if k.startswith('pred_')]:
         tp = t[key]
         tmae = float(np.abs(tp - y).mean())
-        print(f'{key}: trees MAE {tmae:.4f}')
+        lines.append(f'{key}: trees MAE {tmae:.4f}')
         for name, p in models.items():
             d, lo, hi, share = _paired(np.abs(p - y), np.abs(tp - y), formulas)
             verdict = 'network better' if hi < 0 else 'trees better' if lo > 0 else 'not distinguishable'
-            print(f'  {name}: MAE {np.abs(p - y).mean():.4f}  diff {d:+.4f}  95% [{lo:+.4f}, {hi:+.4f}]  network better on {share:.0%} of formulas  -> {verdict}')
+            lines.append(f'  {name}: MAE {np.abs(p - y).mean():.4f}  diff {d:+.4f}  95% [{lo:+.4f}, {hi:+.4f}]  network better on {share:.0%} of formulas  -> {verdict}')
             out['comparisons'].setdefault(key, {})[name] = {'network_mae': float(np.abs(p - y).mean()), 'trees_mae': tmae, 'diff': d, 'ci95': [lo, hi],
                                                              'share_formulas_network_better': share, 'verdict': verdict}
+    return out, lines
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument('--runs', nargs='+', required=True)
+    ap.add_argument('--trees', required=True)
+    ap.add_argument('--output', help='optional new JSON path')
+    a = ap.parse_args(argv)
+    try:
+        out, lines = compare(a.runs, a.trees)
+    except ValueError as e:
+        sys.exit(str(e))
+    print('\n'.join(lines))
     if a.output:
         write_json_new(a.output, out)
         print(f'\nwrote {a.output}')

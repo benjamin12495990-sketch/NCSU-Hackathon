@@ -32,7 +32,8 @@ def main(argv=None):
     if (run / 'predictions.npz').exists():
         sys.exit(f'{run} already has predictions.npz')
     old = json.loads((run / 'run_config.json').read_text())
-    cfg = old['config']
+    cfg = dict(old['config'])
+    cfg.setdefault('target', 'bulk_modulus_kv')  # runs made before --target existed
     args = SimpleNamespace(**cfg, data=a.data)
     recs, source, counts = load_records(args)
     if not cfg.get('synthetic') and source['zip_sha256'] != old['source']['zip_sha256']:
