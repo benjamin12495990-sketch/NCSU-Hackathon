@@ -385,7 +385,7 @@ train/test split and several wording changes.
 | `src/lib/name.js` | Builds each mix's formula name from its recipe. |
 | `src/lib/nn.js` | The neural network: forward pass, backpropagation and Adam, written from scratch. `PANEL_DESIGN` is the textbook-laws design behind the switch. |
 | `src/lib/sweep.js` | The sweep test: vary water or age alone and count which way the prediction moves. |
-| `scripts/sweep.mjs` | `npm run sweep`: trains the network and runs the sweep test on 26 tested mixes. |
+| `scripts/sweep.mjs` | `npm run sweep`: trains the page's default network and runs the sweep test on 26 tested mixes. Add `-- --physics` to test the textbook-laws design instead (water 20 of 26, age 26 of 26). |
 | `src/components/NeuralNet.jsx` | The training panel: button, learning curve and the two prediction tables. |
 | `public/model/nn_data.json` | The training and held-out rows the network uses, the same split as the trees. |
 | `train/export_nn_data.py` | Writes `nn_data.json` from the same loading, features and split as `train/train.py`. |

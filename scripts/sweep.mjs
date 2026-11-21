@@ -1,4 +1,5 @@
-// npm run sweep: trains the page's network from scratch, then checks on a
+// npm run sweep: trains the page's default network from scratch (add --physics
+// for the design behind the "textbook strength laws" switch), then checks on a
 // spread of tested mixes whether its predictions follow two known trends:
 // more water for the same binder gives weaker concrete, and older concrete
 // is stronger. Prints the tree model beside it. Exits with an error if the
@@ -12,9 +13,10 @@ import { AGES, waterSteps, trend } from '../src/lib/sweep.js'
 
 const read = (name) => JSON.parse(readFileSync(new URL('../public/model/' + name, import.meta.url)))
 const nnData = read('nn_data.json'), spec = read('features.json'), space = read('space.json'), trees = read('model.json'), known = read('known.json')
-const net = createTrainer(nnData, PANEL_DESIGN)
+const physics = process.argv.includes('--physics')
+const net = createTrainer(nnData, physics ? PANEL_DESIGN : {})
 while (!net.done) net.runEpochs(50)
-console.log(`Network trained: ${net.history.at(-1).mae.toFixed(2)} MPa average miss on the held-out mixes.\n`)
+console.log(`Network trained (${physics ? 'with the textbook laws' : 'default design, as the page trains it'}): ${net.history.at(-1).mae.toFixed(2)} MPa average miss on the held-out mixes.\n`)
 
 const models = { network: (x) => net.predict(x), trees: (x) => predict(trees, x) }
 const total = { network: { water: [0, 0], age: [0, 0], waterRight: 0, ageRight: 0 }, trees: { water: [0, 0], age: [0, 0], waterRight: 0, ageRight: 0 } }
