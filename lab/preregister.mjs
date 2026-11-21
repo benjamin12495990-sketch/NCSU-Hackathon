@@ -1,9 +1,10 @@
-// Run once, after evolution and before the vault is opened. Names exactly which models open_vault.mjs will
-// score on FUTURE, with each model's SHA-256 and the sealed hash of FUTURE (read from lab/seal_receipt.json, so
-// nothing sealed is opened), and writes lab/preregistration.json. It refuses to overwrite an existing file.
-//   node lab/preregister.mjs [--archive lab/archive] [--out lab/preregistration.json] [--dry-run]
-// Models: the champion by reward; the best individual without 'physics' inputs; the best individual that did
-// not inherit weights (trained from its own seed); and every baseline in lab/results/baselines_select.json.
+// Phase 2. Run once, after evolve2.mjs, evolve2.mjs --random and baselines2.mjs, before the vault is opened.
+// Names every model open_vault.mjs will score on FUTURE (lab/results/baselines2.json: the physics equations, trees,
+// forest, ridge, plain network x10 seeds, PANEL_DESIGN, plain + physics pre-training, champion retrained x10,
+// champion without pre-training, the archived champion, the random-search champion, the top-10 ensemble) with
+// their SHA-256, the sealed FUTURE hash (from lab/seal_receipt.json; the vault is not opened), both archives'
+// lineage hashes, the metrics and the success criterion. Writes lab/preregistration.json once (never overwritten).
+//   node lab/preregister.mjs [--out lab/preregistration.json] [--dry-run]
 import './guard.mjs'
 import path from 'node:path'
 import { readFileSync } from 'node:fs'
@@ -11,45 +12,40 @@ import { spawnSync } from 'node:child_process'
 import { LAB } from './guard.mjs'
 import { readJson, sha256, writeNew } from './io.mjs'
 import { openArchive } from './archive.mjs'
-import { checkedModel } from './scoring.mjs'
+import { checkedFile } from './scoring2.mjs'
 
 const arg = (name, dflt) => { const i = process.argv.indexOf('--' + name); return i > 0 ? process.argv[i + 1] : dflt }
-const archiveDir = path.resolve(arg('archive', path.join(LAB, 'archive')))
 const outFile = path.resolve(arg('out', path.join(LAB, 'preregistration.json')))
-const A = openArchive(archiveDir)
-const all = A.individuals()
-if (!all.length) { console.error(`preregister: no individuals in ${archiveDir}`); process.exit(1) }
-const best = (list) => list.reduce((a, b) => (b.reward > a.reward ? b : a), list[0])
-const picks = [
-  ['champion', 'highest reward in the archive', all],
-  ['best_without_physics_inputs', "highest reward among genomes with features 'base' or 'rich'", all.filter((r) => r.genome.features !== 'physics')],
-  ['best_without_inherited_weights', 'highest reward among individuals trained from their own seed (inherited: false)', all.filter((r) => !r.inherited)],
-]
-const rel = (p) => path.relative(LAB, p)
-const models = []
-for (const [role, rule, list] of picks) {
-  if (!list.length) { console.log(`preregister: no individual for ${role}; skipped`); continue }
-  const r = best(list)
-  models.push({ role, rule, kind: 'network', id: r.id, file: rel(path.join(archiveDir, 'weights', `${r.id}.json.gz`)), sha256: r.weightsSha256, hash: 'sha256 of the uncompressed weights JSON', genome: r.genome, inherited: r.inherited, generation: r.generation, select: { reward: r.reward, selectMae: r.selectMae, violations: r.violations } })
+const b2 = readJson(path.join(LAB, 'results', 'baselines2.json'))
+const models = b2.models.map(({ reward, monitor, violations, ...m }) => ({ ...m, selectionSetScores: { rewardRmse: reward.overall.rmse, monitorRmse: monitor.overall.rmse, rewardMedianOverSeeds: reward.medianOverSeeds && reward.medianOverSeeds.rmse, monitorMedianOverSeeds: monitor.medianOverSeeds && monitor.medianOverSeeds.rmse } }))
+for (const m of models) {
+  if (m.kind === 'ensemble') for (const mm of m.members) checkedFile(mm.file, mm.sha256, true)
+  else checkedFile(m.file, m.sha256, m.kind === 'seeds' || m.kind === 'archived')
 }
-const baselines = readJson(path.join(LAB, 'results', 'baselines_select.json'))
-for (const [name, b] of Object.entries(baselines.models)) {
-  models.push({ role: `baseline_${name}`, rule: 'baseline from lab/baselines.mjs', kind: b.kind, perMix: b.perMix, file: b.file, sha256: b.sha256, hash: b.kind === 'network' ? 'sha256 of the uncompressed weights JSON' : 'sha256 of the file', select: { reward: b.reward, selectMae: b.selectMae, violations: b.violations } })
+const archive = (dir) => {
+  const A = openArchive(path.join(LAB, dir)), text = readFileSync(A.lineage)
+  return { dir, individuals: A.individuals().length, lineageBytes: text.length, lineageSha256: sha256(text), stop: A.records().find((r) => r.type === 'stop') }
 }
-for (const m of models) checkedModel(m) // every file must still match the hash it is registered under
 const receipt = readJson(path.join(LAB, 'seal_receipt.json'))
-const lineageText = readFileSync(A.lineage)
 const git = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: LAB, encoding: 'utf8' })
 const prereg = {
+  version: 2,
   created: new Date().toISOString(),
   commit: git.status === 0 ? git.stdout.trim() : null,
-  vault: { sha256: receipt.sha256, rows: receipt.rows, sealed: receipt.created },
-  archive: { dir: rel(archiveDir), individuals: all.length, lineageBytes: lineageText.length, lineageSha256: sha256(lineageText) },
-  plan: 'Each model below is scored exactly once on FUTURE (age > 28 d) by lab/open_vault.mjs: MAE, RMSE and R2 overall, on rows whose exact mix was tested in TRAIN or SELECT (seen) and on the others (unseen), the same by mix group, and by age band. No model is retrained, tuned or added after this file exists.',
+  vault: { sha256: receipt.sha256, rows: receipt.rows, sealed: receipt.created, seenMixRows: receipt.seenMixRows.length, unseenMixRows: receipt.unseenMixRows.length },
+  data: Object.fromEntries(['train', 'reward', 'monitor'].map((n) => [n, sha256(readFileSync(path.join(LAB, 'data', `${n}.json`)))])),
+  archives: { evolution: archive('archive'), randomSearch: archive('archive_random') },
+  championRule: 'The evolution champion is the individual holding the Ladder title when evolve2.mjs stopped (eligible individuals only; a challenger must beat REWARD RMSE + 1 x (V_age + V_wb) of the champion by more than the paired bootstrap SE of their RMSE difference). champion_retrained is that genome trained from scratch with seed indices 0-9.',
+  primary: {
+    championRole: 'champion_retrained',
+    against: ['physics_powers', 'physics_fib', 'gbt', 'rf', 'ridge', 'plain', 'random_champion'],
+    successCriterion: 'Success if the RMSE on FUTURE of champion_retrained (mean prediction of its 10 seeds) minus the RMSE of the best model in "against" has a 95% mix-grouped paired bootstrap interval (1,000 resamples of FUTURE mix groups, seed 909) entirely below zero. Otherwise the headline is that evolution did not beat the best simple baseline.',
+  },
+  metrics: 'For every model, once: RMSE (primary), MAE and R2 on all FUTURE rows; for multi-seed models also the median and range over seeds; mix-grouped bootstrap 95% CI of RMSE; the same on rows whose exact mix was or was not tested in TRAIN or SELECT, by mix group, and by age bucket (56 d, 90-100 d, 120-180 d, 270-365 d); paired RMSE difference to champion_retrained with its CI; physics violations (V_age, V_wb, rate) on the query grid of FUTURE mixes (inputs only).',
+  honestReporting: 'REWARD scores of evolved models are optimistic (they were selected on REWARD). Every result is published, including failures. The vault is opened exactly once.',
   models,
 }
 const text = JSON.stringify(prereg, null, 1) + '\n'
 if (process.argv.includes('--dry-run')) { console.log(text); process.exit(0) }
 writeNew(outFile, text)
-console.log(`preregister: wrote ${outFile} with ${models.length} models; FUTURE sha256 ${receipt.sha256.slice(0, 16)}...`)
-for (const m of models) console.log(`  ${m.role}: ${m.id || m.file} (SELECT reward ${m.select.reward.toFixed(3)}, MAE ${m.select.selectMae.toFixed(3)})`)
+console.log(`preregister: wrote ${path.relative(path.dirname(LAB), outFile)}, sha256 ${sha256(text)}; ${models.length} models; FUTURE sha256 ${receipt.sha256}`)
