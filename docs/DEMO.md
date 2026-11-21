@@ -149,7 +149,8 @@ mixes themselves are untested. The page says so on every result, and the last bo
 is 249 and a tested mix is 208, so the candidate is **20 percent worse** than what a lab already
 has. At 25 MPa it was 5 percent better. Show it if asked: click **Structural · 35 MPa**.
 
-**Why not every family?** Concrete, alloys and polymers have public measured datasets; the insulator
+**Why not every family?** Concrete and alloys have public measured datasets with citations; the
+polymer values are literature measurements whose source we have not confirmed; the insulator
 values are calculated by computer simulation (DFT) and the page says so. Solubility has a trained
 model that is not on the site yet because its training file is too big for a phone. The method needs
 real data for each family, and we would not fake the rest.

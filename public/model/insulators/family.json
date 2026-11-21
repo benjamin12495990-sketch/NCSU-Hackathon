@@ -13,7 +13,7 @@
  "targetNote": "y = log10(poly_total); poly_total is the DFT-calculated polycrystalline total dielectric constant",
  "important": "All target values are CALCULATED with density functional theory (DFPT, Materials Project; Petousis et al.), NOT measured in a lab. Every error below is error against that calculation, not against experiment. The model is a fast stand-in for a slow calculation.",
  "data": {
-  "source": "Hugging Face foundry-ml/dielectric_constant_v1-1 (CC BY 4.0), Petousis et al., DOI 10.18126/racd-go9m",
+  "source": "Hugging Face foundry-ml/dielectric_constant_v1-1 (CC BY 4.0)",
   "citation": "Petousis et al., DOI 10.18126/racd-go9m",
   "licence": "CC BY 4.0",
   "rows": 1056,
@@ -86,10 +86,10 @@
   "2. The model fails exactly where screening cares most: the high-dielectric tail. On the 18 of 213 test rows with a true value above 30 the network's MAE is 0.38 log10, its median prediction is 0.52x the true value, and the 90% interval covers only 39% of them (89% overall). The largest test prediction is 36.6 against a true maximum of 278. With formula and cell-level inputs only (no structure, no phonons) the lattice contribution that makes a compound high-k is not captured; treat this as an estimator for typical compounds, not an outlier finder.",
   "3. The network is not better than the trees, and the data are small. Single test split: trees 0.1173 vs network 0.1211 MAE (log10). Eight grouped splits: mean difference network minus trees -0.0018, paired 95% t interval [-0.0075, +0.0038], which includes zero (and the splits overlap, so that interval is if anything too narrow). With band gap added the trees improve to 0.1068 while the network stays at 0.1209. Only 1,056 rows / 964 formulas; MAE moves between 0.107 and 0.137 from split to split, more than any model difference.",
   "The element table was typed from memory and checked only by internal consistency tests (molar masses, periodic trends), not against a reference file.",
-  "The second (band-gap) network reuses the main network's settings; it was not re-tuned, which may understate what a network could get from band gap.",
+  "Not shown on this page (a second network that also takes band gap as an input): The second (band-gap) network reuses the main network's settings; it was not re-tuned, which may understate what a network could get from band gap.",
   "In (c) the network settings were chosen by CV on the seed-42 training rows, which overlap the test rows of the eight other splits: a mild selection leak in the network's favour. Tree settings were fixed in advance.",
   "The 90% interval assumes new compounds resemble this dataset (compounds selected by the original screening study); it is an average guarantee, not a per-compound one.",
-  "The band-gap sweep shows how the model responds when band gap alone is changed; it is model behaviour, not evidence of causation. Grid points above about 5.4 eV lie beyond 95% of training rows.",
+  "Not shown on this page (a second network that also takes band gap as an input): The band-gap sweep shows how the model responds when band gap alone is changed; it is model behaviour, not evidence of causation. Grid points above about 5.4 eV lie beyond 95% of training rows.",
   "R2 of about 0.64 in log10 units means roughly a third of the variance of the calculated values is unexplained."
  ],
  "trainingRange": [
@@ -97,7 +97,7 @@
   2.413836
  ],
  "source": {
-  "folder": "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/insulators",
+  "folder": "domains/insulators/ (copies of the family agent's result.json and skeptic_check.json)",
   "files": {
    "result.json": {
     "mtime": "2026-11-21T02:35:37.560Z",

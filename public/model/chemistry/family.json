@@ -1,7 +1,7 @@
 {
  "id": "chemistry",
  "shipped": false,
- "reason": "Its training file is about 2 MB (680 kB compressed), too slow to load on a phone for now.",
+ "reason": "Its training file is about 2 MB (660 kB compressed), too slow to load on a phone for now.",
  "folder": "domains/chemistry/",
  "test": {
   "network": 0.7613,
@@ -11,7 +11,7 @@
   "unit": "LogS (log10 mol/L)"
  },
  "source": {
-  "folder": "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry",
+  "folder": "domains/chemistry/ (copies of the family agent's result.json and skeptic_check.json)",
   "files": [
    "result.json: b_test_once",
    "skeptic_check.json: my_trees_tuned"

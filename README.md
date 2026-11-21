@@ -16,7 +16,8 @@ seven simulations (families of materials). **Four are live: concrete, alloys (ha
 "Train the network" button (see "The trained families" below). The other three (corrosive solutions,
 cleaning products, general chemistry) are marked "Planned": choosing one shows what it would predict,
 vary and rank by, and says that nothing is generated for it yet. General chemistry (water solubility)
-has a trained model in `domains/chemistry/` that is not on the site yet; its card says so and shows
+has a model that was trained and checked offline; its scripts and results files are in
+`domains/chemistry/`, but its data file is not in the repo or on the site. Its card says so and shows
 its verified numbers. The switch at the
 top right turns dark mode on and off; it starts from the system setting and remembers the choice.
 The page follows the visual rules in [`taste.md`](taste.md).
@@ -122,8 +123,9 @@ the other folders are plans.
 Three more families are live, each on one shared page (`src/components/FamilyPage.jsx`) that is
 downloaded with its data only when it is opened. Every number on those pages is read from
 `public/model/<family>/family.json`, which `scripts/build_family_files.mjs` writes from the family's
-`result.json` and an independent re-check (`skeptic_check.json`); nothing is typed into the
-component. The browser trains one network (seed 11, the family's chosen settings) with
+`result.json` and an independent re-check (`skeptic_check.json`), both copied into
+`domains/<family>/` so the numbers can be checked from the repo; apart from rounding, nothing is typed
+into the component. The browser trains one network (seed 11, the family's chosen settings) with
 `src/lib/nnFamily.js`; the five-network number in the table was trained in Node with the same code.
 `npm run family-parity` trains each family with `nnFamily.js` and with the agent's own trainer in
 `domains/<family>/nn_generic.js` and requires identical test predictions (measured difference 0) and
@@ -409,10 +411,12 @@ train/test split and several wording changes.
 | `docs/SCOPE.md`, `domains/` | Plans for applying the same method to other domains. Four folders in `domains/` also hold what a trained family was built with (next rows). |
 | `domains/<family>/prepare.py` | The script each family agent used to build its training file (materials, insulators, polymers, chemistry). Copied byte-identical from the agents' work folders so the method survives; it is not run by the site. |
 | `domains/<family>/nn_generic.js` | Each family agent's own network trainer, copied byte-identical. `npm run family-parity` trains with it to prove that `src/lib/nnFamily.js` gives the same predictions. |
+| `domains/<family>/result.json` | Each family agent's full results file (test errors, eight-split comparison, interval, sweep and caveats), copied unchanged. Every number in `public/model/<family>/family.json` comes from it or from `skeptic_check.json`, and the `source` field lists the paths used. |
+| `domains/<family>/skeptic_check.json` | An independent re-run of each family: reproduced numbers, trees tuned fairly by cross-validation, and the safe sentence the page uses as its verdict. It is copied unchanged so the "tuned trees" row and the verdict can be checked from the repo. |
 | `src/lib/nnFamily.js` | The trainer behind the three family pages: `seeded()` and `Mlp` copied unchanged from `nn.js`, plus every preprocessing option the families use. `nn.js` itself is not edited, so the concrete page cannot change. |
 | `src/components/FamilyPage.jsx` | One page for every trained family: data facts, the Train button and learning curve, error table, interval, sweep or trend check and the caveat box. It is lazy-loaded and fetches its family's files only when opened. |
 | `src/components/family.css` | The few layout rules the family pages add. Colours come only from the existing variables, so dark mode works. |
-| `scripts/build_family_files.mjs` | `npm run family-files`: copies each family's `nn_data.json` into `public/model/<family>/` and writes `family.json` from `result.json` and `skeptic_check.json`. Each `family.json` has a `source` field naming the files and paths its numbers came from. |
+| `scripts/build_family_files.mjs` | `npm run family-files`: copies each family's `nn_data.json` into `public/model/<family>/` and writes `family.json` from `result.json` and `skeptic_check.json`, and copies those two files into `domains/<family>/`. It reads from the family agents' work folder (outside the repo; pass another folder as an argument), and each `family.json` has a `source` field naming the files and paths its numbers came from. |
 | `scripts/family_parity.mjs` | `npm run family-parity`: trains each family twice (shared trainer and agent trainer) on the shipped file. It fails unless predictions match to 1e-9 and the test error equals `result.json`. |
 | `public/model/<family>/nn_data.json` | The training and held-out rows for alloys, insulators and polymers, copied unchanged from the family agents. The browser trains on it; the polymer file's Fox columns belong to this one split, so the page never re-splits it. |
 | `public/model/<family>/family.json` | Every number and caveat a family page shows, written by `build_family_files.mjs`. For chemistry it holds only the verified test numbers for the Planned card; no chemistry data is shipped. |

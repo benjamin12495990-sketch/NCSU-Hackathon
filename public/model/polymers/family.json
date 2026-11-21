@@ -11,7 +11,7 @@
  },
  "task": "Predict measured glass-transition temperature Tg (K) of homopolymers and binary copolymers",
  "data": {
-  "source": "source file experimental_dataset.csv, citation not confirmed",
+  "source": "source file experimental_dataset.csv",
   "citation": "citation not confirmed",
   "licence": "licence not confirmed",
   "rows": 666,
@@ -110,7 +110,7 @@
   668
  ],
  "source": {
-  "folder": "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/polymers",
+  "folder": "domains/polymers/ (copies of the family agent's result.json and skeptic_check.json)",
   "files": {
    "result.json": {
     "mtime": "2026-11-21T02:38:17.074Z",

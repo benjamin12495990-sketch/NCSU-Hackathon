@@ -69,8 +69,8 @@ function displayFor(fam) {
 }
 
 // Learning curve: error on the held-out rows after each pass, with dashed lines for the trees
-// and for guessing the training mean (both from the file).
-function FamilyCurve({ history, total, trees, mean, unit, digits }) {
+// (first settings and tuned by cross-validation) and for guessing the training mean, all from the file.
+function FamilyCurve({ history, total, trees, treesTuned, mean, unit, digits }) {
   const w = 520, h = 240, left = 48, bottom = 34, top = 12, right = 12
   const ticks = niceTicks(mean * 1.25)
   const maxY = ticks[3]
@@ -90,7 +90,9 @@ function FamilyCurve({ history, total, trees, mean, unit, digits }) {
       ))}
       {xt.map((e) => <text key={e} x={x(e)} y={h - bottom + 16} textAnchor="middle">{e}</text>)}
       <line x1={left} y1={y(trees)} x2={w - right} y2={y(trees)} className="tree" />
-      <text x={left + 6} y={y(trees) + 14}>trees: {trees.toFixed(digits)}</text>
+      <text x={left + 6} y={y(trees) + (trees >= treesTuned ? -6 : 14)}>trees, first settings: {trees.toFixed(digits)}</text>
+      <line x1={left} y1={y(treesTuned)} x2={w - right} y2={y(treesTuned)} className="tree" />
+      <text x={w - right - 6} y={y(treesTuned) + (treesTuned > trees ? -6 : 14)} textAnchor="end">trees, tuned: {treesTuned.toFixed(digits)}</text>
       <line x1={left} y1={y(mean)} x2={w - right} y2={y(mean)} className="tree" />
       <text x={left + 6} y={y(mean) - 6}>guess the mean: {mean.toFixed(digits)}</text>
       {pts.length > 1 && <polyline points={points} className="line" />}
@@ -141,7 +143,7 @@ function HeldoutRanking({ fam, heldout, predictions }) {
   const [atLeast, setAtLeast] = useState(5)
   const [revealed, setRevealed] = useState(false)
   const q = fam.interval.q
-  const cap = 20
+  const cap = Math.floor(fam.highTail.largestPrediction / 10 ** q) // the largest lower edge the file's predictions reach
   const rows = heldout.map((h, i) => ({ ...h, pred: predictions[i], lower: 10 ** (predictions[i] - q) }))
     .filter((r) => r.lower >= atLeast)
     .sort((a, b) => b.pred - a.pred)
@@ -165,10 +167,10 @@ function HeldoutRanking({ fam, heldout, predictions }) {
         </label>
       </div>
       <p className="note small">
-        The slider stops at {cap}: the largest held-out prediction is {fam.highTail.largestPrediction.toFixed(1)}, so
-        the lower edge never goes much above 20, while the largest calculated value is {fam.highTail.largestTrue.toFixed(0)}.
+        The slider stops at {cap}: the largest held-out prediction in the results file is {fam.highTail.largestPrediction.toFixed(1)}, so
+        the lower edge never goes much above {cap}, while the largest calculated value is {fam.highTail.largestTrue.toFixed(0)}.
         On held-out compounds above 30 the network predicts about {Math.round(100 * fam.highTail.medianPredOverTrue)}% of
-        the calculated value (median): it under-predicts the high tail by about 2×, so it cannot find them.
+        the calculated value (median): it under-predicts the high tail by about {(1 / fam.highTail.medianPredOverTrue).toFixed(1)}×, so it cannot find them.
       </p>
       {shown.length === 0 ? (
         <p className="note">No held-out compound has a lower edge at or above {atLeast}.</p>
@@ -176,7 +178,7 @@ function HeldoutRanking({ fam, heldout, predictions }) {
         <div className="tablewrap">
           <table>
             <thead>
-              <tr><th className="num">Rank</th><th>Compound</th><th className="num">Predicted</th><th className="num">Lower edge</th>{revealed && <th className="num">Calculated (check)</th>}</tr>
+              <tr><th className="num">Rank</th><th>Compound</th><th className="num">Predicted</th><th className="num">Lower edge (results-file 90% range, ÷ {(10 ** q).toFixed(2)})</th>{revealed && <th className="num">Calculated (check)</th>}</tr>
             </thead>
             <tbody>
               {shown.map((r, i) => (
@@ -321,8 +323,8 @@ export default function FamilyPage({ family, onBack }) {
         {history.length > 0 && (
           <div className="nnbody">
             <figure>
-              <FamilyCurve history={history} total={opts.epochs} trees={fam.test.trees} mean={fam.test.mean} unit={show.errUnit} digits={show.pow ? 3 : 1} />
-              <figcaption>Lower is better. Dashed lines, from the results file: gradient-boosted trees, and always guessing the training mean.</figcaption>
+              <FamilyCurve history={history} total={opts.epochs} trees={fam.test.trees} treesTuned={fam.test.treesTuned} mean={fam.test.mean} unit={show.errUnit} digits={show.pow ? 3 : 1} />
+              <figcaption>Lower is better. Dashed lines, from the results file: gradient-boosted trees (first settings, and tuned by cross-validation) and always guessing the training mean.</figcaption>
             </figure>
           </div>
         )}
@@ -368,7 +370,7 @@ export default function FamilyPage({ family, onBack }) {
         <p className="big">{show.width(fam.interval.q)}</p>
         <p className="note">
           From the results file: {fam.interval.rule}. On the held-out rows it held for {Math.round(fam.interval.coverage * 100)} in 100.
-          {band && <> Measured live in this browser by training {FOLDS} more networks on two thirds of the training rows each and scoring
+          {band && <> Estimated live in this browser by training {FOLDS} more networks on two thirds of the training rows each and scoring
           the {band.errors} rows left out: <strong>{show.width(band.q)}</strong>, which held for <strong>{Math.round(band.coverage * 100)} in 100</strong> held-out rows.</>}
           {!fam.interval.liveMeasure && <> {fam.interval.noLiveReason}</>}
         </p>
@@ -387,7 +389,7 @@ export default function FamilyPage({ family, onBack }) {
           <p className="note small">
             Dashed: the five-network average from the results file. {sweepLive ? 'Solid: the network you just trained' : 'Press Train to add the network you train'}
             {band ? ', with its live 90% interval as the band' : ''}. Dots: as-cast measurements in the dataset.
-            {sweepLive && ` Live: ${sweepLive[0].toFixed(0)} ${fam.unit} at x = 0 to ${sweepLive.at(-1).toFixed(0)} ${fam.unit} at x = 2, rising in ${sweepLive.slice(1).filter((v, i) => v > sweepLive[i]).length} of ${sweepLive.length - 1} steps.`}
+            {sweepLive && ` Live: ${sweepLive[0].toFixed(0)} ${fam.unit} at x = ${fam.sweep.x[0]} to ${sweepLive.at(-1).toFixed(0)} ${fam.unit} at x = ${fam.sweep.x.at(-1)}, rising in ${sweepLive.slice(1).filter((v, i) => v > sweepLive[i]).length} of ${sweepLive.length - 1} steps.`}
             {' '}{fam.sweep.note}
           </p>
         </section>

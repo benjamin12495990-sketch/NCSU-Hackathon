@@ -1,0 +1,1313 @@
+{
+ "task": "Vickers hardness (HV) of multi-principal-element alloys from composition and processing route",
+ "data": {
+  "source": "https://raw.githubusercontent.com/CitrineInformatics/MPEA_dataset/master/MPEA_dataset.csv",
+  "citation": "Borg et al., Scientific Data 7, 430 (2020)",
+  "rows_used": 530,
+  "alloys_groups": 377,
+  "train_rows": 426,
+  "test_rows": 104,
+  "train_groups": 301,
+  "test_groups": 76,
+  "hv_range": [
+   94.7,
+   1183.0
+  ],
+  "columns_used_as_inputs": [
+   "FORMULA",
+   "PROPERTY: Processing method"
+  ],
+  "processing_counts": {
+   "CAST": 292,
+   "ANNEAL": 64,
+   "POWDER": 57,
+   "UNKNOWN": 73,
+   "OTHER": 14,
+   "WROUGHT": 30
+  },
+  "repeat_measurement_noise": {
+   "cells_with_repeats": 62,
+   "rows": 174,
+   "mean_abs_dev_from_cell_mean_HV": 37.321111111111115
+  }
+ },
+ "features": [
+  "x_Al",
+  "x_B",
+  "x_C",
+  "x_Co",
+  "x_Cr",
+  "x_Cu",
+  "x_Fe",
+  "x_Hf",
+  "x_Mn",
+  "x_Mo",
+  "x_Nb",
+  "x_Ni",
+  "x_Pd",
+  "x_Re",
+  "x_Si",
+  "x_Sn",
+  "x_Ta",
+  "x_Ti",
+  "x_V",
+  "x_W",
+  "x_Zr",
+  "x_other",
+  "proc_ANNEAL",
+  "proc_CAST",
+  "proc_OTHER",
+  "proc_POWDER",
+  "proc_UNKNOWN",
+  "proc_WROUGHT",
+  "n_elements",
+  "mix_entropy_R",
+  "radius_mean_pm",
+  "radius_mismatch_pct",
+  "eneg_mean",
+  "eneg_spread",
+  "vec_mean",
+  "vec_spread",
+  "tmelt_mean_K"
+ ],
+ "network": {
+  "settings": {
+   "epochs": 300,
+   "batch": 32,
+   "lr": 0.004,
+   "seed": 11,
+   "loss": "squared",
+   "inputClip": 3,
+   "clampOutput": true,
+   "hidden": [
+    32,
+    16
+   ],
+   "decay": 0.01,
+   "logTarget": false
+  },
+  "ensemble_members": 5,
+  "layers": [
+   37,
+   32,
+   16,
+   1
+  ],
+  "weights_total": 8805,
+  "train_seconds_final": 2.983607663,
+  "train_fit": {
+   "mae": 38.11998563472084,
+   "rmse": 53.70320395126757,
+   "r2": 0.9355517851093362
+  }
+ },
+ "cv_on_training_rows": {
+  "network_single_chosen": {
+   "mae": 75.96395959298741,
+   "rmse": 104.90475717557091,
+   "r2": 0.7540760277798263
+  },
+  "network_ensemble": {
+   "mae": 75.34004065284446,
+   "rmse": 105.13969898032803,
+   "r2": 0.7529732651933999,
+   "per_fold_mae": [
+    64.34631528528617,
+    89.99066519314229,
+    68.73186890430426
+   ]
+  },
+  "trees_same_folds": {
+   "mae": 75.4967172818674,
+   "rmse": 102.67165554045643,
+   "r2": 0.7644345306621819
+  },
+  "naive_same_folds": {
+   "mae": 173.8341989066878,
+   "rmse": 212.1092479317365,
+   "r2": -0.005378763803496556
+  },
+  "grid": [
+   {
+    "settings": {
+     "epochs": 300,
+     "batch": 32,
+     "lr": 0.004,
+     "seed": 11,
+     "loss": "squared",
+     "inputClip": 3,
+     "clampOutput": true,
+     "hidden": [
+      32,
+      16
+     ],
+     "decay": 0.001,
+     "logTarget": false
+    },
+    "cv_mae": 80.83561993221669,
+    "cv_rmse": 113.37974949576842,
+    "cv_r2": 0.712735813415452
+   },
+   {
+    "settings": {
+     "epochs": 300,
+     "batch": 32,
+     "lr": 0.004,
+     "seed": 11,
+     "loss": "squared",
+     "inputClip": 3,
+     "clampOutput": true,
+     "hidden": [
+      32,
+      16
+     ],
+     "decay": 0.001,
+     "logTarget": true
+    },
+    "cv_mae": 81.9301264807723,
+    "cv_rmse": 116.98719840501144,
+    "cv_r2": 0.6941650029802902
+   },
+   {
+    "settings": {
+     "epochs": 300,
+     "batch": 32,
+     "lr": 0.004,
+     "seed": 11,
+     "loss": "squared",
+     "inputClip": 3,
+     "clampOutput": true,
+     "hidden": [
+      32,
+      16
+     ],
+     "decay": 0.01,
+     "logTarget": false
+    },
+    "cv_mae": 75.96395959298741,
+    "cv_rmse": 104.90475717557091,
+    "cv_r2": 0.7540760277798263
+   },
+   {
+    "settings": {
+     "epochs": 300,
+     "batch": 32,
+     "lr": 0.004,
+     "seed": 11,
+     "loss": "squared",
+     "inputClip": 3,
+     "clampOutput": true,
+     "hidden": [
+      32,
+      16
+     ],
+     "decay": 0.01,
+     "logTarget": true
+    },
+    "cv_mae": 76.4456176300331,
+    "cv_rmse": 108.10760864430661,
+    "cv_r2": 0.7388301612258117
+   },
+   {
+    "settings": {
+     "epochs": 300,
+     "batch": 32,
+     "lr": 0.004,
+     "seed": 11,
+     "loss": "squared",
+     "inputClip": 3,
+     "clampOutput": true,
+     "hidden": [
+      32,
+      16
+     ],
+     "decay": 0.05,
+     "logTarget": false
+    },
+    "cv_mae": 87.2487133765761,
+    "cv_rmse": 112.26138748294375,
+    "cv_r2": 0.7183749314599619
+   },
+   {
+    "settings": {
+     "epochs": 300,
+     "batch": 32,
+     "lr": 0.004,
+     "seed": 11,
+     "loss": "squared",
+     "inputClip": 3,
+     "clampOutput": true,
+     "hidden": [
+      32,
+      16
+     ],
+     "decay": 0.05,
+     "logTarget": true
+    },
+    "cv_mae": 88.54765170178398,
+    "cv_rmse": 115.53622948612816,
+    "cv_r2": 0.7017043776416365
+   },
+   {
+    "settings": {
+     "epochs": 300,
+     "batch": 32,
+     "lr": 0.004,
+     "seed": 11,
+     "loss": "squared",
+     "inputClip": 3,
+     "clampOutput": true,
+     "hidden": [
+      64,
+      32
+     ],
+     "decay": 0.001,
+     "logTarget": false
+    },
+    "cv_mae": 79.31994585778105,
+    "cv_rmse": 114.54373700687019,
+    "cv_r2": 0.7068072714337399
+   },
+   {
+    "settings": {
+     "epochs": 300,
+     "batch": 32,
+     "lr": 0.004,
+     "seed": 11,
+     "loss": "squared",
+     "inputClip": 3,
+     "clampOutput": true,
+     "hidden": [
+      64,
+      32
+     ],
+     "decay": 0.001,
+     "logTarget": true
+    },
+    "cv_mae": 79.82100685740055,
+    "cv_rmse": 115.14914497849283,
+    "cv_r2": 0.7036998069656097
+   },
+   {
+    "settings": {
+     "epochs": 300,
+     "batch": 32,
+     "lr": 0.004,
+     "seed": 11,
+     "loss": "squared",
+     "inputClip": 3,
+     "clampOutput": true,
+     "hidden": [
+      64,
+      32
+     ],
+     "decay": 0.01,
+     "logTarget": false
+    },
+    "cv_mae": 76.4152198445236,
+    "cv_rmse": 105.84676299900285,
+    "cv_r2": 0.7496395858335193
+   },
+   {
+    "settings": {
+     "epochs": 300,
+     "batch": 32,
+     "lr": 0.004,
+     "seed": 11,
+     "loss": "squared",
+     "inputClip": 3,
+     "clampOutput": true,
+     "hidden": [
+      64,
+      32
+     ],
+     "decay": 0.01,
+     "logTarget": true
+    },
+    "cv_mae": 81.40653429152253,
+    "cv_rmse": 113.82826955132387,
+    "cv_r2": 0.7104585355660846
+   },
+   {
+    "settings": {
+     "epochs": 300,
+     "batch": 32,
+     "lr": 0.004,
+     "seed": 11,
+     "loss": "squared",
+     "inputClip": 3,
+     "clampOutput": true,
+     "hidden": [
+      64,
+      32
+     ],
+     "decay": 0.05,
+     "logTarget": false
+    },
+    "cv_mae": 87.3414631532544,
+    "cv_rmse": 112.63921196753361,
+    "cv_r2": 0.7164760790463749
+   },
+   {
+    "settings": {
+     "epochs": 300,
+     "batch": 32,
+     "lr": 0.004,
+     "seed": 11,
+     "loss": "squared",
+     "inputClip": 3,
+     "clampOutput": true,
+     "hidden": [
+      64,
+      32
+     ],
+     "decay": 0.05,
+     "logTarget": true
+    },
+    "cv_mae": 87.28089462163547,
+    "cv_rmse": 114.25882823155386,
+    "cv_r2": 0.7082639952295189
+   },
+   {
+    "settings": {
+     "epochs": 300,
+     "batch": 32,
+     "lr": 0.004,
+     "seed": 11,
+     "loss": "squared",
+     "inputClip": 3,
+     "clampOutput": true,
+     "hidden": [
+      128,
+      64
+     ],
+     "decay": 0.001,
+     "logTarget": false
+    },
+    "cv_mae": 78.85976351611326,
+    "cv_rmse": 112.42308050996463,
+    "cv_r2": 0.717563083240891
+   },
+   {
+    "settings": {
+     "epochs": 300,
+     "batch": 32,
+     "lr": 0.004,
+     "seed": 11,
+     "loss": "squared",
+     "inputClip": 3,
+     "clampOutput": true,
+     "hidden": [
+      128,
+      64
+     ],
+     "decay": 0.001,
+     "logTarget": true
+    },
+    "cv_mae": 78.45907054208503,
+    "cv_rmse": 114.81798217636418,
+    "cv_r2": 0.7054016433637949
+   },
+   {
+    "settings": {
+     "epochs": 300,
+     "batch": 32,
+     "lr": 0.004,
+     "seed": 11,
+     "loss": "squared",
+     "inputClip": 3,
+     "clampOutput": true,
+     "hidden": [
+      128,
+      64
+     ],
+     "decay": 0.01,
+     "logTarget": false
+    },
+    "cv_mae": 76.98264802190455,
+    "cv_rmse": 106.0875259145087,
+    "cv_r2": 0.7484993325798897
+   },
+   {
+    "settings": {
+     "epochs": 300,
+     "batch": 32,
+     "lr": 0.004,
+     "seed": 11,
+     "loss": "squared",
+     "inputClip": 3,
+     "clampOutput": true,
+     "hidden": [
+      128,
+      64
+     ],
+     "decay": 0.01,
+     "logTarget": true
+    },
+    "cv_mae": 83.85469348781322,
+    "cv_rmse": 116.43648045630886,
+    "cv_r2": 0.6970376657098561
+   },
+   {
+    "settings": {
+     "epochs": 300,
+     "batch": 32,
+     "lr": 0.004,
+     "seed": 11,
+     "loss": "squared",
+     "inputClip": 3,
+     "clampOutput": true,
+     "hidden": [
+      128,
+      64
+     ],
+     "decay": 0.05,
+     "logTarget": false
+    },
+    "cv_mae": 86.86723457263034,
+    "cv_rmse": 112.57520145932547,
+    "cv_r2": 0.7167982289130703
+   },
+   {
+    "settings": {
+     "epochs": 300,
+     "batch": 32,
+     "lr": 0.004,
+     "seed": 11,
+     "loss": "squared",
+     "inputClip": 3,
+     "clampOutput": true,
+     "hidden": [
+      128,
+      64
+     ],
+     "decay": 0.05,
+     "logTarget": true
+    },
+    "cv_mae": 87.67694938930826,
+    "cv_rmse": 114.4912970340388,
+    "cv_r2": 0.7070756667149853
+   },
+   {
+    "settings": {
+     "epochs": 300,
+     "batch": 32,
+     "lr": 0.004,
+     "seed": 11,
+     "loss": "huber",
+     "inputClip": 3,
+     "clampOutput": true,
+     "hidden": [
+      32,
+      16
+     ],
+     "decay": 0.01,
+     "logTarget": false
+    },
+    "cv_mae": 76.54346426024712,
+    "cv_rmse": 105.67731537386464,
+    "cv_r2": 0.7504405365556426
+   }
+  ]
+ },
+ "b_test_split_once": {
+  "network": {
+   "mae": 78.15917451234517,
+   "rmse": 121.58252645918333,
+   "r2": 0.6720922932621207
+  },
+  "trees": {
+   "mae": 73.28874056497101,
+   "rmse": 116.20682090259746,
+   "r2": 0.7004477837835281
+  },
+  "naive_train_mean": {
+   "mae": 176.82145178764898,
+   "rmse": 218.5740971902442,
+   "r2": -0.05975794948689339
+  },
+  "trees_fit_seconds": 0.41749048233032227
+ },
+ "c_eight_splits": {
+  "per_split": [
+   {
+    "seed": 1001,
+    "test_rows": 104,
+    "network_mae": 94.37758617294737,
+    "trees_mae": 89.61068006843954,
+    "naive_mae": 203.4872381726255
+   },
+   {
+    "seed": 1002,
+    "test_rows": 99,
+    "network_mae": 69.40565491251625,
+    "trees_mae": 74.3827661907315,
+    "naive_mae": 178.99541353207243
+   },
+   {
+    "seed": 1003,
+    "test_rows": 117,
+    "network_mae": 86.35434946360274,
+    "trees_mae": 89.76471826574993,
+    "naive_mae": 181.6504066554914
+   },
+   {
+    "seed": 1004,
+    "test_rows": 138,
+    "network_mae": 78.10787082579056,
+    "trees_mae": 82.19021925153281,
+    "naive_mae": 180.26839692398698
+   },
+   {
+    "seed": 1005,
+    "test_rows": 107,
+    "network_mae": 81.04751865681688,
+    "trees_mae": 82.0091637995447,
+    "naive_mae": 193.20571573761077
+   },
+   {
+    "seed": 1006,
+    "test_rows": 101,
+    "network_mae": 55.239790699953836,
+    "trees_mae": 58.46505111386722,
+    "naive_mae": 181.0698862193912
+   },
+   {
+    "seed": 1007,
+    "test_rows": 114,
+    "network_mae": 58.76422405815272,
+    "trees_mae": 65.40477287419088,
+    "naive_mae": 180.0905870445344
+   },
+   {
+    "seed": 1008,
+    "test_rows": 101,
+    "network_mae": 61.08141238627078,
+    "trees_mae": 65.08921144196052,
+    "naive_mae": 145.63362874749012
+   }
+  ],
+  "network_mae_mean": 73.0473008970064,
+  "trees_mae_mean": 75.86457287575215,
+  "naive_mae_mean": 180.55015912915036,
+  "mean_diff_network_minus_trees": -2.817271978745744,
+  "paired_t95": [
+   -5.709563506224507,
+   0.07501954873301919
+  ],
+  "paired_t95_corrected_for_overlap": [
+   -7.915439063407742,
+   2.2808951059162546
+  ],
+  "network_better_in": 7,
+  "of": 8
+ },
+ "d_interval90": {
+  "halfwidth_HV": 179.20320974650724,
+  "rule": "the 385th smallest of 426 out-of-fold absolute errors (ceil((n+1)*0.9))",
+  "test_inside": 95,
+  "test_rows": 104,
+  "test_coverage": 0.9134615384615384
+ },
+ "sanity_al_sweep": {
+  "alloy": "Al_x Co Cr Fe Ni, as cast",
+  "al_x": [
+   0.0,
+   0.1,
+   0.2,
+   0.3,
+   0.4,
+   0.5,
+   0.6,
+   0.7,
+   0.8,
+   0.9,
+   1.0,
+   1.1,
+   1.2,
+   1.3,
+   1.4,
+   1.5,
+   1.6,
+   1.7,
+   1.8,
+   1.9,
+   2.0
+  ],
+  "network_hv": [
+   136.8,
+   157.9,
+   176.7,
+   195.6,
+   250.4,
+   300.2,
+   342.6,
+   380.3,
+   414.0,
+   441.8,
+   465.7,
+   482.7,
+   495.2,
+   501.5,
+   505.5,
+   509.2,
+   512.8,
+   516.2,
+   519.0,
+   522.3,
+   525.3
+  ],
+  "trees_hv": [
+   151.4,
+   161.0,
+   167.6,
+   143.9,
+   241.1,
+   209.7,
+   355.0,
+   393.0,
+   421.8,
+   450.2,
+   476.2,
+   487.7,
+   503.0,
+   503.7,
+   491.6,
+   484.8,
+   487.8,
+   602.3,
+   611.7,
+   599.8,
+   599.4
+  ],
+  "network_x0_to_x2": [
+   136.8,
+   525.3
+  ],
+  "network_rising_steps": 20,
+  "steps": 20,
+  "measured_in_dataset": [
+   {
+    "formula": "Al0.25 Co1 Cr1 Fe1 Ni1",
+    "al_x": 0.25,
+    "proc": "ANNEAL",
+    "hv": 110.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al0.25 Co1 Cr1 Fe1 Ni1",
+    "al_x": 0.25,
+    "proc": "ANNEAL",
+    "hv": 113.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al0.375 Co1 Cr1 Fe1 Ni1",
+    "al_x": 0.375,
+    "proc": "ANNEAL",
+    "hv": 131.0,
+    "side": "test"
+   },
+   {
+    "formula": "Al0.375 Co1 Cr1 Fe1 Ni1",
+    "al_x": 0.375,
+    "proc": "ANNEAL",
+    "hv": 196.0,
+    "side": "test"
+   },
+   {
+    "formula": "Al0.5 Co1 Cr1 Fe1 Ni1",
+    "al_x": 0.5,
+    "proc": "ANNEAL",
+    "hv": 159.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al0.5 Co1 Cr1 Fe1 Ni1",
+    "al_x": 0.5,
+    "proc": "ANNEAL",
+    "hv": 209.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al0.75 Co1 Cr1 Fe1 Ni1",
+    "al_x": 0.75,
+    "proc": "ANNEAL",
+    "hv": 388.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al0.75 Co1 Cr1 Fe1 Ni1",
+    "al_x": 0.75,
+    "proc": "ANNEAL",
+    "hv": 280.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al0.875 Co1 Cr1 Fe1 Ni1",
+    "al_x": 0.875,
+    "proc": "ANNEAL",
+    "hv": 538.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al0.875 Co1 Cr1 Fe1 Ni1",
+    "al_x": 0.875,
+    "proc": "ANNEAL",
+    "hv": 361.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al1 Co0.8 Cr0.8 Fe0.8 Ni0.8",
+    "al_x": 1.25,
+    "proc": "ANNEAL",
+    "hv": 487.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al1 Co0.8 Cr0.8 Fe0.8 Ni0.8",
+    "al_x": 1.25,
+    "proc": "ANNEAL",
+    "hv": 499.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al1 Co0.667 Cr0.667 Fe0.667 Ni0.667",
+    "al_x": 1.499,
+    "proc": "ANNEAL",
+    "hv": 484.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al1 Co0.667 Cr0.667 Fe0.667 Ni0.667",
+    "al_x": 1.499,
+    "proc": "ANNEAL",
+    "hv": 517.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al1 Co0.5 Cr0.5 Fe0.5 Ni0.5",
+    "al_x": 2.0,
+    "proc": "ANNEAL",
+    "hv": 509.0,
+    "side": "test"
+   },
+   {
+    "formula": "Al1 Co0.5 Cr0.5 Fe0.5 Ni0.5",
+    "al_x": 2.0,
+    "proc": "ANNEAL",
+    "hv": 512.0,
+    "side": "test"
+   },
+   {
+    "formula": "Al1 Co1 Cr1 Fe1 Ni1",
+    "al_x": 1.0,
+    "proc": "ANNEAL",
+    "hv": 484.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al1 Co1 Cr1 Fe1 Ni1",
+    "al_x": 1.0,
+    "proc": "ANNEAL",
+    "hv": 433.0,
+    "side": "train"
+   },
+   {
+    "formula": "Co1 Cr1 Fe1 Ni1",
+    "al_x": 0.0,
+    "proc": "ANNEAL",
+    "hv": 116.0,
+    "side": "test"
+   },
+   {
+    "formula": "Co1 Cr1 Fe1 Ni1",
+    "al_x": 0.0,
+    "proc": "ANNEAL",
+    "hv": 113.0,
+    "side": "test"
+   },
+   {
+    "formula": "Al1 Co0.667 Cr0.667 Fe0.667 Ni0.667",
+    "al_x": 1.499,
+    "proc": "CAST",
+    "hv": 402.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al1 Co0.4 Cr0.4 Fe0.4 Ni0.4",
+    "al_x": 2.5,
+    "proc": "CAST",
+    "hv": 487.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al1 Co0.5 Cr0.5 Fe0.5 Ni0.5",
+    "al_x": 2.0,
+    "proc": "CAST",
+    "hv": 432.0,
+    "side": "test"
+   },
+   {
+    "formula": "Al1 Co0.333 Cr0.333 Fe0.333 Ni0.333",
+    "al_x": 3.003,
+    "proc": "CAST",
+    "hv": 506.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al1 Co1 Cr1 Fe1 Ni1",
+    "al_x": 1.0,
+    "proc": "CAST",
+    "hv": 395.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al1 Co1 Cr1 Fe1 Ni1",
+    "al_x": 1.0,
+    "proc": "CAST",
+    "hv": 520.0,
+    "side": "train"
+   },
+   {
+    "formula": "Co1 Cr1 Fe1 Ni1",
+    "al_x": 0.0,
+    "proc": "CAST",
+    "hv": 94.7,
+    "side": "test"
+   },
+   {
+    "formula": "Al0.3 Co1 Cr1 Fe1 Ni1",
+    "al_x": 0.3,
+    "proc": "CAST",
+    "hv": 117.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al0.6 Co1 Cr1 Fe1 Ni1",
+    "al_x": 0.6,
+    "proc": "CAST",
+    "hv": 228.0,
+    "side": "test"
+   },
+   {
+    "formula": "Al0.9 Co1 Cr1 Fe1 Ni1",
+    "al_x": 0.9,
+    "proc": "CAST",
+    "hv": 511.0,
+    "side": "test"
+   },
+   {
+    "formula": "Al0.3 Co1 Cr1 Fe1 Ni1",
+    "al_x": 0.3,
+    "proc": "CAST",
+    "hv": 132.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al0.3 Co1 Cr1 Fe1 Ni1",
+    "al_x": 0.3,
+    "proc": "CAST",
+    "hv": 147.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al0.3 Co1 Cr1 Fe1 Ni1",
+    "al_x": 0.3,
+    "proc": "CAST",
+    "hv": 165.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al1 Co1 Cr1 Fe1 Ni1",
+    "al_x": 1.0,
+    "proc": "CAST",
+    "hv": 519.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al1 Co1 Cr1 Fe1 Ni1",
+    "al_x": 1.0,
+    "proc": "CAST",
+    "hv": 493.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al1 Co0.5 Cr0.5 Fe0.5 Ni0.5",
+    "al_x": 2.0,
+    "proc": "CAST",
+    "hv": 581.7,
+    "side": "test"
+   },
+   {
+    "formula": "Co1 Cr1 Fe1 Ni1",
+    "al_x": 0.0,
+    "proc": "CAST",
+    "hv": 168.9,
+    "side": "test"
+   },
+   {
+    "formula": "Al1 Co1 Cr1 Fe1 Ni1",
+    "al_x": 1.0,
+    "proc": "POWDER",
+    "hv": 550.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al1 Co1 Cr1 Fe1 Ni1",
+    "al_x": 1.0,
+    "proc": "POWDER",
+    "hv": 510.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al1 Co1 Cr1 Fe1 Ni1",
+    "al_x": 1.0,
+    "proc": "POWDER",
+    "hv": 503.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al0.5 Co1 Cr1 Fe1 Ni1",
+    "al_x": 0.5,
+    "proc": "UNKNOWN",
+    "hv": 250.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al1 Co1 Cr1 Fe1 Ni1",
+    "al_x": 1.0,
+    "proc": "UNKNOWN",
+    "hv": 500.0,
+    "side": "train"
+   },
+   {
+    "formula": "Al1 Co0.5 Cr0.5 Fe0.5 Ni0.5",
+    "al_x": 2.0,
+    "proc": "UNKNOWN",
+    "hv": 733.0,
+    "side": "test"
+   },
+   {
+    "formula": "Al0.3 Co1 Cr1 Fe1 Ni1",
+    "al_x": 0.3,
+    "proc": "UNKNOWN",
+    "hv": 160.0,
+    "side": "train"
+   }
+  ],
+  "outcome": "Direction is right: network prediction rises at every one of the 20 steps, from 137 HV at x=0 to 525 HV at x=2, steepest from x=0.3 to about x=0.8 and flattening above x=1.2. Against as-cast measurements in the file it is too high at x=0.6 (predicted 343, one test-side measurement 228) and too low at x=0.9 (predicted 442, one test-side measurement 511): the network draws a smooth ramp where the measurements show a sharper jump. Not an independent physics test: Al-Co-Cr-Fe-Ni alloys are among the training rows (as cast at x=0.3, 1.0, 1.5, 2.5, 3.0; annealed at x=0.25 to 1.5), so part of this is recall. The trees give the same overall rise but in steps and not monotonically."
+ },
+ "trees_top_inputs": [
+  [
+   "vec_mean",
+   0.383
+  ],
+  [
+   "radius_mean_pm",
+   0.099
+  ],
+  [
+   "x_Al",
+   0.073
+  ],
+  [
+   "eneg_spread",
+   0.068
+  ],
+  [
+   "radius_mismatch_pct",
+   0.059
+  ],
+  [
+   "vec_spread",
+   0.052
+  ],
+  [
+   "x_Cr",
+   0.041
+  ],
+  [
+   "tmelt_mean_K",
+   0.034
+  ]
+ ],
+ "extra_cv_whole_alloy_systems_held_out_training_rows_only": {
+  "network_ensemble": {
+   "mae": 102.13351235903943,
+   "rmse": 138.42921287967556,
+   "r2": 0.5717809355728607,
+   "per_fold_mae": [
+    111.75799558933282,
+    86.80311421133274,
+    106.68881604938568
+   ]
+  },
+  "trees": {
+   "mae": 94.62240942448442,
+   "rmse": 121.21701546051966,
+   "r2": 0.6716495067340984
+  },
+  "naive": {
+   "mae": 173.92143153850884,
+   "rmse": 212.00646949238646,
+   "r2": -0.004404678736432022
+  },
+  "alloy_systems_in_train": 118,
+  "test_rows_whose_element_set_is_also_in_train": 74
+ },
+ "guards_note": {
+  "what": "standardised inputs capped at +-3 and predictions kept inside the training HV range",
+  "why": "first CV pass without guards gave absurd out-of-fold predictions for a few unusual alloys",
+  "unguarded_single_net_cv_grid": [
+   {
+    "hidden": [
+     32,
+     16
+    ],
+    "decay": 0.001,
+    "logTarget": false,
+    "loss": "squared",
+    "cv_mae": 94.53075281953157,
+    "cv_r2": -0.2741306836144659
+   },
+   {
+    "hidden": [
+     32,
+     16
+    ],
+    "decay": 0.001,
+    "logTarget": true,
+    "loss": "squared",
+    "cv_mae": 580647.1579476302,
+    "cv_r2": -3208597079.0703535
+   },
+   {
+    "hidden": [
+     32,
+     16
+    ],
+    "decay": 0.01,
+    "logTarget": false,
+    "loss": "squared",
+    "cv_mae": 83.53249497621842,
+    "cv_r2": 0.649198992370261
+   },
+   {
+    "hidden": [
+     32,
+     16
+    ],
+    "decay": 0.01,
+    "logTarget": true,
+    "loss": "squared",
+    "cv_mae": 104.57350971024772,
+    "cv_r2": -5.337488371510926
+   },
+   {
+    "hidden": [
+     32,
+     16
+    ],
+    "decay": 0.05,
+    "logTarget": false,
+    "loss": "squared",
+    "cv_mae": 88.95266095576912,
+    "cv_r2": 0.7046720331522053
+   },
+   {
+    "hidden": [
+     32,
+     16
+    ],
+    "decay": 0.05,
+    "logTarget": true,
+    "loss": "squared",
+    "cv_mae": 89.9492531143713,
+    "cv_r2": 0.6740837947870788
+   },
+   {
+    "hidden": [
+     64,
+     32
+    ],
+    "decay": 0.001,
+    "logTarget": false,
+    "loss": "squared",
+    "cv_mae": 87.53115951382904,
+    "cv_r2": 0.595359211384042
+   },
+   {
+    "hidden": [
+     64,
+     32
+    ],
+    "decay": 0.001,
+    "logTarget": true,
+    "loss": "squared",
+    "cv_mae": 133.38718512948753,
+    "cv_r2": -19.52356278128804
+   },
+   {
+    "hidden": [
+     64,
+     32
+    ],
+    "decay": 0.01,
+    "logTarget": false,
+    "loss": "squared",
+    "cv_mae": 85.35677145627501,
+    "cv_r2": 0.5500971309573279
+   },
+   {
+    "hidden": [
+     64,
+     32
+    ],
+    "decay": 0.01,
+    "logTarget": true,
+    "loss": "squared",
+    "cv_mae": 121.64682920714888,
+    "cv_r2": -14.477578185484475
+   },
+   {
+    "hidden": [
+     64,
+     32
+    ],
+    "decay": 0.05,
+    "logTarget": false,
+    "loss": "squared",
+    "cv_mae": 88.86479873919684,
+    "cv_r2": 0.7091707982946209
+   },
+   {
+    "hidden": [
+     64,
+     32
+    ],
+    "decay": 0.05,
+    "logTarget": true,
+    "loss": "squared",
+    "cv_mae": 89.95756710029545,
+    "cv_r2": 0.6833407190422731
+   },
+   {
+    "hidden": [
+     128,
+     64
+    ],
+    "decay": 0.001,
+    "logTarget": false,
+    "loss": "squared",
+    "cv_mae": 80.50041276120704,
+    "cv_r2": 0.7117742001964198
+   },
+   {
+    "hidden": [
+     128,
+     64
+    ],
+    "decay": 0.001,
+    "logTarget": true,
+    "loss": "squared",
+    "cv_mae": 81.1972500857242,
+    "cv_r2": 0.6331974592658922
+   },
+   {
+    "hidden": [
+     128,
+     64
+    ],
+    "decay": 0.01,
+    "logTarget": false,
+    "loss": "squared",
+    "cv_mae": 79.92572652843641,
+    "cv_r2": 0.7177488814418684
+   },
+   {
+    "hidden": [
+     128,
+     64
+    ],
+    "decay": 0.01,
+    "logTarget": true,
+    "loss": "squared",
+    "cv_mae": 85.0257974068688,
+    "cv_r2": 0.6452772703879697
+   },
+   {
+    "hidden": [
+     128,
+     64
+    ],
+    "decay": 0.05,
+    "logTarget": false,
+    "loss": "squared",
+    "cv_mae": 88.6741590090361,
+    "cv_r2": 0.7094996810445517
+   },
+   {
+    "hidden": [
+     128,
+     64
+    ],
+    "decay": 0.05,
+    "logTarget": true,
+    "loss": "squared",
+    "cv_mae": 90.00897301580476,
+    "cv_r2": 0.6885500454719962
+   },
+   {
+    "hidden": [
+     128,
+     64
+    ],
+    "decay": 0.01,
+    "logTarget": false,
+    "loss": "huber",
+    "cv_mae": 79.44402415046928,
+    "cv_r2": 0.72965360465998
+   }
+  ],
+  "unguarded_best_ensemble_cv": {
+   "mae": 78.78218904727625,
+   "rmse": 108.91938958646948,
+   "r2": 0.7348931820803413,
+   "per_fold_mae": [
+    72.99040671987784,
+    90.03239025780834,
+    71.42558638986877
+   ]
+  }
+ },
+ "caveats": [
+  "Network and trees are not distinguishable. Single test split: trees better by about 5 HV MAE. Eight further splits: network better by about 3 HV on average, 7 of 8, but the 95% interval reaches zero and the overlap-corrected one clearly includes it. The network settings were tuned on rows that reappear as test rows in those eight splits, which favours the network slightly there, and the settings tried differ by less than the fold-to-fold noise (single-net CV MAE 76.0 to 88.5 with guards). The network needed two guards (capped inputs, clamped output) to stop absurd predictions on unusual alloys; the trees need none.",
+  "The error is large and the split is kind. Typical miss about 75 HV on a 95-1183 scale, 90% interval about +-180 HV. Only the exact formula is kept on one side: near neighbours (Al0.3 vs Al0.25 CoCrFeNi, often from the same paper) sit on both sides, and 74 of the 104 test rows come from element sets also present in training. With whole alloy systems held out (3-fold, training rows only) MAE rises to 102 HV for the network and 95 HV for the trees (naive 174). Scores for alloys from a family nobody has studied are less trustworthy than the test numbers.",
+  "The data limit the model. 530 literature measurements from many labs, loads and heat treatments; processing is five coarse labels and blank in 73 rows (no temperatures or times); repeat measurements of the same formula and route (62 cases, 174 rows) sit on average 37 HV from their own mean, so a good part of the error cannot be removed with these inputs. The element table (radius, electronegativity, valence electrons, melting point) was typed in from memory with citations and not re-checked against the sources."
+ ],
+ "provenance": "Every number in this file was computed in this session by the scripts listed under files, on the CSV downloaded in this session. Nothing is quoted from the literature except the direction of the Al trend, which was given in the brief. The network was evaluated on the test split exactly once (run_nn.js final). eval_trees.py, which has fixed settings and a fixed seed, was re-executed several times (four runs, one of which crashed on a text-formatting error before writing anything) only to add report fields; its test numbers were identical each time and nothing was tuned on them.",
+ "files": [
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/materials/data/MPEA_dataset.csv",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/materials/prepare.py",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/materials/nn_generic.js",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/materials/run_nn.js",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/materials/eval_trees.py",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/materials/package.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/materials/nn_data.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/materials/splits.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/materials/cv_folds.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/materials/cv_folds_system.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/materials/sweep.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/materials/prepare_summary.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/materials/cv_results.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/materials/cv_results_unguarded.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/materials/cv_system_nn.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/materials/nn_final.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/materials/result.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/materials/cv.log",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/materials/cv_unguarded.log",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/materials/final.log",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/materials/trees.log"
+ ]
+}

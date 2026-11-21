@@ -24,9 +24,10 @@ export default function Planned({ domain, onBack }) {
       </p>
       {offline && (
         <p className="note">
-          A trained model exists in <code>{offline.folder}</code> and is not on the site yet: on held-out
-          compounds its average miss is {offline.test.network} {offline.test.unit}, against {offline.test.treesTuned} for
-          fairly tuned trees and {offline.test.mean} for guessing the average. {offline.reason}
+          A water-solubility (LogS) model was trained and checked offline; its scripts and results files are
+          in <code>{offline.folder}</code>, but its data file is not in the repo or on the site. On held-out compounds its
+          average miss is {offline.test.network.toFixed(2)} {offline.test.unit}, against {offline.test.treesTuned.toFixed(2)} for
+          fairly tuned trees (a tie) and {offline.test.mean.toFixed(2)} for guessing the average. {offline.reason}
         </p>
       )}
       <dl className="plan">

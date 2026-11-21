@@ -1,0 +1,418 @@
+{
+ "IMPORTANT": "All target values are CALCULATED with density functional theory (DFPT, Materials Project; Petousis et al.), NOT measured in a lab. Every error below is error against that calculation, not against experiment. The model is a fast stand-in for a slow calculation.",
+ "numbers_run_by": "Every number in this file was computed in this session by the scripts listed under files_written (no number is quoted from a paper).",
+ "data": {
+  "source": "Hugging Face foundry-ml/dielectric_constant_v1-1 (CC BY 4.0), Petousis et al., DOI 10.18126/racd-go9m",
+  "rows_used": 1056,
+  "groups_reduced_formulas": 964,
+  "train_rows": 843,
+  "test_rows": 213,
+  "train_groups": 771,
+  "test_groups": 193,
+  "target": "y = log10(poly_total); poly_total is the DFT-calculated polycrystalline total dielectric constant",
+  "split": "GroupShuffleSplit 80/20 by reduced formula, random_state=42; 8 more grouped splits seeds 1001-1008"
+ },
+ "features_main": [
+  "mean_Z",
+  "range_Z",
+  "std_Z",
+  "mean_period",
+  "range_period",
+  "std_period",
+  "mean_group",
+  "range_group",
+  "std_group",
+  "mean_electronegativity",
+  "range_electronegativity",
+  "std_electronegativity",
+  "mean_mass",
+  "range_mass",
+  "std_mass",
+  "mean_covalent_radius",
+  "range_covalent_radius",
+  "std_covalent_radius",
+  "mean_valence_electrons",
+  "range_valence_electrons",
+  "std_valence_electrons",
+  "n_elements",
+  "frac_O",
+  "frac_S",
+  "frac_Se",
+  "frac_Te",
+  "frac_F",
+  "frac_Cl",
+  "frac_Br",
+  "frac_I",
+  "frac_N",
+  "volume_per_atom",
+  "nsites",
+  "density_g_cm3",
+  "packing_fraction_covalent",
+  "system_triclinic",
+  "system_monoclinic",
+  "system_orthorhombic",
+  "system_tetragonal",
+  "system_trigonal",
+  "system_hexagonal",
+  "system_cubic"
+ ],
+ "features_second_model": "features_main + band_gap_eV_calculated (Materials Project calculated band gap)",
+ "excluded_inputs": "n, poly_electronic, pot_ferroelectric (outputs of the same calculation as the target); crystal-structure JSON not used",
+ "element_table_source": "Typed by hand in prepare.py for the 63 elements present, from memory (nothing downloaded): atomic number, period, group = periodic table; Pauling electronegativity as in the CRC Handbook / Wikipedia data page; IUPAC abridged standard atomic weights; covalent radii from Cordero et al., Dalton Trans. 2008 (C sp3; Mn/Fe/Co low-spin); valence electrons DERIVED from group (group for 1-12, group-10 for 13-17). Checked in code: molar masses of NaCl, SiO2, BaTiO3, Al2O3, Mg(OH)2 to 0.02 g/mol; Z/period/group ordering; electronegativity and radius trends. Not independently verified against a reference file tonight.",
+ "network_settings_chosen": {
+  "hidden": [
+   64,
+   32
+  ],
+  "lr": 0.002,
+  "decay": 0.03,
+  "epochs": 150,
+  "loss": "huber",
+  "batch": 32,
+  "seed": 11,
+  "chosen_by": "3-fold grouped CV MAE (log10) on training rows, single network",
+  "single_net_cv_mae_log10": 0.11764895790414903,
+  "name": "F 64-32 huber wd3e-2 lr.002",
+  "members": 5,
+  "members_reason": "ensemble-of-5 CV MAE 0.1175 vs single 0.1176"
+ },
+ "cv_on_training_rows_3fold_grouped": {
+  "grid_single_network": [
+   {
+    "name": "A 64-32 squared wd1e-3",
+    "hidden": [
+     64,
+     32
+    ],
+    "lr": 0.004,
+    "decay": 0.001,
+    "epochs": 150,
+    "loss": "squared",
+    "cv_mae_log10": 0.1425,
+    "seconds": 3
+   },
+   {
+    "name": "B 64-32 huber wd1e-3",
+    "hidden": [
+     64,
+     32
+    ],
+    "lr": 0.004,
+    "decay": 0.001,
+    "epochs": 150,
+    "loss": "huber",
+    "cv_mae_log10": 0.1371,
+    "seconds": 3.12
+   },
+   {
+    "name": "C 64-32 huber wd1e-2",
+    "hidden": [
+     64,
+     32
+    ],
+    "lr": 0.004,
+    "decay": 0.01,
+    "epochs": 150,
+    "loss": "huber",
+    "cv_mae_log10": 0.125,
+    "seconds": 3.19
+   },
+   {
+    "name": "D 32-16 huber wd1e-2",
+    "hidden": [
+     32,
+     16
+    ],
+    "lr": 0.004,
+    "decay": 0.01,
+    "epochs": 150,
+    "loss": "huber",
+    "cv_mae_log10": 0.1292,
+    "seconds": 1.28
+   },
+   {
+    "name": "E 32 huber wd1e-2",
+    "hidden": [
+     32
+    ],
+    "lr": 0.004,
+    "decay": 0.01,
+    "epochs": 150,
+    "loss": "huber",
+    "cv_mae_log10": 0.1197,
+    "seconds": 0.79
+   },
+   {
+    "name": "F 64-32 huber wd3e-2 lr.002",
+    "hidden": [
+     64,
+     32
+    ],
+    "lr": 0.002,
+    "decay": 0.03,
+    "epochs": 150,
+    "loss": "huber",
+    "cv_mae_log10": 0.1176,
+    "seconds": 3.6
+   }
+  ],
+  "network_ensemble5_cv_mae_log10": 0.1175,
+  "trees_cv_mae_log10_fixed_settings": 0.1246,
+  "naive_cv_mae_log10": 0.207
+ },
+ "b_test_split_once": {
+  "network": {
+   "mae_log10": 0.1211,
+   "r2_log10": 0.6384,
+   "median_abs_error_dielectric_units": 1.8895,
+   "mean_abs_error_dielectric_units": 5.965,
+   "typical_factor_off_10^mae": 1.3216
+  },
+  "trees_gradient_boosting": {
+   "mae_log10": 0.1173,
+   "r2_log10": 0.6618,
+   "median_abs_error_dielectric_units": 1.9864,
+   "mean_abs_error_dielectric_units": 5.8327,
+   "typical_factor_off_10^mae": 1.3101
+  },
+  "naive_training_mean": {
+   "mae_log10": 0.2131,
+   "r2_log10": -0.0038,
+   "median_abs_error_dielectric_units": 3.7947,
+   "mean_abs_error_dielectric_units": 8.5011,
+   "typical_factor_off_10^mae": 1.6335
+  },
+  "high_tail_rows_true_value_above_30": {
+   "rows": 18,
+   "network_mae_log10": 0.3804,
+   "trees_mae_log10": 0.2898,
+   "network_median_predicted_over_true": 0.5221,
+   "trees_median_predicted_over_true": 0.5997
+  }
+ },
+ "final_network": {
+  "training_seconds": 11.29,
+  "layers": [
+   42,
+   64,
+   32,
+   1
+  ],
+  "weights_total": 24325,
+  "members": 5,
+  "runtime": "Node, single thread, niced, on a shared 4-CPU machine",
+  "tree_fit_seconds": 1.22
+ },
+ "d_interval_90": {
+  "method": "absolute-error quantile of 3-fold grouped out-of-fold errors on training rows (rank ceil((n+1)*0.9) of n), applied as prediction +/- q in log10 units around the final network",
+  "half_width_log10": 0.245,
+  "multiplicative_factor": 1.7578,
+  "reads_as": "calculated value expected between prediction/1.76 and prediction*1.76",
+  "test_coverage": 0.892,
+  "test_rows_inside": 190,
+  "test_rows": 213,
+  "nominal": 0.9,
+  "test_coverage_rows_true_value_above_30": 0.3889,
+  "rows_above_30": 18,
+  "test_coverage_rows_true_value_30_or_below": 0.9385,
+  "largest_test_prediction_dielectric_units": 36.5716,
+  "largest_test_true_value": 277.78,
+  "warning": "coverage is an average over compounds like those in this dataset; it fails badly on the high-dielectric tail, which the network systematically under-predicts"
+ },
+ "c_eight_grouped_splits": {
+  "seeds": [
+   1001,
+   1002,
+   1003,
+   1004,
+   1005,
+   1006,
+   1007,
+   1008
+  ],
+  "network_members_per_split": 5,
+  "mae_log10_network": [
+   0.112,
+   0.1184,
+   0.1073,
+   0.133,
+   0.1232,
+   0.1111,
+   0.1141,
+   0.137
+  ],
+  "mae_log10_trees": [
+   0.1091,
+   0.1184,
+   0.1046,
+   0.1335,
+   0.1343,
+   0.1147,
+   0.1263,
+   0.13
+  ],
+  "mae_log10_naive": [
+   0.1906,
+   0.211,
+   0.1974,
+   0.2379,
+   0.2258,
+   0.2006,
+   0.2191,
+   0.2211
+  ],
+  "mean_network": 0.1195,
+  "mean_trees": 0.1213,
+  "mean_naive": 0.2129,
+  "mean_difference_network_minus_trees": -0.0018,
+  "paired_t_95_interval": [
+   -0.0075,
+   0.0038
+  ],
+  "splits_completed": 8,
+  "network_better_on_splits": 5,
+  "reading": "negative difference = network better. Interval includes zero: no clear winner.",
+  "caveat": "the eight test sets overlap, so the splits are not independent and the t interval is somewhat too narrow"
+ },
+ "e_second_model_with_band_gap": {
+  "network": {
+   "mae_log10": 0.1209,
+   "r2_log10": 0.631,
+   "median_abs_error_dielectric_units": 1.8098,
+   "mean_abs_error_dielectric_units": 5.9351,
+   "typical_factor_off_10^mae": 1.321
+  },
+  "trees_gradient_boosting": {
+   "mae_log10": 0.1068,
+   "r2_log10": 0.7121,
+   "median_abs_error_dielectric_units": 1.52,
+   "mean_abs_error_dielectric_units": 5.4992,
+   "typical_factor_off_10^mae": 1.2787
+  },
+  "network_settings": "same as the main network (not re-tuned)",
+  "tree_band_gap_importance": 0.2704,
+  "gain_mae_log10_network": 0.0002,
+  "gain_mae_log10_trees": 0.0105
+ },
+ "sanity_check_band_gap_trend": {
+  "expectation": "dielectric constant should fall as band gap rises",
+  "reference_true_target_vs_band_gap_spearman_test": -0.5996,
+  "main_model_no_band_gap_input": {
+   "network_prediction_vs_true_band_gap_spearman": -0.6723,
+   "trees_prediction_vs_true_band_gap_spearman": -0.6389
+  },
+  "second_model_sweep": {
+   "grid_eV": [
+    0.5,
+    1.25,
+    2,
+    2.75,
+    3.5,
+    4.25,
+    5,
+    5.75,
+    6.5
+   ],
+   "rows": 213,
+   "training_band_gap_quantiles_5_50_95_eV": [
+    0.281,
+    1.73,
+    5.436999999999999
+   ],
+   "network": {
+    "share_rows_prediction_lower_at_6.5eV_than_0.5eV": 1.0,
+    "share_rows_falling_at_every_step": 0.9859,
+    "share_rows_never_rising_at_any_step": 0.9859,
+    "share_of_all_steps_falling": 0.9953,
+    "median_change_log10_per_eV": -0.0355
+   },
+   "trees": {
+    "share_rows_prediction_lower_at_6.5eV_than_0.5eV": 0.9484,
+    "share_rows_falling_at_every_step": 0.0094,
+    "share_rows_never_rising_at_any_step": 0.0188,
+    "share_of_all_steps_falling": 0.6391,
+    "median_change_log10_per_eV": -0.0303
+   },
+   "note": "band gap is swept on real test rows with every other input held fixed; the top of the grid (above about 5.4 eV) is beyond 95% of training rows"
+  }
+ },
+ "nn_run_complete": true,
+ "nn_total_seconds_all_stages": 119.9,
+ "ablation_trees_cv_training_rows_only": {
+  "note": "3-fold grouped CV on training rows only; gradient boosting with the fixed baseline settings; MAE in log10 units. Targets are DFT-calculated, not measured.",
+  "all_42_features": 0.1246,
+  "without_volume_derived_3": 0.1365,
+  "composition_only_no_cell_info": 0.1355,
+  "volume_and_cell_only_no_composition": 0.1622
+ },
+ "followup_cv_grid_training_rows_only_not_used_for_choice": {
+  "note": "CV on training rows only, run after the single test evaluation; not used for model choice; no test numbers here. Targets are DFT-calculated, not measured.",
+  "grid": [
+   {
+    "name": "G 64-32 huber wd1e-1 lr.002",
+    "cv_mae_log10": 0.1442
+   },
+   {
+    "name": "H 32 huber wd3e-2 lr.002",
+    "cv_mae_log10": 0.1206
+   },
+   {
+    "name": "I 32 huber wd3e-2 lr.004",
+    "cv_mae_log10": 0.1199
+   },
+   {
+    "name": "J 64-32 huber wd3e-2 lr.002 300ep",
+    "cv_mae_log10": 0.1172
+   },
+   {
+    "name": "K 64-32 squared wd3e-2 lr.002",
+    "cv_mae_log10": 0.1216
+   },
+   {
+    "name": "L 16 huber wd1e-2 lr.004",
+    "cv_mae_log10": 0.1206
+   }
+  ]
+ },
+ "files_written": [
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/insulators/prepare.py",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/insulators/nn_generic.js",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/insulators/run_nn.js",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/insulators/trees.py",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/insulators/report.py",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/insulators/cv_extra.js",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/insulators/ablation.py",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/insulators/package.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/insulators/nn_data.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/insulators/nn_data_bandgap.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/insulators/splits.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/insulators/cv_folds.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/insulators/all_rows.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/insulators/trees.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/insulators/nn_out.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/insulators/nn_cv_extra.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/insulators/ablation.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/insulators/extras.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/insulators/trees.log",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/insulators/nn.log",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/insulators/cv_extra.log",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/insulators/report.log",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/insulators/result.json",
+  "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/insulators/.t0"
+ ],
+ "headline": "On DFT-calculated targets: network test MAE 0.121 log10 (about a factor 1.32), trees 0.117, guessing the training mean 0.213. Network and trees are statistically indistinguishable over eight splits; both beat the naive guess clearly; neither can find high-dielectric outliers.",
+ "three_biggest_caveats": [
+  "1. The targets are CALCULATED (density functional perturbation theory, Materials Project / Petousis et al.), not measured. Every error here is error against that calculation; how far the calculation itself sits from experiment is not included and was not assessed. Two inputs are DFT outputs too: the relaxed-cell volume (main model) and the band gap (second model). Dropping the three volume-derived features moves the tree CV MAE on training rows from 0.1246 to 0.1365, so a proposed compound needs a relaxed cell or a good volume estimate to get the reported accuracy.",
+  "2. The model fails exactly where screening cares most: the high-dielectric tail. On the 18 of 213 test rows with a true value above 30 the network's MAE is 0.38 log10, its median prediction is 0.52x the true value, and the 90% interval covers only 39% of them (89% overall). The largest test prediction is 36.6 against a true maximum of 278. With formula and cell-level inputs only (no structure, no phonons) the lattice contribution that makes a compound high-k is not captured; treat this as an estimator for typical compounds, not an outlier finder.",
+  "3. The network is not better than the trees, and the data are small. Single test split: trees 0.1173 vs network 0.1211 MAE (log10). Eight grouped splits: mean difference network minus trees -0.0018, paired 95% t interval [-0.0075, +0.0038], which includes zero (and the splits overlap, so that interval is if anything too narrow). With band gap added the trees improve to 0.1068 while the network stays at 0.1209. Only 1,056 rows / 964 formulas; MAE moves between 0.107 and 0.137 from split to split, more than any model difference."
+ ],
+ "other_caveats": [
+  "The element table was typed from memory and checked only by internal consistency tests (molar masses, periodic trends), not against a reference file.",
+  "The second (band-gap) network reuses the main network's settings; it was not re-tuned, which may understate what a network could get from band gap.",
+  "In (c) the network settings were chosen by CV on the seed-42 training rows, which overlap the test rows of the eight other splits: a mild selection leak in the network's favour. Tree settings were fixed in advance.",
+  "The 90% interval assumes new compounds resemble this dataset (compounds selected by the original screening study); it is an average guarantee, not a per-compound one.",
+  "The band-gap sweep shows how the model responds when band gap alone is changed; it is model behaviour, not evidence of causation. Grid points above about 5.4 eV lie beyond 95% of training rows.",
+  "R2 of about 0.64 in log10 units means roughly a third of the variance of the calculated values is unexplained."
+ ],
+ "protocol": "Network settings were picked automatically by the script as the minimum 3-fold grouped CV MAE on training rows. The seed-42 test split was then scored once per model (network, trees, naive, and the two band-gap variants); no setting was changed afterwards. A follow-up CV grid and a feature ablation were run later on training rows only and changed nothing in the reported model."
+}

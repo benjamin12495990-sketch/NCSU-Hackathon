@@ -2,8 +2,9 @@
 
 > **Status: concrete is built in the main app. `materials` (alloy hardness), `insulators` (dielectric
 > constant) and `polymers` (glass transition) are live on the site; their folders hold the agent's
-> `prepare.py` and `nn_generic.js`, copied byte-identical. `chemistry` (solubility) has the same two
-> files and a verified model that is not on the site yet. The other folders are plans.** Sources were
+> `prepare.py` and `nn_generic.js`, copied byte-identical, plus `result.json` and `skeptic_check.json`.
+> `chemistry` (solubility) has the same four files for a model trained and checked offline; its data
+> file and weights are not in the repo and it is not on the site yet. The other folders are plans.** Sources were
 > not checked again through MCPs (see docs/AGENTS.md), and the insulator element table was typed from
 > memory by its agent and is uncited.
 
