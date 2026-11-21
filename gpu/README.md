@@ -49,7 +49,10 @@ build, then run the command it prints.
 > driver 580.88 or later. The snapshot says PyTorch 2.15 ships CUDA 13.2 wheels by default and 13.4
 > alongside them. `check_env.py` prints `sm in build: True/False` for the actual GPU.
 
-Use Python 3.10 to 3.13 (tested here on 3.13 with `torch 2.15.0+cu132`, run on CPU).
+Use Python 3.10 to 3.13. The kit was tested here on Python 3.13 with `torch 2.15.0+cu132` from PyPI,
+running on CPU. The CPU-only index (`--index-url https://download.pytorch.org/whl/cpu`) was blocked by this
+machine's network proxy. On Windows, peak CPU memory is not reported (`null`), because Python has no
+`resource` module there. CUDA memory is always reported.
 
 ### Windows (PowerShell), from the repository root
 
@@ -81,7 +84,7 @@ Write down the exact install command, the driver version and the torch version. 
 
 ## 2. Check, profile, then train
 
-Commands use `/`. PowerShell accepts that in these arguments. Every `--output` and run folder must be new;
+Commands use `/`. PowerShell accepts that in these arguments. `--threads N` caps PyTorch's CPU threads. Every `--output` and run folder must be new;
 use a new name for each run. Keep the laptop plugged in. During CUDA runs, watch temperature and power
 in a second terminal with `nvidia-smi -l 2`.
 

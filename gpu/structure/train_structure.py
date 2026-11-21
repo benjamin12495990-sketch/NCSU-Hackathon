@@ -236,7 +236,7 @@ def main(argv=None):
         order = tr[rng.permutation(len(tr))]
         sync(device)
         t0 = time.perf_counter()
-        tot, cnt = 0.0, 0
+        tot, cnt = torch.zeros((), device=device), 0  # summed on the device: no per-step host sync
         for s in range(0, len(order), a.batch):
             bi = order[s:s + a.batch]
             if len(bi) < 2:
@@ -249,9 +249,10 @@ def main(argv=None):
             opt.zero_grad(set_to_none=True)
             loss.backward()
             opt.step()
-            tot += float(loss.detach()) * len(bi); cnt += len(bi)
+            tot += loss.detach() * len(bi); cnt += len(bi)
         sync(device)
         dt = time.perf_counter() - t0
+        tot = float(tot)
         train_seconds += dt
         pv = run_model(model, graphs, idx['val'], device, 256, a.amp) * ys + ym
         mv = metrics(pv, y[idx['val']])
