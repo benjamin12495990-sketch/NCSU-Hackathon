@@ -1,4 +1,8 @@
-# gpu/: local GPU training kit (RTX 5080 laptop)
+# gpu/: local GPU training kit (RTX 50-series laptop GPU)
+
+> First measured on an NVIDIA GeForce RTX 5070 Laptop GPU (8 GB, driver 592.19), not the RTX 5080 named in the
+> earlier project snapshot. Results and hardware are in `reference_gpu/`. Everything here works on any
+> CUDA GPU that your PyTorch build supports.
 
 This folder is a PyTorch training path for the project. It does not replace anything: the JavaScript
 trainers, splits and results stay the reference. It was built and tested **on CPU only** (no GPU on the
@@ -46,8 +50,8 @@ PyTorch is not in `requirements.txt`. Install it from the official selector,
 <https://pytorch.org/get-started/locally/>: choose Stable, your OS, Pip, Python, and the newest CUDA
 build, then run the command it prints.
 
-> **From the project snapshot (verify on the selector):** the RTX 5080 is Blackwell, compute capability
-> 12.0. It needs a PyTorch build that includes `sm_120`. Use CUDA 13.0+ wheels and, on Windows, NVIDIA
+> **From the project snapshot (verify on the selector):** RTX 50-series GPUs (5070, 5080 and so on) are
+> Blackwell, compute capability 12.0. It needs a PyTorch build that includes `sm_120`. Use CUDA 13.0+ wheels and, on Windows, NVIDIA
 > driver 580.88 or later. The snapshot says PyTorch 2.15 ships CUDA 13.2 wheels by default and 13.4
 > alongside them. `check_env.py` prints `sm in build: True/False` for the actual GPU.
 
@@ -86,10 +90,10 @@ Write down the exact install command, the driver version and the torch version. 
 
 ## 2. Check, profile, then train
 
-**One command for the first day:** `python -m gpu.laptop_suite --device cuda --label rtx5080` runs every step
+**One command for the first day:** `python -m gpu.laptop_suite --device cuda --label laptop` runs every step
 below in order: smoke test, environment checks, profiles, all six tabular families, a 32-seed bank, the
 JARVIS download and the 3,000-record structure run, on CUDA and, for comparison, on CPU. Each step's log
-goes to `gpu/runs/<UTC time>_suite_rtx5080/`. The compact JSONs and a `summary.json` that compares them with
+goes to `gpu/runs/<UTC time>_suite_laptop/`. The compact JSONs and a `summary.json` that compares them with
 `reference_cpu/` go to its `share/` subfolder. Add `--full-structure` for the full JARVIS run. The steps one
 by one:
 
@@ -99,12 +103,12 @@ in a second terminal with `nvidia-smi -l 2`.
 
 ```bash
 python -m gpu.tests.smoke                                        # CPU, about 15 s; must end "10/10 passed"
-python -m gpu.check_env --device cuda --output gpu/runs/env/rtx5080_cuda.json
-python -m gpu.check_env --device cpu  --output gpu/runs/env/rtx5080_cpu.json
+python -m gpu.check_env --device cuda --output gpu/runs/env/laptop_cuda.json
+python -m gpu.check_env --device cpu  --output gpu/runs/env/laptop_cpu.json
 
-python -m gpu.profile_batched_mlp --device cpu  --counts 1,5,32,128 --epochs 10 --output gpu/runs/profile/rtx5080_cpu.json
-python -m gpu.profile_batched_mlp --device cuda --counts 1,5,32,128 --epochs 10 --output gpu/runs/profile/rtx5080_cuda.json
-python -m gpu.profile_batched_mlp --device cuda --counts 1,5,32,128,512 --epochs 10 --output gpu/runs/profile/rtx5080_cuda_warm.json
+python -m gpu.profile_batched_mlp --device cpu  --counts 1,5,32,128 --epochs 10 --output gpu/runs/profile/laptop_cpu.json
+python -m gpu.profile_batched_mlp --device cuda --counts 1,5,32,128 --epochs 10 --output gpu/runs/profile/laptop_cuda.json
+python -m gpu.profile_batched_mlp --device cuda --counts 1,5,32,128,512 --epochs 10 --output gpu/runs/profile/laptop_cuda_warm.json
 ```
 
 Repeat each profile once the laptop is warm. Compare **model-rows/second** at each K, not the wall time of
@@ -184,7 +188,7 @@ For every run, keep:
    performance profile), and the exact PyTorch install command.
 
 Copy the compact JSONs, not checkpoints or `predictions.npz`, into a new folder such as
-`gpu/reference_rtx5080/`. Commit it on a branch together with a short note of the hardware and commands.
+`gpu/reference_gpu/`. Commit it on a branch together with a short note of the hardware and commands.
 Do not commit `gpu/runs/` or `gpu/data_cache/`. Compare the laptop's numbers with `gpu/reference_cpu/`:
 
 - Accuracy on the same command should agree within seed noise. CPU and CUDA are not bit-identical.

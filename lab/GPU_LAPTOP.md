@@ -1,12 +1,12 @@
 > Reconstructed from the documentation snapshot of commit eff7c37 and checked against this repository on 2026-11-21.
 
-# RTX 5080 local training path
+# Laptop GPU local training path
 
 This page gives the reasoning. The commands for GPU work are in `../gpu/README.md`.
 
 The laptop can run all current training without hosted model calls. The current JavaScript trainers
 (`lab/net.mjs` and the family `nn_generic.js` files) are CPU-only. This workspace has no
-`nvidia-smi` and no PyTorch installation, so it cannot see or benchmark the RTX 5080.
+`nvidia-smi` and no PyTorch installation, so it cannot see or benchmark the laptop GPU. (The first measurements were made on an RTX 5070 Laptop GPU with 8 GB, not the RTX 5080 this snapshot named; see `../gpu/reference_gpu/`.)
 
 ## Blackwell, the CUDA wheel and the driver
 
@@ -51,14 +51,14 @@ split grouped by structure or composition.
 Do not download the full roughly 1.42 GB JARVIS collection just to start. Choose one property first,
 then fetch the matching named dataset using the official JARVIS-Tools API or NIST Figshare record.
 Record its version and checksum, run a CPU reference on a small subset, and then benchmark the same
-training configuration on CUDA. The RTX 5080 value is demonstrated by measured structure-model
+training configuration on CUDA. The GPU's value is demonstrated by measured structure-model
 throughput and reproducible candidate screening, not by a synthetic MLP profile alone.
 
 - JARVIS dataset API: https://jarvis-tools.readthedocs.io/en/master/databases.html
 - JARVIS data portal: https://jarvis.nist.gov/
 
 Later, Open Catalyst OC20/OC22 structure-level DFT tasks are a natural graph-neural-network workload
-for the 5080. Their full datasets are large. Start with an official small task/split after the
+for the laptop GPU (8 GB on the machine measured so far, which limits model and batch size). Their full datasets are large. Start with an official small task/split after the
 JARVIS pipeline works. See `../docs/DATA_ROADMAP.md` for sizes, licences and links.
 
 ## Order of work
@@ -67,7 +67,7 @@ JARVIS pipeline works. See `../docs/DATA_ROADMAP.md` for sizes, licences and lin
    check that it sees the device (`../gpu/README.md`).
 2. Run the batched MLP throughput profile on CPU and on CUDA with the same workload. Each output path
    must be new. Repeat each run once after the laptop is warm.
-3. If the 5080 shows a useful gain at realistic candidate counts, port one training family as an
+3. If the GPU shows a useful gain at realistic candidate counts, port one training family as an
    optional PyTorch backend:
    1. Keep the current CPU trainer, split files, seeds, feature transforms, loss, and metric as the
       reference.

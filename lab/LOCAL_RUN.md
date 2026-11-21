@@ -3,8 +3,8 @@
 # Running experiments locally
 
 The lab experiments use small tabular networks. The current trainer is JavaScript and CPU-only; the
-RTX 5080 does not accelerate `lab:evolve2`. Those runs are already light enough to run locally for
-hours without model-token or API charges. The 5080 is useful if you later move the network
+laptop GPU does not accelerate `lab:evolve2`. Those runs are already light enough to run locally for
+hours without model-token or API charges. The GPU is useful if you later move the network
 training loop to PyTorch, but that port should be benchmarked against the existing deterministic
 JavaScript reference before becoming the default. GPU work is being set up in the `gpu/` folder;
 see `../gpu/README.md`.
@@ -53,7 +53,7 @@ This repository has checked only that 2 and 3 workers give the same lineage (`la
 Check that 6 workers give the same lineage on the laptop before relying on it.
 
 On the laptop, time the same small run at 2, 4, then 6 workers before leaving a long run. These
-are CPU processes; the RTX 5080 will not speed them up. More workers can shorten wall time if the
+are CPU processes; the laptop GPU will not speed them up. More workers can shorten wall time if the
 CPU has spare cores, but they do not improve model quality by themselves. Keep the generation and
 stopping rules fixed when comparing worker counts. Do not run six independent searches against the
 same REWARD/MONITOR split and treat their best score as independent evidence: that multiplies
