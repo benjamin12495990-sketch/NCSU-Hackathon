@@ -31,7 +31,8 @@ to a new folder and never overwrites an earlier one.
 - **Grouped evaluation.** Each family is scored by grouped K-fold CV on its training rows. Alloys and
   insulators use the agents' own fold files; the other families use the same group ids. The electrolyte
   loader reads only the OBELiX training partition (`train_idx.csv`). Its groups are connected components of
-  rows that share a composition or a DOI. The fixed test splits (`--mode fixed`) were already scored once by
+  rows that share a Composition string or a DOI token. This is the rule of `domains/electrolytes/work/baseline.py`,
+  and it gives the same 124 groups and 5 folds. The fixed test splits (`--mode fixed`) were already scored once by
   the family agents, so new numbers on them are exploratory.
 - **No exact parity with JavaScript.** The PyTorch trainer uses different random streams and float32 by
   default (`--dtype float64` is available), and it sums in a different order. Compare metrics, not
@@ -200,7 +201,7 @@ with Python 3.13 and torch 2.15.0+cu132 running on CPU, in float32.
 | `profile_batched_mlp --device cpu --counts 1,5,32,128 --epochs 3 --threads 2` (synthetic) | K=1: 72,910; K=5: 187,965; K=32: 408,336; K=128: 660,008 model-rows/s (9.1x K=1) | 0.33 / 0.64 / 1.88 / 4.65 s |
 | `train_tabular --family alloys --mode cv` (agent's 3 grouped folds, 5 seeds) | ensemble MAE 77.71 HV, RMSE 107.6, R2 0.742; members 79.2 +- 2.9; train mean 173.8. JavaScript reference: ensemble 75.34 / 105.1 / 0.753 | 5.0 s |
 | same with `--members 32` (one bank of 32 seeds) | ensemble MAE 76.78 HV, R2 0.747 | 10.2 s (6.4x the networks in 2.0x the time) |
-| `train_tabular --family electrolytes --mode cv` (5 grouped folds, 5 seeds) | ensemble MAE 2.114 log10(S/cm), RMSE 2.995, R2 0.225; train mean 2.575; per-fold MAE 1.26 to 2.61. No JavaScript reference exists | 16.5 s |
+| `train_tabular --family electrolytes --mode cv` (5 grouped folds, 5 seeds) | ensemble MAE 1.934 log10(S/cm), RMSE 2.815, R2 0.316; train mean 2.554. That is the same value, fold for fold, as the mean baseline in `domains/electrolytes/work/reproductions/obelix_group_cv.json` (on main), so the groups and folds match. Its ExtraTrees reaches 1.520, so this MLP is weaker than the trees | 19.4 s |
 | `train_tabular --family insulators --mode cv` (agent's 3 folds, 5 seeds) | ensemble MAE 0.1168 log10, R2 0.604; train mean 0.207. JavaScript: single network 0.1176, ensemble 0.1175 | 7.2 s |
 | `train_tabular --family polymers --mode cv` (GroupKFold 3, 5 seeds) | ensemble MAE 15.18 K, R2 0.926; train mean 65.7. JavaScript single network 15.1 (its folds recompute the Fox features, which these do not) | 11.4 s |
 | `train_tabular --family chemistry --mode cv` (prepare.py folds, 5 seeds) | ensemble MAE 0.765 LogS, R2 0.778; members 0.793; train mean 1.884. JavaScript single seed 0.8025 | 13.7 s |

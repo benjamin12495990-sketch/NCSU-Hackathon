@@ -240,7 +240,9 @@ def load_electrolytes(k=5):
     train_ids = [r['ID'] for r in csv.DictReader(io.StringIO(read_bytes(ptr).decode('utf-8')))]
     by_id = {r['ID']: r for r in rows}
     assert len(by_id) == len(rows), 'duplicate IDs'
-    tr = [by_id[i] for i in train_ids]  # the official test rows are never loaded here
+    assert len(set(train_ids)) == len(train_ids) and set(train_ids) <= set(by_id)
+    keep = set(train_ids)
+    tr = [r for r in rows if r['ID'] in keep]  # processed.csv order; the official test rows are never loaded here
     comps = [parse_composition(r['Composition']) for r in tr]
     elements = sorted({e for c in comps for e in c})
     X = np.zeros((len(tr), len(elements)))
@@ -251,21 +253,22 @@ def load_electrolytes(k=5):
     y = np.log10(np.array([float(r['Ionic conductivity (S cm-1)']) for r in tr]))
     uf = _UF(len(tr))
     first = {}
-    for i, (r, c) in enumerate(zip(tr, comps)):
-        tot = sum(c.values())
-        ckey = 'C:' + ','.join(f'{e}{c[e] / tot:.6f}' for e in sorted(c))
-        keys = [ckey] + ['D:' + t.strip().lower() for t in re.split(r'[;,\s|]+', r['DOI']) if t.strip()]
+    for i, r in enumerate(tr):
+        # the same rule as domains/electrolytes/work/baseline.py: exact Composition string, DOI tokens split on '|'
+        keys = ['C:' + r['Composition'].strip()] + ['D:' + t.strip().lower() for t in r['DOI'].split('|') if t.strip()]
         for key in keys:
             if key in first:
                 uf.union(i, first[key])
             else:
                 first[key] = i
-    groups = np.array([uf.find(i) for i in range(len(tr))])
+    roots = [uf.find(i) for i in range(len(tr))]
+    relabel = {r: j for j, r in enumerate(dict.fromkeys(roots))}  # 0, 1, ... in order of first appearance
+    groups = np.array([relabel[r] for r in roots])
     ds = Dataset('electrolytes', [f'x_{e}' for e in elements], X, y, groups,
                  'log10 room-temperature ionic conductivity, log10(S/cm); OBELiX training partition only')
     for p in (pcsv, ptr):
         _src(ds.sources, p)
-    ds.folds, ds.folds_source = group_kfold(groups, k), f'GroupKFold({k}) on connected components of shared composition or DOI'
+    ds.folds, ds.folds_source = group_kfold(groups, k), f'GroupKFold({k}) on connected components of a shared Composition string or DOI token (rule of domains/electrolytes/work/baseline.py)'
     ds.notes.append('formula-only element fractions; the official 121-row holdout is not loaded (labels are public, so it is not blind)')
     return ds
 

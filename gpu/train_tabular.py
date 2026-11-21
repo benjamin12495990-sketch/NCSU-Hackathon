@@ -204,6 +204,19 @@ def reference_numbers(family, mode):
         return {'file': 'lab/README.md (smoke-test table)', 'select_mae_plain_network_MPa': 12.467,
                 'note': 'plain nn.js network (64-32, its own base inputs, squared, 300 epochs, seed 11) on SELECT = REWARD + MONITOR; '
                         'inputs and scored set differ from this kit, so it is context only'}
+    if family == 'electrolytes':
+        q = REPO / 'domains/electrolytes/work/reproductions/obelix_group_cv.json'
+        if not q.exists():
+            return {'note': f'{q.relative_to(REPO)} not in this checkout (it is on main after 1d1b90b); nothing to compare'}
+        r = json.loads(q.read_text())
+        m = r.get('models', {})
+        return {'file': str(q.relative_to(REPO)), 'parity_note': 'same groups and GroupKFold(5) folds; the mean baseline should match exactly',
+                'cv_mean_baseline': {'mae': m.get('mean', {}).get('pooled_oof_mae'), 'rmse': m.get('mean', {}).get('pooled_oof_rmse'),
+                                     'per_fold_mae': m.get('mean', {}).get('fold_mae')},
+                'cv_selected_' + str(r.get('selected_model')): {'mae': r.get('selected_pooled_oof_mae'),
+                                                                'rmse': m.get(r.get('selected_model'), {}).get('pooled_oof_rmse'),
+                                                                'r2': m.get(r.get('selected_model'), {}).get('pooled_oof_r2')},
+                'mode_run': mode}
     if not p.exists():
         return {'note': f'no result.json for {family}; nothing to compare'}
     r = json.loads(p.read_text())
@@ -261,7 +274,7 @@ def print_comparison(result):
     for k in ('select_mae_plain_network_MPa',):
         if k in ref:
             print(f'  reference [{k}] {ref[k]}')
-    print('  (exact parity with the JavaScript trainer is not expected; compare within seed noise)')
+    print('  (exact parity with the reference trainer is not expected; compare within seed noise)')
 
 
 def main(argv=None):
