@@ -1,0 +1,27 @@
+[real opening] opened 271 rows:
+  physics_powers             RMSE 15.736 [14.20, 17.12]  seen 15.050 (263)  unseen 30.691 (8)
+  physics_fib                RMSE 13.056 [11.67, 14.37]  seen 12.360 (263)  unseen 27.416 (8)
+  curve_permix               RMSE 13.025 [11.72, 14.32]  seen 12.327 (263)  unseen 27.416 (8)
+  gbt                        RMSE 24.276 [22.72, 25.63]  seen 24.290 (263)  unseen 23.821 (8)
+  rf                         RMSE 25.440 [23.86, 26.82]  seen 25.404 (263)  unseen 26.587 (8)
+  ridge                      RMSE 9.069 [8.06, 9.97]  seen 9.169 (263)  unseen 4.664 (8)
+  plain                      RMSE 113.607 [96.23, 128.30]  median of 10 seeds 89.446  seen 110.179 (263)  unseen 195.254 (8)
+  panel_design               RMSE 35.955 [29.64, 41.54]  median of 10 seeds 40.670  seen 34.920 (263)  unseen 60.870 (8)
+  plain_physics_pretrain     RMSE 11.288 [10.01, 12.57]  median of 10 seeds 12.048  seen 11.423 (263)  unseen 5.162 (8)
+  champion_retrained         RMSE 11.501 [10.63, 12.31]  median of 10 seeds 11.897  seen 11.336 (263)  unseen 16.014 (8)
+  champion_no_pretrain       RMSE 51.363 [42.40, 59.03]  median of 10 seeds 183.320  seen 49.827 (263)  unseen 88.035 (8)
+  random_champion_retrained  RMSE 10.716 [9.17, 12.23]  median of 10 seeds 11.263  seen 10.851 (263)  unseen 4.314 (8)
+  champion                   RMSE 10.055 [8.75, 11.29]  seen 10.153 (263)  unseen 6.037 (8)
+  random_champion            RMSE 9.946 [8.70, 11.13]  seen 10.057 (263)  unseen 5.094 (8)
+  top10_ensemble             RMSE 10.011 [8.80, 11.16]  seen 10.097 (263)  unseen 6.583 (8)
+  primary: champion_retrained - ridge = 2.433 MPa, 95% CI [1.080, 3.739], success false
+  secondary: champion_retrained - random_champion_retrained = 0.786 [-0.943, 2.378]
+  secondary: champion_retrained - plain_physics_pretrain = 0.213 [-1.131, 1.448]
+  secondary: champion_retrained - curve_permix = -1.524 [-2.700, -0.271]
+  secondary: champion_retrained - physics_fib = -1.554 [-2.687, -0.376]
+  secondary: champion_retrained - physics_powers = -4.234 [-5.558, -2.904]
+  secondary: champion_retrained - gbt = -12.775 [-13.930, -11.559]
+  secondary: champion_retrained - rf = -13.939 [-15.030, -12.684]
+  secondary: champion_retrained - panel_design = -24.454 [-30.165, -17.978]
+  secondary: champion_retrained - plain = -102.106 [-116.870, -84.813]
+  wrote /workspace/ncsu-hackathon/lab/results/vault_opening.json, then the marker. Commit lab/results/OPENING_STARTED.json, vault_opening.json and VAULT_OPENED now.
