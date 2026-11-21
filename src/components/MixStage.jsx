@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { buildParticles } from '../lib/particles.js'
+import { busy } from '../lib/busy.js'
 
 // The 3D stage: one cubic metre of the chosen mix, drawn with Three.js.
 // Particles fly in and pack into the cube, the cube turns slowly, and the
@@ -98,6 +99,10 @@ export default function MixStage({ mix, factors, ingredients, highlight }) {
     const gap = 0.006
     let frame
     const tick = (now) => {
+      if (busy.training) { // let the neural network train; resume drawing afterwards
+        frame = requestAnimationFrame(tick)
+        return
+      }
       const t = (now - start) / 1000
       for (let i = 0; i < meshes.length; i++) {
         const { from, to, radius, hot } = meshes[i].userData

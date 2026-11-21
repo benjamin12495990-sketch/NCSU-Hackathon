@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createTrainer } from '../lib/nn.js'
 import { featurize } from '../lib/featurize.js'
 import { mixName } from '../lib/name.js'
+import { busy } from '../lib/busy.js'
 import './neuralnet.css'
 
 // One pass per step at first, with a short pause so the early learning is
@@ -57,7 +58,10 @@ export default function NeuralNet({ data, result }) {
     fetch(import.meta.env.BASE_URL + 'model/nn_data.json')
       .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))))
       .then(setNnData, (e) => setLoadError(e.message))
-    return () => clearTimeout(frame.current)
+    return () => {
+      clearTimeout(frame.current)
+      busy.training = false
+    }
   }, [])
 
   const train = () => {
@@ -66,10 +70,14 @@ export default function NeuralNet({ data, result }) {
     trainer.current = t
     setHistory([...t.history])
     setStatus('training')
+    busy.training = true // the 3D view pauses its redraws until training ends
     const tick = () => {
       t.runEpochs(passesThisStep(t.epoch))
       setHistory([...t.history])
-      if (t.done) setStatus('done')
+      if (t.done) {
+        busy.training = false
+        setStatus('done')
+      }
       else frame.current = setTimeout(tick, pauseAfter(t.epoch))
     }
     frame.current = setTimeout(tick, 0)
