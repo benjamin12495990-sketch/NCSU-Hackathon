@@ -165,23 +165,29 @@ results-file interval if the live one has not been measured, and the page says w
 - Only element sets that labs have tested, each element inside the range of fractions those tested
   alloys used (never widened), in steps of 0.001, capped by the user's maximum per element.
 - By default only element sets that were tested by the chosen processing route (CAST unless changed).
+  The route menu offers only ANNEAL, CAST, POWDER and WROUGHT (`routes_selectable` in `alloys.json`);
+  UNKNOWN and OTHER are data labels, kept as network inputs only, and the generator refuses them.
 - Distance is L1 on element fractions to the nearest tested alloy, any route. Under 0.10: not new,
-  dropped. 0.10 to 0.20: "interpolation between tested alloys". 0.20 to 0.40: "untested composition
-  near tested ones". Over 0.40 (the 90th percentile of the spacing between tested alloys): dropped.
+  dropped. 0.10 to 0.20: "interpolation between tested alloys". 0.20 to 0.30: "untested composition
+  near tested ones". 0.30 to 0.40: "far from tested alloys (least reliable)". Over 0.40 (the 90th percentile of the spacing between tested alloys): dropped.
 - A tested alloy with an element left out and the rest rescaled counts as a copy and is dropped.
 - A prediction at the clamp (107 or 1072 HV, the training range) is dropped, not ranked.
 - Kept if the lower edge of the 90% range (prediction minus the half-width) reaches the target.
-  The half-width is one constant, so the ranking is the same as ranking by prediction.
-- Each kept candidate shows its 3 nearest tested alloys (formula, route, measured HV), how many
-  measured at least the target, and the gap "predicted minus the nearest tested alloy's measured HV".
-  With a target set, by default a candidate is kept only if at least 2 of those 3 reached it.
+  Candidates the network rates more than one familiar-system error (78 HV, `family.json`) above
+  their nearest tested alloy are ranked after all the others and labelled; inside each group the
+  half-width is one constant, so the order follows the prediction.
+- Each kept candidate shows the nearest tested alloy (formula, route, measured HV) and the gap
+  "predicted minus its measured HV", plus its 3 nearest DISTINCT tested compositions (repeat
+  measurements of one composition are one neighbour, shown as their mean with their routes) and how
+  many of them measured at least the target. With a target set, by default a candidate is kept only
+  if at least 2 of those 3 reached it. Support counts any route; the routes are shown, not weighed.
 - When nothing is kept, the page says why (for a high target: the best lower edge any candidate
   reached) and shows no table.
 
 Measured with `npm run alloy-check` (one network, seed 11, file half-width 179.2 HV, seed 1, all
 elements, CAST): at 400 HV with both default rules, 38 element sets used, 11400 compositions drawn,
-8502 not new, 11 too far, 170 subset copies, 0 at the clamp, 1497 below the target, 13 removed by the
-neighbour rule, 358 kept. Switching the route rule off: 49 sets, 621 kept before the neighbour rule,
+8502 not new, 11 too far, 170 subset copies, 0 at the clamp, 1497 below the target, 5 removed by the
+neighbour rule, 366 kept, 65 of them ranked last for a gap above 78 HV. Switching the route rule off: 49 sets, 621 kept before the neighbour rule,
 262 of them from sets never made by CAST. At 600 and 800 HV nothing is kept: the best lower edge any
 candidate reaches is 594 HV. The top candidate at 400 HV, Al28.9 Co10.0 Cr18.0 Fe24.2 Mo8.9 Ni10.0,
 is predicted 773 HV while its nearest tested alloy measured 605 HV (gap +168 HV); its 3 nearest

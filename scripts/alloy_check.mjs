@@ -9,7 +9,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { featurize } from '../src/lib/alloyFeatures.js'
-import { generate, generateAsync, spacing, testedSets, TOO_FAR, NOT_NEW, INTERPOLATION, TIER_INTERPOLATION, TIER_NEAR, NEIGHBOURS, SUPPORT_NEEDED } from '../src/lib/alloyGen.js'
+import { generate, generateAsync, spacing, testedSets, TOO_FAR, NOT_NEW, INTERPOLATION, TIER_INTERPOLATION, TIER_NEAR, TIER_FAR, FAR, NEIGHBOURS, SUPPORT_NEEDED } from '../src/lib/alloyGen.js'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const SIM = process.env.MATERIALS_SIM_DIR ||
@@ -99,7 +99,7 @@ function checkRequest(label, opts) {
   if (opts.targetHV != null && !st.kept && !(st.bestCautious < opts.targetHV)) fail(`${label}: empty although best cautious reaches the target`)
   console.log(`  generated ${st.draws}; excluded: ${ex.duplicate} duplicates, ${ex.notNew} under 0.10 from a tested alloy (not new), ` +
     `${ex.tooFar} over 0.40 (too far), ${ex.subsetCopy} a tested alloy with an element left out, ${ex.clamped} prediction at the clamp, ` +
-    `${ex.belowTarget} cautious estimate below target, ${ex.unsupported} fewer than ${SUPPORT_NEEDED} of ${NEIGHBOURS} nearest tested alloys reached the target (unsupported); kept ${st.kept} (${st.tiers[TIER_INTERPOLATION]} interpolation, ${st.tiers[TIER_NEAR]} near-tested) from ${st.keptSets} sets; returned ${st.returned}`)
+    `${ex.belowTarget} cautious estimate below target, ${ex.unsupported} fewer than ${SUPPORT_NEEDED} of ${NEIGHBOURS} nearest tested alloys reached the target (unsupported); kept ${st.kept} (${st.tiers[TIER_INTERPOLATION]} interpolation, ${st.tiers[TIER_NEAR]} near-tested, ${st.tiers[TIER_FAR]} far) from ${st.keptSets} sets; returned ${st.returned}`)
   const total = ex.duplicate + ex.notNew + ex.tooFar + ex.subsetCopy + ex.clamped + ex.belowTarget + ex.unsupported + st.kept
   if (total !== st.draws) fail(`${label}: counts do not add up (${total} vs ${st.draws})`)
   if (JSON.stringify(res) !== JSON.stringify(again)) fail(`${label}: not deterministic for the same seed`)
@@ -130,38 +130,50 @@ function checkRequest(label, opts) {
     if (named.f !== c.nearest.formula || Math.abs(dist(cd, testedDense[c.nearest.index]) - best) > 1e-9)
       fail(`${where}: nearest tested alloy is not at the minimum distance (brute force: ${data.rows[at].f})`)
     if (best < NOT_NEW || best > TOO_FAR) fail(`${where}: distance ${best} outside 0.10-0.40`)
-    const tier = best < INTERPOLATION ? TIER_INTERPOLATION : TIER_NEAR
+    const tier = best < INTERPOLATION ? TIER_INTERPOLATION : best < FAR ? TIER_NEAR : TIER_FAR
     if (tier !== c.tier) fail(`${where}: tier ${c.tier} should be ${tier}`)
     const p = predict(featurize(c.frac, opts.proc, data))
     if (Math.abs(p - c.predicted) > 1e-9) fail(`${where}: prediction does not reproduce`)
     if (!(p > minHv + 1e-9 && p < maxHv - 1e-9)) fail(`${where}: prediction ${p} at the clamp`)
     if (Math.abs(c.cautious - (p - q)) > 1e-9) fail(`${where}: cautious is not prediction - q`)
     if (opts.targetHV != null && c.cautious < opts.targetHV) fail(`${where}: cautious ${c.cautious} below target`)
-    // Neighbour evidence: the 3 nearest tested rows by brute force, the count that reached the
-    // target, the support rule, and the gap to the nearest tested alloy.
-    const order = testedDense.map((t, j) => ({ d: dist(cd, t), j })).sort((a, b) => a.d - b.d || a.j - b.j).slice(0, NEIGHBOURS)
+    // Neighbour evidence: the 3 nearest DISTINCT tested compositions by brute force (rows grouped by
+    // g, each with the mean of its measurements), the count that reached the target, the support
+    // rule, and the gap to the nearest tested alloy.
+    const seenG = new Set()
+    const order = testedDense.map((t, j) => ({ d: dist(cd, t), j })).sort((a, b) => a.d - b.d || a.j - b.j)
+      .filter(({ j }) => !seenG.has(data.rows[j].g) && seenG.add(data.rows[j].g)).slice(0, NEIGHBOURS)
     if (!Array.isArray(c.neighbours) || c.neighbours.length !== NEIGHBOURS) fail(`${where}: expected ${NEIGHBOURS} neighbours`)
     else {
       c.neighbours.forEach((nb, k) => {
         if (Math.abs(nb.distance - order[k].d) > 1e-9) fail(`${where}: neighbour ${k + 1} distance ${nb.distance} but brute force gives ${order[k].d}`)
         const row = data.rows[nb.index]
-        if (row.f !== nb.formula || row.proc !== nb.proc || row.hv !== nb.hv) fail(`${where}: neighbour ${k + 1} does not match its tested row`)
+        const same = data.rows.filter((t) => t.g === row.g)
+        const mean = same.reduce((a, t) => a + t.hv, 0) / same.length
+        const routes = [...new Set(same.map((t) => t.proc))].sort()
+        if (row.f !== nb.formula || row.g !== nb.g || Math.abs(mean - nb.hv) > 1e-9 || nb.n !== same.length || JSON.stringify(routes) !== JSON.stringify(nb.routes))
+          fail(`${where}: neighbour ${k + 1} does not match its tested composition`)
+        if (data.rows[order[k].j].g !== nb.g && Math.abs(order[k].d - nb.distance) > 1e-9) fail(`${where}: neighbour ${k + 1} is not the brute-force one`)
         if (Math.abs(dist(cd, testedDense[nb.index]) - nb.distance) > 1e-9) fail(`${where}: neighbour ${k + 1} distance is not its own`)
       })
       if (Math.abs(c.neighbours[0].distance - c.distance) > 1e-9) fail(`${where}: first neighbour is not the nearest tested alloy`)
+      if (new Set(c.neighbours.map((nb) => nb.g)).size !== NEIGHBOURS) fail(`${where}: neighbours repeat a composition`)
       const reached = opts.targetHV == null ? null : c.neighbours.filter((nb) => nb.hv >= opts.targetHV).length
       if (reached !== c.neighboursReached) fail(`${where}: neighboursReached ${c.neighboursReached} should be ${reached}`)
       if (st.rules.onlySupported && opts.targetHV != null && !(c.neighboursReached >= SUPPORT_NEEDED)) fail(`${where}: unsupported candidate kept`)
     }
     if (Math.abs(c.gapHV - (c.predicted - c.nearest.hv)) > 1e-9) fail(`${where}: gap is not predicted minus nearest measured HV`)
     if (st.rules.routeMustBeTested && !c.routeTestedInSet) fail(`${where}: set never tested by ${opts.proc} although the route rule is on`)
+    const far = opts.gapLimit != null && c.gapHV > opts.gapLimit
+    if (c.farAbove !== far) fail(`${where}: farAbove ${c.farAbove} should be ${far}`)
     if (i > 0) {
       const b = res.candidates[i - 1]
-      if (b.cautious < c.cautious || (b.cautious === c.cautious && b.distance > c.distance)) fail(`${where}: ranked out of order`)
+      if (b.farAbove && !c.farAbove) fail(`${where}: ranked below a candidate the network rates far above its neighbours`)
+      else if (b.farAbove === c.farAbove && (b.cautious < c.cautious || (b.cautious === c.cautious && b.distance > c.distance))) fail(`${where}: ranked out of order`)
     }
     checked++
   })
-  console.log(`  asserted every rule on all ${checked} kept candidates (the page shows the first ${opts.limit}); deterministic for seed ${opts.seed}: ${JSON.stringify(res) === JSON.stringify(again)}`)
+  console.log(`  asserted every rule on all ${checked} kept candidates (this list returns the first ${opts.limit}; the page shows 10); deterministic for seed ${opts.seed}: ${JSON.stringify(res) === JSON.stringify(again)}`)
   console.log('  top five:')
   for (const c of res.candidates.slice(0, 5)) {
     console.log(`    ${c.composition.padEnd(44)} pred ${c.predicted.toFixed(0)} HV, cautious ${c.cautious.toFixed(0)} HV, ` +
@@ -197,6 +209,22 @@ for (const target of [400, 600, 800]) {
 const noTarget = generate({ targetHV: null, allowed: all, proc: 'CAST', limit: 5, seed: 1, onlySupported: true }, data, predict, q)
 if (noTarget.stats.excluded.unsupported !== 0 || noTarget.candidates.some((c) => c.neighboursReached !== null)) fail('onlySupported without a target should change nothing')
 else console.log('\nonlySupported without a target removes nothing and neighboursReached is null: true')
+
+// Only real routes can be generated for: UNKNOWN and OTHER are data labels.
+if (JSON.stringify(data.routes_selectable) !== JSON.stringify(data.procs.filter((p) => p !== 'UNKNOWN' && p !== 'OTHER'))) fail('routes_selectable should be procs without UNKNOWN and OTHER')
+for (const bad of ['UNKNOWN', 'OTHER']) {
+  let threw = false
+  try { generate({ targetHV: 400, allowed: all, proc: bad, seed: 1 }, data, predict, q) } catch { threw = true }
+  if (!threw) fail(`generate accepted route ${bad}`)
+  else console.log(`\nRoute ${bad} is refused (routes to generate for: ${data.routes_selectable.join(', ')})`)
+}
+
+// The page's ranking: candidates rated more than one familiar-system error (family.json) above
+// their nearest tested alloy go below the others.
+const famFile = JSON.parse(readFileSync(join(root, 'public/model/materials/family.json'), 'utf8'))
+const gapRun = checkRequest(`Request 400, only supported, gap limit ${famFile.test.network.toFixed(1)} HV (the page's settings)`,
+  { targetHV: 400, allowed: all, proc: 'CAST', limit: Infinity, seed: 1, onlySupported: true, gapLimit: famFile.test.network })
+console.log(`  ${gapRun.stats.keptFarAbove} of ${gapRun.stats.kept} kept candidates are rated more than ${famFile.test.network.toFixed(1)} HV above their nearest tested alloy and ranked last`)
 
 // The user's maximum fractions: Al at most 0.10, Ti at most 0.15, everything else allowed.
 checkRequest('Capped request (Al <= 0.10, Ti <= 0.15)', { targetHV: 400, allowed: { ...all, Al: 0.1, Ti: 0.15 }, proc: 'CAST', limit: 20, seed: 1 })

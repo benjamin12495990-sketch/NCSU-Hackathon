@@ -447,7 +447,7 @@ export default function FamilyPage({ family, onBack }) {
         ? <HeldoutRanking fam={fam} heldout={heldout} predictions={preds} />
         : <section className="card fam-section"><h2>Rank compounds the network never trained on</h2><p className="note">Train the network first; the ranking uses the network you train.</p></section>)}
 
-      {family === 'materials' && <AlloyGenerator fam={fam} net={net} band={band} status={status} whenTrained={whenTrained} folds={FOLDS} />}
+      {family === 'materials' && <AlloyGenerator fam={fam} net={net} band={band} status={status} whenTrained={whenTrained} folds={FOLDS} liveMae={live?.mae} />}
 
       <section className="caveat">
         <h2>How this can be wrong</h2>

@@ -65,6 +65,9 @@ def main(csv_path, nn_path, result_path, out_path):
         'features': features,
         'elements': elements,
         'procs': procs,
+        # Routes a user may generate for. UNKNOWN and OTHER are data labels (route not reported, or
+        # a mix of routes), not ways to make an alloy, so they stay featurizer inputs only.
+        'routes_selectable': [p for p in procs if p not in ('UNKNOWN', 'OTHER')],
         'descriptors': desc_names,
         # [metallic radius pm, Pauling electronegativity, valence electrons, melting point K]
         'table': {el: list(prep.ELEMENTS[el]) for el in used},
