@@ -35,7 +35,9 @@ function variant(parent, rand, step, opts, data) {
     slagFrac *= L.scm_fraction_max / scm
     flyFrac *= L.scm_fraction_max / scm
   }
-  const wb = clamp((w0 / b0) * (1 + step * (rand() - 0.5) * 0.2), L.water_binder_ratio[0], L.water_binder_ratio[1])
+  // An exposure limit from the environment sliders caps the water/binder ratio.
+  const wbMax = Math.min(L.water_binder_ratio[1], opts.maxWaterBinder ?? Infinity)
+  const wb = clamp((w0 / b0) * (1 + step * (rand() - 0.5) * 0.2), L.water_binder_ratio[0], wbMax)
   const spPerBinder = clamp(sp0 / b0 + step * (rand() - 0.5) * 0.01, 0, L.superplasticizer_per_binder_max)
 
   const slag = Math.round(binder * slagFrac)
@@ -65,10 +67,12 @@ function variant(parent, rand, step, opts, data) {
 //      and actually reached the target in the lab.
 export function design(request, data, limit = 10) {
   const { spec, model, modelLow, known, metrics, factors } = data
-  const opts = { allowSlag: true, allowFlyAsh: true, onlySupported: true, cautious: true, ...request }
+  const opts = { allowSlag: true, allowFlyAsh: true, onlySupported: true, cautious: true, maxWaterBinder: null, ...request }
   const { targetMPa, ageDays } = opts
   const rand = seeded(20261120)
-  const stats = { generated: 0, removedKnown: 0, meetTarget: 0, hiddenUnsupported: 0 }
+  const stats = { generated: 0, removedKnown: 0, meetTarget: 0, hiddenUnsupported: 0, overWaterLimit: 0 }
+  const waterBinder = (mix) => mix[3] / (mix[0] + mix[1] + mix[2])
+  const withinWater = (mix) => opts.maxWaterBinder == null || waterBinder(mix) <= opts.maxWaterBinder + 1e-9
   const seen = new Set()
   const feasible = []
 
@@ -79,6 +83,7 @@ export function design(request, data, limit = 10) {
     seen.add(key)
     stats.generated++
     if (known.keys.has(key)) return void stats.removedKnown++
+    if (!withinWater(mix)) return void stats.overWaterLimit++
     const x = featurize(mix, ageDays, spec)
     const strength = predict(model, x)
     if (strength < targetMPa) return
@@ -107,7 +112,7 @@ export function design(request, data, limit = 10) {
   const bestTested = (allowed) => {
     let best = null
     for (const { entry, result } of tested) {
-      if (!allowed(entry.mix) || result[1] < targetMPa) continue
+      if (!allowed(entry.mix) || !withinWater(entry.mix) || result[1] < targetMPa) continue
       const co2 = co2PerM3(entry.mix, factors, spec.ingredients)
       if (!best || co2 < best.co2) best = { mix: entry.mix, co2, age: result[0], strength: result[1] }
     }

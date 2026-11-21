@@ -1,0 +1,63 @@
+{
+ "standard": "ACI 318-19 Table 19.3.2.1",
+ "note": "Limits are from ACI 318-19 Table 19.3.2.1 as reported by secondary sources found tonight; the code itself is paywalled and we did not open it. The four water/cement and strength pairs were seen word for word in an ACI Concrete International article; which pair belongs to which class was seen only in search summaries of third-party pages. Class C1 and the 28 MPa wear minimum (ACI 201.2R) are recalled values that we could not confirm tonight. ACI also requires air entrainment for the freezing classes, which this app does not model.",
+ "classes": {
+  "F1": {
+   "condition": "Concrete exposed to freezing-and-thawing cycles with limited exposure to water",
+   "max_w_cm": 0.55,
+   "min_fc_MPa": 24,
+   "evidence": "sourced",
+   "sources_seen": 2
+  },
+  "F2": {
+   "condition": "Concrete exposed to freezing-and-thawing cycles with frequent exposure to water",
+   "max_w_cm": 0.45,
+   "min_fc_MPa": 31,
+   "evidence": "sourced",
+   "sources_seen": 2
+  },
+  "F3": {
+   "condition": "Concrete exposed to freezing-and-thawing cycles with frequent exposure to water and exposure to deicing chemicals",
+   "max_w_cm": 0.4,
+   "min_fc_MPa": 35,
+   "evidence": "sourced",
+   "sources_seen": 2
+  },
+  "W1": {
+   "condition": "Concrete in contact with water where low permeability is not required",
+   "max_w_cm": null,
+   "min_fc_MPa": 17,
+   "evidence": "sourced",
+   "sources_seen": 1
+  },
+  "W2": {
+   "condition": "Concrete in contact with water where low permeability is required",
+   "max_w_cm": 0.5,
+   "min_fc_MPa": 28,
+   "evidence": "sourced",
+   "sources_seen": 2
+  },
+  "C1": {
+   "condition": "Concrete exposed to moisture but not to an external source of chlorides",
+   "max_w_cm": null,
+   "min_fc_MPa": 17,
+   "evidence": "typical",
+   "sources_seen": 0
+  },
+  "C2": {
+   "condition": "Concrete exposed to moisture and an external source of chlorides (deicing chemicals, salt, brackish water, seawater, or spray from these sources)",
+   "max_w_cm": 0.4,
+   "min_fc_MPa": 35,
+   "evidence": "sourced",
+   "sources_seen": 3
+  }
+ },
+ "wear": {
+  "min_fc_MPa": 28,
+  "evidence": "typical",
+  "guidance": "ACI 201.2R: wear surfaces should be at least 28 MPa (4000 psi)",
+  "plateau_fc_MPa": 60,
+  "plateau_citation": "Omoding N. et al., 'Review of Concrete Resistance to Abrasion by Waterborne Solids', ACI Materials Journal, 2020",
+  "plateau_url": "https://consensus.app/papers/details/w:8924ad51-a9a2-46c9-b5f5-62f327dff9c0/"
+ }
+}

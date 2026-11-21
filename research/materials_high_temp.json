@@ -1,0 +1,211 @@
+{
+  "family": "High-temperature alloys and technical ceramics",
+  "notes": "'sourced' = the number appeared in SciSpace MCP tool output on 2026-11-21 (abstract text or extract_data on the paper). 'typical' = handbook-level value recalled by the AI research agent, NOT seen in tool output tonight. Sourced values are for the specific sample in the cited paper, not a guaranteed grade minimum. embodied_CO2 and cost are rough handbook-order figures and prices are volatile; null means the agent was not confident enough to state a value.",
+  "materials": [
+    {
+      "name": "Inconel 718 (nickel superalloy, aged)",
+      "family": "High-temperature alloys and technical ceramics",
+      "fields": ["aerospace", "energy", "manufacturing"],
+      "density_kg_m3": 8190,
+      "strength_MPa": 1300,
+      "strength_kind": "tensile ultimate",
+      "youngs_modulus_GPa": 200,
+      "max_service_temp_C": 650,
+      "thermal_conductivity_W_mK": 11.4,
+      "hardness_HV": 400,
+      "water_absorption_pct": 0,
+      "embodied_CO2_kg_per_kg": 12,
+      "cost_usd_per_kg": 40,
+      "humidity_resistance_1to5": 5,
+      "humidity_reason": "Chromium-rich passive oxide film gives excellent corrosion resistance in humid and wet air.",
+      "wear_resistance_1to5": 3,
+      "wear_reason": "Moderate hardness (about 40 HRC) and a tendency to gall limit abrasive and sliding wear resistance.",
+      "main_limitation": "Strength falls quickly above about 650 C as the strengthening precipitates coarsen; dense, costly and hard to machine.",
+      "evidence": {
+        "density_kg_m3": "typical",
+        "strength_MPa": "sourced",
+        "youngs_modulus_GPa": "typical",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "hardness_HV": "typical",
+        "water_absorption_pct": "typical",
+        "embodied_CO2_kg_per_kg": "typical",
+        "cost_usd_per_kg": "typical"
+      },
+      "sources": [
+        {
+          "citation": "Kim K.H., Moon I.S., Moon I.Y., 2009, Evaluation of mechanical properties of gas tungsten arc welded Inconel 718 alloy for cryogenic applications (in Korean), Korean Journal of Materials Research",
+          "url": "https://scispace.com/papers/geugjeoon-hwangyeonge-jeogyongdoeneun-inconel-718habgeumyi-4rms0nucdw",
+          "supports": ["strength_MPa"],
+          "quote": "UTS of base metal is about 900MPa at room temperature; this is increased up to 1300MPa after heat treatment & aging-hardening."
+        },
+        {
+          "citation": "Mills W.J., 1994, Effect of Microstructural Variations on the Tensile and Fracture Toughness Properties of Alloy 718 Welds, Superalloys (TMS proceedings)",
+          "url": "https://scispace.com/papers/effect-of-microstructural-variations-on-the-tensile-and-3rx7rtqj2v",
+          "supports": ["strength_MPa"],
+          "quote": "Both heat treatments resulted in room temperature yield strengths in excess of 1000 MPa and total elongation values between 10 and 20%. (context: yield, weld metal; supports the order of magnitude only)"
+        }
+      ]
+    },
+    {
+      "name": "Alumina (99% Al2O3, dense)",
+      "family": "High-temperature alloys and technical ceramics",
+      "fields": ["energy", "electronics", "manufacturing"],
+      "density_kg_m3": 3900,
+      "strength_MPa": 300,
+      "strength_kind": "flexural",
+      "youngs_modulus_GPa": 370,
+      "max_service_temp_C": 1500,
+      "thermal_conductivity_W_mK": 30,
+      "hardness_HV": 1500,
+      "water_absorption_pct": 0,
+      "embodied_CO2_kg_per_kg": 2.8,
+      "cost_usd_per_kg": 20,
+      "humidity_resistance_1to5": 5,
+      "humidity_reason": "Fully oxidised, dense and chemically inert, so humid or wet air does not attack it.",
+      "wear_resistance_1to5": 5,
+      "wear_reason": "Very high hardness (about 15 GPa Vickers) makes it a standard wear and armour ceramic.",
+      "main_limitation": "Brittle with low fracture toughness and poor thermal-shock resistance.",
+      "evidence": {
+        "density_kg_m3": "typical",
+        "strength_MPa": "sourced",
+        "youngs_modulus_GPa": "typical",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "hardness_HV": "typical",
+        "water_absorption_pct": "typical",
+        "embodied_CO2_kg_per_kg": "typical",
+        "cost_usd_per_kg": "typical"
+      },
+      "sources": [
+        {
+          "citation": "Silva M.V., Stainer D., Al-Qureshi H.A., et al., 2014, Alumina-Based Ceramics for Armor Application: Mechanical Characterization and Ballistic Testing, Journal of Ceramics",
+          "url": "https://scispace.com/papers/alumina-based-ceramics-for-armor-application-mechanical-4rzus4t616",
+          "supports": ["strength_MPa"],
+          "quote": "Three compositions (92, 96, and 99 wt% Al2O3) were tested ... four-point flexural strength ... strength values ranged from 210 to 300 MPa depending on the porosity (300 is the top of the reported range; the per-composition value was not in the tool output)"
+        }
+      ]
+    },
+    {
+      "name": "Silicon carbide (sintered SiC)",
+      "family": "High-temperature alloys and technical ceramics",
+      "fields": ["energy", "aerospace", "manufacturing", "electronics"],
+      "density_kg_m3": 3150,
+      "strength_MPa": 458,
+      "strength_kind": "flexural",
+      "youngs_modulus_GPa": 427,
+      "max_service_temp_C": 1600,
+      "thermal_conductivity_W_mK": 120,
+      "hardness_HV": 2500,
+      "water_absorption_pct": 0,
+      "embodied_CO2_kg_per_kg": 6.5,
+      "cost_usd_per_kg": 18,
+      "humidity_resistance_1to5": 5,
+      "humidity_reason": "Dense SiC is chemically inert and protected by a thin silica film in moist air.",
+      "wear_resistance_1to5": 5,
+      "wear_reason": "Among the hardest structural ceramics (about 2500 HV), used for seals, nozzles and abrasive duty.",
+      "main_limitation": "Brittle (low fracture toughness) and expensive to shape because it needs sintering near 2000 C and diamond grinding.",
+      "evidence": {
+        "density_kg_m3": "typical",
+        "strength_MPa": "sourced",
+        "youngs_modulus_GPa": "sourced",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "hardness_HV": "sourced",
+        "water_absorption_pct": "typical",
+        "embodied_CO2_kg_per_kg": "typical",
+        "cost_usd_per_kg": "typical"
+      },
+      "sources": [
+        {
+          "citation": "Magnani G., Galvagno S., Sico G., et al., 2016, Sintering and mechanical properties of beta-SiC powder obtained from waste tires, Journal of Advanced Ceramics",
+          "url": "https://scispace.com/papers/sintering-and-mechanical-properties-of-b-sic-powder-obtained-3fj4jxtlt7",
+          "supports": ["strength_MPa", "youngs_modulus_GPa"],
+          "quote": "similar sintered density (98%T.D.) ... T-SiC also showed higher flexural strength than C-SiC both at room temperature (508 vs. 458 MPa) and at 1500 C (280 vs. 171 MPa). extract_data: 'T-SiC: Young's modulus was 427 GPa.' (458 MPa is the commercial-powder SiC, four-point bending; 427 GPa is the T-SiC sample; pressureless liquid-phase sintered)"
+        },
+        {
+          "citation": "Klimczyk P., 2011, SiC-Based Composites Sintered with High Pressure Method (book chapter)",
+          "url": "https://scispace.com/papers/sic-based-composites-sintered-with-high-pressure-method-jlx0ilns76",
+          "supports": ["hardness_HV"],
+          "quote": "Silicon carbide-based materials usually have high hardness (2500 - 2800 HV) and thus have superior wear resistance."
+        }
+      ]
+    },
+    {
+      "name": "Yttria-stabilised zirconia (3Y-TZP)",
+      "family": "High-temperature alloys and technical ceramics",
+      "fields": ["energy", "medical", "manufacturing"],
+      "density_kg_m3": 6030,
+      "strength_MPa": 1000,
+      "strength_kind": "flexural",
+      "youngs_modulus_GPa": 221,
+      "max_service_temp_C": 1000,
+      "thermal_conductivity_W_mK": 2.5,
+      "hardness_HV": 1336,
+      "water_absorption_pct": 0,
+      "embodied_CO2_kg_per_kg": null,
+      "cost_usd_per_kg": 25,
+      "humidity_resistance_1to5": 3,
+      "humidity_reason": "Stable in ordinary humid air, but warm moisture (roughly 100 to 300 C) slowly triggers tetragonal-to-monoclinic ageing that weakens the surface.",
+      "wear_resistance_1to5": 4,
+      "wear_reason": "Hard (about 13 GPa Vickers) and the toughest of the oxide ceramics, but softer than alumina, SiC or WC-Co.",
+      "main_limitation": "Low-temperature hydrothermal degradation in moist conditions and loss of transformation toughening at high temperature; very low thermal conductivity.",
+      "evidence": {
+        "density_kg_m3": "sourced",
+        "strength_MPa": "sourced",
+        "youngs_modulus_GPa": "sourced",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "hardness_HV": "sourced",
+        "water_absorption_pct": "typical",
+        "cost_usd_per_kg": "typical"
+      },
+      "sources": [
+        {
+          "citation": "Li W., Ghazanfari A., McMillen D., et al., 2016, Properties of Partially Stabilized Zirconia Components Fabricated by the Ceramic On-Demand Extrusion Process, Solid Freeform Fabrication Symposium proceedings",
+          "url": "https://scispace.com/papers/properties-of-partially-stabilized-zirconia-components-3a4hokume4",
+          "supports": ["density_kg_m3", "strength_MPa", "youngs_modulus_GPa", "hardness_HV"],
+          "quote": "extract_data: 'maximum bulk density of 6.03 g/cm3 (98.8% of theoretical density)'; 'Conventional cold-pressed TZ-3Y-E powder: Three-point bending flexural strength was 1,000 MPa' (the paper's own extrusion-printed parts gave 616 MPa in four-point bending); 'Young's modulus ... was 221 GPa'; 'Vickers hardness was 13.1 GPa' (converted here: 13.1 GPa = 1336 HV)"
+        }
+      ]
+    },
+    {
+      "name": "Cemented tungsten carbide (WC-6Co)",
+      "family": "High-temperature alloys and technical ceramics",
+      "fields": ["manufacturing", "mining", "energy"],
+      "density_kg_m3": 14900,
+      "strength_MPa": 2900,
+      "strength_kind": "flexural",
+      "youngs_modulus_GPa": 620,
+      "max_service_temp_C": 500,
+      "thermal_conductivity_W_mK": 90,
+      "hardness_HV": 1640,
+      "water_absorption_pct": 0,
+      "embodied_CO2_kg_per_kg": null,
+      "cost_usd_per_kg": 50,
+      "humidity_resistance_1to5": 4,
+      "humidity_reason": "Unaffected by humid air, but the cobalt binder can corrode and leach in wet acidic or chloride-bearing conditions.",
+      "wear_resistance_1to5": 5,
+      "wear_reason": "Hard carbide grains in a tough cobalt binder make it the standard material for cutting tools, dies and mining inserts.",
+      "main_limitation": "Oxidises in air above roughly 500 to 600 C; very dense, and depends on cobalt and tungsten, both critical raw materials.",
+      "evidence": {
+        "density_kg_m3": "typical",
+        "strength_MPa": "sourced",
+        "youngs_modulus_GPa": "typical",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "hardness_HV": "sourced",
+        "water_absorption_pct": "typical",
+        "cost_usd_per_kg": "typical"
+      },
+      "sources": [
+        {
+          "citation": "Yin C., Peng Y., Ruan J., et al., 2021, Influence of Cr3C2 and VC Content on WC Grain Size, WC Shape and Mechanical Properties of WC-6.0 wt.% Co Cemented Carbides, Materials (MDPI)",
+          "url": "https://scispace.com/papers/influence-of-cr3c2-and-vc-content-on-wc-grain-size-wc-shape-4qdbn43fbc",
+          "supports": ["strength_MPa", "hardness_HV"],
+          "quote": "extract_data: 'transverse rupture strength (TRS), measured after sintering at 1450 C for 1 hour: WC-6Co (sample 1): 2900 MPa'; 'WC-6Co: 1640 kg/mm2 (Vickers hardness) ... under a 30 kg load' (transverse rupture strength is a three-point bend test, recorded here as flexural)"
+        }
+      ]
+    }
+  ]
+}

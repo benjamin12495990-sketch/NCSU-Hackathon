@@ -1,0 +1,1167 @@
+{
+ "note": "Reference table compiled tonight by AI research agents using literature search tools. Values with a dot were seen in a cited paper tonight (as the search tool summarised it). All other values are typical handbook-level figures recalled by the AI and not individually checked. The 1 to 5 humidity and wear ratings are AI judgments. Use this to build a shortlist, then check a datasheet.",
+ "materials": [
+  {
+   "name": "Normal-strength Portland cement concrete (~30 MPa)",
+   "family": "Concrete, masonry and glass",
+   "fields": [
+    "civil",
+    "buildings",
+    "infrastructure"
+   ],
+   "strength_kind": "compressive",
+   "humidity_resistance_1to5": 4,
+   "humidity_reason": "Hydrated cement paste is stable when wet, but its capillary porosity lets moisture, CO2 and chlorides reach and corrode embedded steel over time.",
+   "wear_resistance_1to5": 3,
+   "wear_reason": "Moderate abrasion resistance that depends on aggregate hardness and surface finish; ordinary paste dusts and wears under heavy traffic.",
+   "main_limitation": "Low tensile strength (needs steel reinforcement) and a cement-driven carbon footprint.",
+   "density_kg_m3": 2400,
+   "strength_MPa": 30,
+   "youngs_modulus_GPa": 30,
+   "max_service_temp_C": 300,
+   "thermal_conductivity_W_mK": 1.7,
+   "hardness_HV": null,
+   "water_absorption_pct": 5.0,
+   "embodied_CO2_kg_per_kg": 0.13,
+   "sourced": [
+    "embodied_CO2_kg_per_kg"
+   ],
+   "sources": [
+    {
+     "citation": "Flower, D.J.M. and Sanjayan, J.G., 2007, Green house gas emissions due to concrete manufacture, International Journal of Life Cycle Assessment",
+     "url": "https://scispace.com/papers/green-house-gas-emissions-due-to-concrete-manufacture-3ha3dn0y3m"
+    }
+   ]
+  },
+  {
+   "name": "High-strength concrete (~70 MPa)",
+   "family": "Concrete, masonry and glass",
+   "fields": [
+    "civil",
+    "high-rise buildings",
+    "bridges"
+   ],
+   "strength_kind": "compressive",
+   "humidity_resistance_1to5": 4,
+   "humidity_reason": "Low water-to-binder ratio gives a dense, low-permeability matrix that slows moisture and chloride ingress, though reinforcement still needs cover.",
+   "wear_resistance_1to5": 4,
+   "wear_reason": "Abrasion resistance rises with compressive strength and paste density, so it wears more slowly than normal concrete.",
+   "main_limitation": "High cement content raises embodied CO2 per kg, and the dense matrix is brittle and prone to explosive spalling in fire.",
+   "density_kg_m3": 2450,
+   "strength_MPa": 70,
+   "youngs_modulus_GPa": 40,
+   "max_service_temp_C": 300,
+   "thermal_conductivity_W_mK": 1.9,
+   "hardness_HV": null,
+   "water_absorption_pct": 2.5,
+   "embodied_CO2_kg_per_kg": 0.19,
+   "sourced": [
+    "strength_MPa"
+   ],
+   "sources": [
+    {
+     "citation": "Zende, A.A., Momin, A.I.A., Alsabhan, A.H. et al., 2023, Mechanical Properties of High-Strength Self-Compacting Concrete, ACS Omega",
+     "url": "https://scispace.com/papers/mechanical-properties-of-high-strength-self-compacting-30jyzgd9"
+    },
+    {
+     "citation": "Burg, R.G. and Ost, B.W., 1994, Engineering properties of commercially available high-strength concretes (including three-year data), Portland Cement Association report",
+     "url": "https://scispace.com/papers/engineering-properties-of-commercially-available-high-468v4roztj"
+    }
+   ]
+  },
+  {
+   "name": "Ultra-high-performance concrete (UHPC)",
+   "family": "Concrete, masonry and glass",
+   "fields": [
+    "civil",
+    "infrastructure",
+    "marine"
+   ],
+   "strength_kind": "compressive",
+   "humidity_resistance_1to5": 5,
+   "humidity_reason": "Very low water-to-binder ratio and optimised particle packing leave almost no connected capillary porosity for water or chlorides to enter.",
+   "wear_resistance_1to5": 4,
+   "wear_reason": "Very dense, high-strength matrix with fine hard quartz filler resists abrasion well.",
+   "main_limitation": "Very high binder content makes it costly and carbon-intensive per kg, and it needs careful mixing and curing.",
+   "density_kg_m3": 2450,
+   "strength_MPa": 150,
+   "youngs_modulus_GPa": 50,
+   "max_service_temp_C": 300,
+   "thermal_conductivity_W_mK": 1.8,
+   "hardness_HV": null,
+   "water_absorption_pct": 1.0,
+   "embodied_CO2_kg_per_kg": 0.33,
+   "sourced": [
+    "strength_MPa",
+    "youngs_modulus_GPa",
+    "embodied_CO2_kg_per_kg"
+   ],
+   "sources": [
+    {
+     "citation": "Magureanu, C., Sosa, I., Negrutiu, C. et al., 2012, Mechanical Properties and Durability of Ultra-High-Performance Concrete, Materials",
+     "url": "https://scispace.com/papers/mechanical-properties-and-durability-of-ultra-high-26b6j5mc91"
+    },
+    {
+     "citation": "Sifan, M., Nagaratnam, B., Railton, J. et al., 2026, Silica-fume-free UHPC with basalt, dolomite and limestone: fresh and hardened properties and embodied carbon characteristics, Magazine of Concrete Research",
+     "url": "https://scispace.com/papers/silica-fume-free-uhpc-with-basalt-dolomite-and-limestone-trmsbvqd5v7l"
+    },
+    {
+     "citation": "Choi, D., Hong, K., Ochirbud, M. et al., 2023, Mechanical Properties of UHPC and UHPFRC with Recycled Sand, International Journal of Concrete Structures and Materials",
+     "url": "https://scispace.com/papers/mechanical-properties-of-ultra-high-performance-concrete-27cs7lzqek"
+    }
+   ]
+  },
+  {
+   "name": "Geopolymer concrete (fly ash / slag based)",
+   "family": "Concrete, masonry and glass",
+   "fields": [
+    "civil",
+    "low-carbon construction",
+    "precast"
+   ],
+   "strength_kind": "compressive",
+   "humidity_resistance_1to5": 4,
+   "humidity_reason": "The reported water absorption is lower than conventional concrete, but alkali leaching can cause efflorescence in damp conditions.",
+   "wear_resistance_1to5": 3,
+   "wear_reason": "Abrasion resistance is broadly comparable to Portland cement concrete of the same strength grade.",
+   "main_limitation": "Needs caustic alkali activators, lacks mature design standards, and depends on fly ash and slag supply.",
+   "density_kg_m3": 2350,
+   "strength_MPa": 30,
+   "youngs_modulus_GPa": 25,
+   "max_service_temp_C": 600,
+   "thermal_conductivity_W_mK": 1.3,
+   "hardness_HV": null,
+   "water_absorption_pct": 4.0,
+   "embodied_CO2_kg_per_kg": 0.05,
+   "sourced": [
+    "strength_MPa"
+   ],
+   "sources": [
+    {
+     "citation": "Nagajothi, S., Elavenil, S., Angalaeswari, S. et al., 2022, Durability Studies on Fly Ash Based Geopolymer Concrete Incorporated with Slag and Alkali Solutions, Advances in Civil Engineering",
+     "url": "https://scispace.com/papers/durability-studies-on-fly-ash-based-geopolymer-concrete-ogx3stev"
+    },
+    {
+     "citation": "Sureshkumar, P., 2026, Low-carbon and Geopolymer Concrete: Advances, Challenges, and Future Directions (review)",
+     "url": "https://scispace.com/papers/low-carbon-and-geopolymer-concrete-advances-challenges-and-v1xt1gzs1hf1"
+    },
+    {
+     "citation": "Sorathiya, D.R., Khoker, P., Sain, R. et al., 2025, Study on the Effect of Geopolymer Concrete in Reducing Carbon Footprint",
+     "url": "https://scispace.com/papers/study-on-the-effect-of-geopolymer-concrete-in-reducing-epcqchey4io7"
+    }
+   ]
+  },
+  {
+   "name": "Fired clay brick",
+   "family": "Concrete, masonry and glass",
+   "fields": [
+    "buildings",
+    "masonry",
+    "architecture"
+   ],
+   "strength_kind": "compressive",
+   "humidity_resistance_1to5": 4,
+   "humidity_reason": "The fired ceramic body is chemically stable in wet air, but its high open porosity takes up water and can suffer frost damage and efflorescence.",
+   "wear_resistance_1to5": 3,
+   "wear_reason": "The sintered body is hard but porous and brittle, so edges and faces chip and erode under abrasion.",
+   "main_limitation": "Brittle and weak in tension, with energy-intensive kiln firing at around 900-1100 C.",
+   "density_kg_m3": 1720,
+   "strength_MPa": 21,
+   "youngs_modulus_GPa": 15,
+   "max_service_temp_C": 900,
+   "thermal_conductivity_W_mK": 0.7,
+   "hardness_HV": null,
+   "water_absorption_pct": 17.5,
+   "embodied_CO2_kg_per_kg": 0.24,
+   "sourced": [
+    "density_kg_m3",
+    "strength_MPa",
+    "water_absorption_pct"
+   ],
+   "sources": [
+    {
+     "citation": "Abadir, M.F., Abd El-razik, M.M., El-Naggar, K.A.M. et al., 2022, Performance assessment of fired bricks incorporating pomegranate peels waste, Innovative Infrastructure Solutions",
+     "url": "https://scispace.com/papers/performance-assessment-of-fired-bricks-incorporating-2h52k6et"
+    },
+    {
+     "citation": "Kizinievic, O., Kizinievic, V., Skamat, J. et al., 2023, Characteristics of fired clay bricks with dolomite powder addition, Steklo i Keramika (Glass and Ceramics)",
+     "url": "https://scispace.com/papers/characteristics-of-fired-clay-bricks-with-dolomite-powder-1dy7lpezgg"
+    }
+   ]
+  },
+  {
+   "name": "Soda-lime float glass",
+   "family": "Concrete, masonry and glass",
+   "fields": [
+    "architecture",
+    "glazing",
+    "automotive",
+    "solar"
+   ],
+   "strength_kind": "flexural",
+   "humidity_resistance_1to5": 5,
+   "humidity_reason": "Non-porous and impervious to water; only slow surface weathering occurs under prolonged stagnant condensation.",
+   "wear_resistance_1to5": 3,
+   "wear_reason": "Harder than most metals, but silica grit scratches it and surface flaws sharply reduce its strength.",
+   "main_limitation": "Brittle with low, flaw-controlled tensile strength and poor thermal-shock resistance unless tempered.",
+   "density_kg_m3": 2500,
+   "strength_MPa": 45,
+   "youngs_modulus_GPa": 72.4,
+   "max_service_temp_C": 250,
+   "thermal_conductivity_W_mK": 1.0,
+   "hardness_HV": 455,
+   "water_absorption_pct": 0,
+   "embodied_CO2_kg_per_kg": 1.2,
+   "sourced": [
+    "youngs_modulus_GPa",
+    "hardness_HV"
+   ],
+   "sources": [
+    {
+     "citation": "Seal, A., Dalui, A.K., Banerjee, M. et al., 2001, Mechanical properties of very thin cover slip glass disk, Bulletin of Materials Science",
+     "url": "https://scispace.com/papers/mechanical-properties-of-very-thin-cover-slip-glass-disk-4kk33tgv17"
+    }
+   ]
+  },
+  {
+   "name": "Structural carbon steel (ASTM A36)",
+   "family": "Ferrous metals",
+   "fields": [
+    "construction",
+    "bridges",
+    "machinery frames",
+    "shipbuilding"
+   ],
+   "strength_kind": "tensile yield",
+   "humidity_resistance_1to5": 2,
+   "humidity_reason": "Unalloyed steel rusts steadily in humid or wet air unless painted, galvanised or otherwise protected.",
+   "wear_resistance_1to5": 2,
+   "wear_reason": "Soft ferrite-pearlite structure of roughly 130 HV abrades quickly compared with hardened steels.",
+   "main_limitation": "Needs corrosion protection, and loses strength and creep resistance above roughly 400 to 500 C.",
+   "density_kg_m3": 7850,
+   "strength_MPa": 250,
+   "youngs_modulus_GPa": 200,
+   "max_service_temp_C": 400,
+   "thermal_conductivity_W_mK": 50,
+   "hardness_HV": 130,
+   "water_absorption_pct": 0,
+   "embodied_CO2_kg_per_kg": 2.6,
+   "sourced": [
+    "embodied_CO2_kg_per_kg"
+   ],
+   "sources": [
+    {
+     "citation": "Na H., Qiu Z., Sun J. et al., 2024, Revealing cradle-to-gate CO2 emissions for steel product producing by different technological pathways based on material flow analysis, Resources Conservation and Recycling",
+     "url": "https://scispace.com/papers/revealing-cradle-to-gate-co2-emissions-for-steel-product-5265ngy7ap"
+    },
+    {
+     "citation": "Hasanbeigi A., Arens M., Rojas Cardenas J.C. et al., 2016, Comparison of carbon dioxide emissions intensity of steel production in China, Germany, Mexico, and the United States, Resources Conservation and Recycling",
+     "url": "https://scispace.com/papers/comparison-of-carbon-dioxide-emissions-intensity-of-steel-27ucprkgfm"
+    }
+   ]
+  },
+  {
+   "name": "Stainless steel 316L",
+   "family": "Ferrous metals",
+   "fields": [
+    "marine",
+    "chemical processing",
+    "biomedical",
+    "food processing"
+   ],
+   "strength_kind": "tensile yield",
+   "humidity_resistance_1to5": 5,
+   "humidity_reason": "A chromium-rich passive oxide film, strengthened by molybdenum, prevents rusting in humid and wet air.",
+   "wear_resistance_1to5": 2,
+   "wear_reason": "Annealed austenite is soft at about 190 HV and is prone to galling in sliding contact.",
+   "main_limitation": "Low yield strength for its cost, and it can pit or crevice-corrode in warm stagnant chloride water.",
+   "density_kg_m3": 8000,
+   "strength_MPa": 170,
+   "youngs_modulus_GPa": 193,
+   "max_service_temp_C": 870,
+   "thermal_conductivity_W_mK": 14.3,
+   "hardness_HV": 190,
+   "water_absorption_pct": 0,
+   "embodied_CO2_kg_per_kg": 6.2,
+   "sourced": [
+    "thermal_conductivity_W_mK",
+    "hardness_HV"
+   ],
+   "sources": [
+    {
+     "citation": "Souza L.B., Santos M.R.N., Garcia R.P. et al., 2022, Characterization of an austenitic stainless steel preform deposited by wire arc additive manufacturing, The International Journal of Advanced Manufacturing Technology",
+     "url": "https://scispace.com/papers/characterization-of-an-austenitic-stainless-steel-preform-ltg3auyv"
+    },
+    {
+     "citation": "Simmons J.C., Chen X., Azizi A. et al., 2020, Influence of processing and microstructure on the local and bulk thermal conductivity of selective laser melted 316L stainless steel, Additive Manufacturing",
+     "url": "https://scispace.com/papers/influence-of-processing-and-microstructure-on-the-local-and-2fn32v6s6v"
+    }
+   ]
+  },
+  {
+   "name": "Alloy steel AISI 4140 (quenched and tempered)",
+   "family": "Ferrous metals",
+   "fields": [
+    "automotive",
+    "oil and gas",
+    "machinery shafts and gears",
+    "tooling"
+   ],
+   "strength_kind": "tensile ultimate",
+   "humidity_resistance_1to5": 2,
+   "humidity_reason": "About 1 percent chromium is far too little to passivate, so it rusts in humid air unless oiled, plated or coated.",
+   "wear_resistance_1to5": 4,
+   "wear_reason": "Tempered martensite of roughly 300 to 550 HV resists abrasion well and can be nitrided or induction hardened further.",
+   "main_limitation": "Requires heat treatment and corrosion protection, and softens if used above its tempering temperature.",
+   "density_kg_m3": 7850,
+   "strength_MPa": 1109,
+   "youngs_modulus_GPa": 205,
+   "max_service_temp_C": 400,
+   "thermal_conductivity_W_mK": 42.6,
+   "hardness_HV": 296,
+   "water_absorption_pct": 0,
+   "embodied_CO2_kg_per_kg": 2.6,
+   "sourced": [
+    "strength_MPa",
+    "hardness_HV"
+   ],
+   "sources": [
+    {
+     "citation": "Bhagyalaxmi, Sharma S., Kini V.M., 2018, Effect of heat treatment and mechanical characterization of AISI 4140 steel (journal article indexed by SciSpace)",
+     "url": "https://scispace.com/papers/effect-of-heat-treatment-and-mechanical-characterization-of-4h8ibh6qgs"
+    },
+    {
+     "citation": "Basan R., Kunc R., Franulovic M., 2008, Monotonic behaviour of normalised and quenched and tempered steel 42CrMo4, Engineering Review",
+     "url": "https://scispace.com/papers/monotonic-behaviour-of-normalised-and-quenched-and-tempered-20i0g8bu61"
+    }
+   ]
+  },
+  {
+   "name": "Ductile (nodular) cast iron",
+   "family": "Ferrous metals",
+   "fields": [
+    "water and sewer pipe",
+    "automotive",
+    "wind energy castings",
+    "heavy machinery"
+   ],
+   "strength_kind": "tensile ultimate",
+   "humidity_resistance_1to5": 3,
+   "humidity_reason": "It rusts in moist air, but more slowly than mild steel in many exposures, and pipe is normally coated or lined.",
+   "wear_resistance_1to5": 3,
+   "wear_reason": "Graphite nodules give some self-lubrication and a pearlitic matrix resists sliding wear, but hardness is only about 180 HB as cast.",
+   "main_limitation": "Lower stiffness, toughness and weldability than steel, and properties depend on casting section size and quality.",
+   "density_kg_m3": 7100,
+   "strength_MPa": 500,
+   "youngs_modulus_GPa": 169,
+   "max_service_temp_C": 425,
+   "thermal_conductivity_W_mK": 36,
+   "hardness_HV": 189,
+   "water_absorption_pct": 0,
+   "embodied_CO2_kg_per_kg": 2.2,
+   "sourced": [
+    "strength_MPa",
+    "hardness_HV",
+    "embodied_CO2_kg_per_kg"
+   ],
+   "sources": [
+    {
+     "citation": "Bai J., Xu H., Wang Y. et al., 2022, Microstructures and Mechanical Properties of Ductile Cast Iron with Different Crystallizer Inner Diameters, Crystals",
+     "url": "https://scispace.com/papers/microstructures-and-mechanical-properties-of-ductile-cast-204howu9"
+    },
+    {
+     "citation": "Zhu Y., Keoleian G.A., Cooper D.R., 2023, A parametric life cycle assessment model for ductile cast iron components, Resources Conservation and Recycling",
+     "url": "https://scispace.com/papers/a-parametric-life-cycle-assessment-model-for-ductile-cast-3tzdassl"
+    }
+   ]
+  },
+  {
+   "name": "Tool steel AISI H13 (hardened and tempered)",
+   "family": "Ferrous metals",
+   "fields": [
+    "die casting dies",
+    "extrusion and forging tooling",
+    "injection moulds"
+   ],
+   "strength_kind": "tensile yield",
+   "humidity_resistance_1to5": 2,
+   "humidity_reason": "With about 5 percent chromium it is not stainless and will rust in humid air unless oiled, nitrided or coated.",
+   "wear_resistance_1to5": 5,
+   "wear_reason": "Tempered martensite with alloy carbides at about 52 HRC, retained at working temperatures up to roughly 540 C.",
+   "main_limitation": "Expensive, hard to machine after hardening, and far less tough than structural steels.",
+   "density_kg_m3": 7800,
+   "strength_MPa": 1500,
+   "youngs_modulus_GPa": 210,
+   "max_service_temp_C": 540,
+   "thermal_conductivity_W_mK": 24,
+   "hardness_HV": 544,
+   "water_absorption_pct": 0,
+   "embodied_CO2_kg_per_kg": null,
+   "sourced": [
+    "hardness_HV"
+   ],
+   "sources": [
+    {
+     "citation": "Bejarano Gaitan G., Gomez Botero M.A., Arroyave Franco M., 2012, Deposition and characterization of duplex treated coating system applied on hot work steel AISI H13",
+     "url": "https://scispace.com/papers/deposition-and-characterization-of-duplex-treated-coating-14oeom4wcm"
+    }
+   ]
+  },
+  {
+   "name": "Aluminium 6061-T6",
+   "family": "Light and non-ferrous alloys",
+   "fields": [
+    "aerospace",
+    "automotive",
+    "marine",
+    "construction"
+   ],
+   "strength_kind": "tensile yield",
+   "humidity_resistance_1to5": 4,
+   "humidity_reason": "Self-passivating oxide film gives good atmospheric corrosion resistance, though chlorides cause pitting.",
+   "wear_resistance_1to5": 2,
+   "wear_reason": "Soft (about 110 HV) and prone to galling unless hard-anodised.",
+   "main_limitation": "Loses T6 strength above about 150 C and in weld heat-affected zones.",
+   "density_kg_m3": 2700,
+   "strength_MPa": 270,
+   "youngs_modulus_GPa": 69,
+   "max_service_temp_C": 150,
+   "thermal_conductivity_W_mK": 167,
+   "hardness_HV": 112,
+   "water_absorption_pct": 0,
+   "embodied_CO2_kg_per_kg": 8.2,
+   "sourced": [
+    "strength_MPa",
+    "hardness_HV"
+   ],
+   "sources": [
+    {
+     "citation": "Ambriz R.R., Chicot D., Benseddiq N., et al., 2011, Local mechanical properties of the 6061-T6 aluminium weld using micro-traction and instrumented indentation, European Journal of Mechanics A/Solids",
+     "url": "https://scispace.com/papers/local-mechanical-properties-of-the-6061-t6-aluminium-weld-1so7seqryc"
+    }
+   ]
+  },
+  {
+   "name": "Aluminium 7075-T6",
+   "family": "Light and non-ferrous alloys",
+   "fields": [
+    "aerospace",
+    "defence",
+    "sporting goods"
+   ],
+   "strength_kind": "tensile ultimate",
+   "humidity_resistance_1to5": 3,
+   "humidity_reason": "High-zinc, copper-bearing alloy is susceptible to stress-corrosion cracking and exfoliation in the T6 temper in humid or salty air.",
+   "wear_resistance_1to5": 2,
+   "wear_reason": "Harder than 6061 but still a soft metal that galls without a hard coating.",
+   "main_limitation": "Poor weldability and stress-corrosion susceptibility in the T6 temper; note strength here is ultimate (typical yield is about 500 MPa).",
+   "density_kg_m3": 2810,
+   "strength_MPa": 600,
+   "youngs_modulus_GPa": 72,
+   "max_service_temp_C": 120,
+   "thermal_conductivity_W_mK": 130,
+   "hardness_HV": 175,
+   "water_absorption_pct": 0,
+   "embodied_CO2_kg_per_kg": 8.2,
+   "sourced": [
+    "strength_MPa"
+   ],
+   "sources": [
+    {
+     "citation": "Alatorre N., Ambriz R.R., et al., 2014, Tensile Properties and Fusion Zone Hardening for GMAW and MIEA Welds of a 7075-T651 Aluminum Alloy, Acta Metallurgica Sinica (English Letters)",
+     "url": "https://scispace.com/papers/tensile-properties-and-fusion-zone-hardening-for-gmaw-and-16dsn1od0h"
+    }
+   ]
+  },
+  {
+   "name": "Titanium Ti-6Al-4V",
+   "family": "Light and non-ferrous alloys",
+   "fields": [
+    "aerospace",
+    "biomedical",
+    "marine",
+    "energy"
+   ],
+   "strength_kind": "tensile yield",
+   "humidity_resistance_1to5": 5,
+   "humidity_reason": "Stable TiO2 passive film makes it essentially immune to humid air and seawater corrosion.",
+   "wear_resistance_1to5": 2,
+   "wear_reason": "Poor tribological behaviour with a strong tendency to gall and adhesive wear unless surface-treated.",
+   "main_limitation": "High cost, high embodied energy and difficult machining.",
+   "density_kg_m3": 4430,
+   "strength_MPa": 880,
+   "youngs_modulus_GPa": 110,
+   "max_service_temp_C": 350,
+   "thermal_conductivity_W_mK": 6.7,
+   "hardness_HV": 340,
+   "water_absorption_pct": 0,
+   "embodied_CO2_kg_per_kg": 40,
+   "sourced": [
+    "youngs_modulus_GPa",
+    "thermal_conductivity_W_mK"
+   ],
+   "sources": [
+    {
+     "citation": "Kalienko M.S., Zhelnina A.V., et al., 2020, A New Approach to Estimation of the Thermal Conductivity of Titanium Alloys, Crystallography Reports",
+     "url": "https://scispace.com/papers/a-new-approach-to-estimation-of-the-thermal-conductivity-of-6bars6nfo8"
+    },
+    {
+     "citation": "Veiga C., Davim J.P., Loureiro A.J.R., 2012, Properties and applications of titanium alloys: a brief review, Reviews on Advanced Materials Science",
+     "url": "https://scispace.com/papers/properties-and-applications-of-titanium-alloys-a-brief-3s2c81khst"
+    }
+   ]
+  },
+  {
+   "name": "Magnesium AZ31B",
+   "family": "Light and non-ferrous alloys",
+   "fields": [
+    "automotive",
+    "aerospace",
+    "consumer electronics"
+   ],
+   "strength_kind": "tensile yield",
+   "humidity_resistance_1to5": 2,
+   "humidity_reason": "Magnesium's surface film is not protective in wet or salty air and it corrodes galvanically against most metals without coating.",
+   "wear_resistance_1to5": 1,
+   "wear_reason": "Very soft (about 50 to 60 HV) so it abrades easily.",
+   "main_limitation": "Poor corrosion resistance and rapid strength loss above about 120 C.",
+   "density_kg_m3": 1770,
+   "strength_MPa": 201,
+   "youngs_modulus_GPa": 43.8,
+   "max_service_temp_C": 120,
+   "thermal_conductivity_W_mK": 96,
+   "hardness_HV": 55,
+   "water_absorption_pct": 0,
+   "embodied_CO2_kg_per_kg": 36,
+   "sourced": [
+    "strength_MPa",
+    "youngs_modulus_GPa"
+   ],
+   "sources": [
+    {
+     "citation": "Kumar R., Harmain G.A., Mursaleen M., 2026, Experimental Investigation of the Mechanical Behaviour of AZ31B Magnesium Alloy at Elevated Temperatures, Mechanics of Solids",
+     "url": "https://scispace.com/papers/experimental-investigation-of-the-mechanical-behaviour-of-smm9lthq806o"
+    }
+   ]
+  },
+  {
+   "name": "Copper C11000 (ETP, half-hard rod)",
+   "family": "Light and non-ferrous alloys",
+   "fields": [
+    "electrical",
+    "electronics",
+    "construction",
+    "energy"
+   ],
+   "strength_kind": "tensile yield",
+   "humidity_resistance_1to5": 4,
+   "humidity_reason": "Tarnishes but forms a slow-growing protective patina in humid air.",
+   "wear_resistance_1to5": 2,
+   "wear_reason": "Fairly soft (about 105 HV as supplied, about 50 HV annealed) and wears quickly under abrasion.",
+   "main_limitation": "Heavy (8.9 g/cm3) and softens when heated above about 150 to 200 C.",
+   "density_kg_m3": 8940,
+   "strength_MPa": 250,
+   "youngs_modulus_GPa": 117,
+   "max_service_temp_C": 200,
+   "thermal_conductivity_W_mK": 390,
+   "hardness_HV": 105,
+   "water_absorption_pct": 0,
+   "embodied_CO2_kg_per_kg": 3.5,
+   "sourced": [
+    "hardness_HV"
+   ],
+   "sources": [
+    {
+     "citation": "Lipinska M., Olejnik L., Lewandowska M., 2018, The influence of an ECAP-based deformation process on the microstructure and properties of electrolytic tough pitch copper, Journal of Materials Science",
+     "url": "https://scispace.com/papers/the-influence-of-an-ecap-based-deformation-process-on-the-16gmvnmth8"
+    }
+   ]
+  },
+  {
+   "name": "Inconel 718 (nickel superalloy, aged)",
+   "family": "High-temperature alloys and technical ceramics",
+   "fields": [
+    "aerospace",
+    "energy",
+    "manufacturing"
+   ],
+   "strength_kind": "tensile ultimate",
+   "humidity_resistance_1to5": 5,
+   "humidity_reason": "Chromium-rich passive oxide film gives excellent corrosion resistance in humid and wet air.",
+   "wear_resistance_1to5": 3,
+   "wear_reason": "Moderate hardness (about 40 HRC) and a tendency to gall limit abrasive and sliding wear resistance.",
+   "main_limitation": "Strength falls quickly above about 650 C as the strengthening precipitates coarsen; dense, costly and hard to machine.",
+   "density_kg_m3": 8190,
+   "strength_MPa": 1300,
+   "youngs_modulus_GPa": 200,
+   "max_service_temp_C": 650,
+   "thermal_conductivity_W_mK": 11.4,
+   "hardness_HV": 400,
+   "water_absorption_pct": 0,
+   "embodied_CO2_kg_per_kg": 12,
+   "sourced": [
+    "strength_MPa"
+   ],
+   "sources": [
+    {
+     "citation": "Kim K.H., Moon I.S., Moon I.Y., 2009, Evaluation of mechanical properties of gas tungsten arc welded Inconel 718 alloy for cryogenic applications (in Korean), Korean Journal of Materials Research",
+     "url": "https://scispace.com/papers/geugjeoon-hwangyeonge-jeogyongdoeneun-inconel-718habgeumyi-4rms0nucdw"
+    },
+    {
+     "citation": "Mills W.J., 1994, Effect of Microstructural Variations on the Tensile and Fracture Toughness Properties of Alloy 718 Welds, Superalloys (TMS proceedings)",
+     "url": "https://scispace.com/papers/effect-of-microstructural-variations-on-the-tensile-and-3rx7rtqj2v"
+    }
+   ]
+  },
+  {
+   "name": "Alumina (99% Al2O3, dense)",
+   "family": "High-temperature alloys and technical ceramics",
+   "fields": [
+    "energy",
+    "electronics",
+    "manufacturing"
+   ],
+   "strength_kind": "flexural",
+   "humidity_resistance_1to5": 5,
+   "humidity_reason": "Fully oxidised, dense and chemically inert, so humid or wet air does not attack it.",
+   "wear_resistance_1to5": 5,
+   "wear_reason": "Very high hardness (about 15 GPa Vickers) makes it a standard wear and armour ceramic.",
+   "main_limitation": "Brittle with low fracture toughness and poor thermal-shock resistance.",
+   "density_kg_m3": 3900,
+   "strength_MPa": 300,
+   "youngs_modulus_GPa": 370,
+   "max_service_temp_C": 1500,
+   "thermal_conductivity_W_mK": 30,
+   "hardness_HV": 1500,
+   "water_absorption_pct": 0,
+   "embodied_CO2_kg_per_kg": 2.8,
+   "sourced": [
+    "strength_MPa"
+   ],
+   "sources": [
+    {
+     "citation": "Silva M.V., Stainer D., Al-Qureshi H.A., et al., 2014, Alumina-Based Ceramics for Armor Application: Mechanical Characterization and Ballistic Testing, Journal of Ceramics",
+     "url": "https://scispace.com/papers/alumina-based-ceramics-for-armor-application-mechanical-4rzus4t616"
+    }
+   ]
+  },
+  {
+   "name": "Silicon carbide (sintered SiC)",
+   "family": "High-temperature alloys and technical ceramics",
+   "fields": [
+    "energy",
+    "aerospace",
+    "manufacturing",
+    "electronics"
+   ],
+   "strength_kind": "flexural",
+   "humidity_resistance_1to5": 5,
+   "humidity_reason": "Dense SiC is chemically inert and protected by a thin silica film in moist air.",
+   "wear_resistance_1to5": 5,
+   "wear_reason": "Among the hardest structural ceramics (about 2500 HV), used for seals, nozzles and abrasive duty.",
+   "main_limitation": "Brittle (low fracture toughness) and expensive to shape because it needs sintering near 2000 C and diamond grinding.",
+   "density_kg_m3": 3150,
+   "strength_MPa": 458,
+   "youngs_modulus_GPa": 427,
+   "max_service_temp_C": 1600,
+   "thermal_conductivity_W_mK": 120,
+   "hardness_HV": 2500,
+   "water_absorption_pct": 0,
+   "embodied_CO2_kg_per_kg": 6.5,
+   "sourced": [
+    "strength_MPa",
+    "youngs_modulus_GPa",
+    "hardness_HV"
+   ],
+   "sources": [
+    {
+     "citation": "Magnani G., Galvagno S., Sico G., et al., 2016, Sintering and mechanical properties of beta-SiC powder obtained from waste tires, Journal of Advanced Ceramics",
+     "url": "https://scispace.com/papers/sintering-and-mechanical-properties-of-b-sic-powder-obtained-3fj4jxtlt7"
+    },
+    {
+     "citation": "Klimczyk P., 2011, SiC-Based Composites Sintered with High Pressure Method (book chapter)",
+     "url": "https://scispace.com/papers/sic-based-composites-sintered-with-high-pressure-method-jlx0ilns76"
+    }
+   ]
+  },
+  {
+   "name": "Yttria-stabilised zirconia (3Y-TZP)",
+   "family": "High-temperature alloys and technical ceramics",
+   "fields": [
+    "energy",
+    "medical",
+    "manufacturing"
+   ],
+   "strength_kind": "flexural",
+   "humidity_resistance_1to5": 3,
+   "humidity_reason": "Stable in ordinary humid air, but warm moisture (roughly 100 to 300 C) slowly triggers tetragonal-to-monoclinic ageing that weakens the surface.",
+   "wear_resistance_1to5": 4,
+   "wear_reason": "Hard (about 13 GPa Vickers) and the toughest of the oxide ceramics, but softer than alumina, SiC or WC-Co.",
+   "main_limitation": "Low-temperature hydrothermal degradation in moist conditions and loss of transformation toughening at high temperature; very low thermal conductivity.",
+   "density_kg_m3": 6030,
+   "strength_MPa": 1000,
+   "youngs_modulus_GPa": 221,
+   "max_service_temp_C": 1000,
+   "thermal_conductivity_W_mK": 2.5,
+   "hardness_HV": 1336,
+   "water_absorption_pct": 0,
+   "embodied_CO2_kg_per_kg": null,
+   "sourced": [
+    "density_kg_m3",
+    "strength_MPa",
+    "youngs_modulus_GPa",
+    "hardness_HV"
+   ],
+   "sources": [
+    {
+     "citation": "Li W., Ghazanfari A., McMillen D., et al., 2016, Properties of Partially Stabilized Zirconia Components Fabricated by the Ceramic On-Demand Extrusion Process, Solid Freeform Fabrication Symposium proceedings",
+     "url": "https://scispace.com/papers/properties-of-partially-stabilized-zirconia-components-3a4hokume4"
+    }
+   ]
+  },
+  {
+   "name": "Cemented tungsten carbide (WC-6Co)",
+   "family": "High-temperature alloys and technical ceramics",
+   "fields": [
+    "manufacturing",
+    "mining",
+    "energy"
+   ],
+   "strength_kind": "flexural",
+   "humidity_resistance_1to5": 4,
+   "humidity_reason": "Unaffected by humid air, but the cobalt binder can corrode and leach in wet acidic or chloride-bearing conditions.",
+   "wear_resistance_1to5": 5,
+   "wear_reason": "Hard carbide grains in a tough cobalt binder make it the standard material for cutting tools, dies and mining inserts.",
+   "main_limitation": "Oxidises in air above roughly 500 to 600 C; very dense, and depends on cobalt and tungsten, both critical raw materials.",
+   "density_kg_m3": 14900,
+   "strength_MPa": 2900,
+   "youngs_modulus_GPa": 620,
+   "max_service_temp_C": 500,
+   "thermal_conductivity_W_mK": 90,
+   "hardness_HV": 1640,
+   "water_absorption_pct": 0,
+   "embodied_CO2_kg_per_kg": null,
+   "sourced": [
+    "strength_MPa",
+    "hardness_HV"
+   ],
+   "sources": [
+    {
+     "citation": "Yin C., Peng Y., Ruan J., et al., 2021, Influence of Cr3C2 and VC Content on WC Grain Size, WC Shape and Mechanical Properties of WC-6.0 wt.% Co Cemented Carbides, Materials (MDPI)",
+     "url": "https://scispace.com/papers/influence-of-cr3c2-and-vc-content-on-wc-grain-size-wc-shape-4qdbn43fbc"
+    }
+   ]
+  },
+  {
+   "name": "HDPE (high-density polyethylene)",
+   "family": "Polymers and elastomers",
+   "fields": [
+    "civil",
+    "chemical",
+    "marine",
+    "packaging"
+   ],
+   "strength_kind": "tensile yield",
+   "humidity_resistance_1to5": 5,
+   "humidity_reason": "Non-polar polyolefin; 24 h water absorption is about 0.01 % (typical) so properties do not change in wet air.",
+   "wear_resistance_1to5": 3,
+   "wear_reason": "Low friction and fair abrasion resistance, but soft and well below UHMWPE or filled engineering plastics.",
+   "main_limitation": "Low stiffness, creep under sustained load, service limit near 80 C and UV degradation unless stabilised.",
+   "density_kg_m3": 952,
+   "strength_MPa": 26.9,
+   "youngs_modulus_GPa": 1.0,
+   "max_service_temp_C": 80,
+   "thermal_conductivity_W_mK": 0.48,
+   "hardness_HV": null,
+   "water_absorption_pct": 0.01,
+   "embodied_CO2_kg_per_kg": 1.9,
+   "sourced": [
+    "density_kg_m3",
+    "strength_MPa"
+   ],
+   "sources": [
+    {
+     "citation": "Wibawa, I P. A., Abdullah, K., Sumardiono, 2022, The Analysis of Tensile Strength of High-Density Polyethylene for Shipbuilding (journal article, via SciSpace)",
+     "url": "https://scispace.com/papers/the-analysis-of-tensile-strength-of-high-density-59nnd3jxji"
+    },
+    {
+     "citation": "Qiao Tong-sen, Chen Hong, Wang Xiong, Comparative Study on Properties of Three Types of Injection Specialty High Density Polyethylene Resin (via SciSpace, year not shown)",
+     "url": "https://scispace.com/papers/comparative-study-on-properties-of-three-types-of-injection-ea2xkepdd5n0"
+    }
+   ]
+  },
+  {
+   "name": "Polyamide 6,6 (nylon 66, dry as moulded)",
+   "family": "Polymers and elastomers",
+   "fields": [
+    "automotive",
+    "mechanical",
+    "electrical"
+   ],
+   "strength_kind": "tensile yield",
+   "humidity_resistance_1to5": 2,
+   "humidity_reason": "Hygroscopic: about 2 % moisture at 50 % RH and about 5 % wet-conditioned (sourced; full saturation of neat PA66 is typically near 8.5 %), which lowers Tg, stiffness and strength and causes swelling.",
+   "wear_resistance_1to5": 4,
+   "wear_reason": "Tough semi-crystalline polymer widely used for gears and bearings with good abrasion resistance.",
+   "main_limitation": "Stiffness, strength and dimensions change strongly with absorbed moisture, so dry-as-moulded data overstate wet performance.",
+   "density_kg_m3": 1140,
+   "strength_MPa": 82,
+   "youngs_modulus_GPa": 3.0,
+   "max_service_temp_C": 100,
+   "thermal_conductivity_W_mK": 0.25,
+   "hardness_HV": null,
+   "water_absorption_pct": 5,
+   "embodied_CO2_kg_per_kg": 7.9,
+   "sourced": [
+    "water_absorption_pct"
+   ],
+   "sources": [
+    {
+     "citation": "Hassan, A., Salleh, N. M., Yahya, R., 2011, Fiber length, thermal, mechanical, and dynamic mechanical properties of injection-molded glass-fiber/polyamide 6,6: Plasticization effect, Journal of Reinforced Plastics and Composites",
+     "url": "https://scispace.com/papers/fiber-length-thermal-mechanical-and-dynamic-mechanical-3e06pybf2v"
+    },
+    {
+     "citation": "Wetzel, P., Sambale, A., Uhlig, K., et al., 2023, Hygromechanical Behavior of Polyamide 6.6: Experiments and Modeling, Polymers",
+     "url": "https://scispace.com/papers/hygromechanical-behavior-of-polyamide-6-6-experiments-and-dlaip9ftdi"
+    }
+   ]
+  },
+  {
+   "name": "PEEK (polyetheretherketone, unfilled)",
+   "family": "Polymers and elastomers",
+   "fields": [
+    "aerospace",
+    "biomedical",
+    "chemical",
+    "energy"
+   ],
+   "strength_kind": "tensile yield",
+   "humidity_resistance_1to5": 5,
+   "humidity_reason": "Saturation water uptake is only 0.43 wt % (sourced, immersion at 75 C) and the polymer resists hydrolysis in hot water and steam.",
+   "wear_resistance_1to5": 4,
+   "wear_reason": "Hard, tough high-temperature thermoplastic used unlubricated in bearings and seals; filled grades are better still.",
+   "main_limitation": "Very high material and processing cost, and stiffness drops above the glass transition near 143 C.",
+   "density_kg_m3": 1320,
+   "strength_MPa": 97,
+   "youngs_modulus_GPa": 3.7,
+   "max_service_temp_C": 250,
+   "thermal_conductivity_W_mK": 0.25,
+   "hardness_HV": null,
+   "water_absorption_pct": 0.43,
+   "embodied_CO2_kg_per_kg": null,
+   "sourced": [
+    "density_kg_m3",
+    "water_absorption_pct"
+   ],
+   "sources": [
+    {
+     "citation": "Boinard, E., Pethrick, R. A., MacFarlane, C. J., 2001, Ageing Study of Polyetheretherketone Exposed to Water and Brine by Thermal Analysis and Dielectric Spectroscopy (book chapter)",
+     "url": "https://scispace.com/papers/ageing-study-of-polyetheretherketone-exposed-to-water-and-49zm5b44w5"
+    },
+    {
+     "citation": "Schwitalla, A. D., Spintig, T., Kallage, I., et al., 2016, Pressure behavior of different PEEK materials for dental implants, Journal of the Mechanical Behavior of Biomedical Materials",
+     "url": "https://scispace.com/papers/pressure-behavior-of-different-peek-materials-for-dental-k5ty5oq6zd"
+    },
+    {
+     "citation": "Babaci, A. M., Nurbas, M., 2026, Polyetheretherketone (PEEK): A Comprehensive Review of Advanced Polymer Engineering, Biomedical Applications, and Emerging Technological Frontiers, Gazi University Journal of Science Part A",
+     "url": "https://scispace.com/papers/polyetheretherketone-peek-a-comprehensive-review-of-advanced-2v4eisawsctt"
+    }
+   ]
+  },
+  {
+   "name": "PTFE (polytetrafluoroethylene, unfilled)",
+   "family": "Polymers and elastomers",
+   "fields": [
+    "chemical",
+    "electrical",
+    "mechanical",
+    "food"
+   ],
+   "strength_kind": "tensile ultimate",
+   "humidity_resistance_1to5": 5,
+   "humidity_reason": "Hydrophobic and chemically inert fluoropolymer; 24 h water absorption is below about 0.01 % (typical).",
+   "wear_resistance_1to5": 1,
+   "wear_reason": "Very low friction but unfilled PTFE has a high wear rate, roughly 1e-3 mm3/Nm in dry sliding (sourced), so fillers are needed for wear duty.",
+   "main_limitation": "Soft, creeps (cold flow) under load and wears quickly unless filled; cannot be melt processed conventionally.",
+   "density_kg_m3": 2200,
+   "strength_MPa": 27.3,
+   "youngs_modulus_GPa": 0.5,
+   "max_service_temp_C": 260,
+   "thermal_conductivity_W_mK": 0.25,
+   "hardness_HV": null,
+   "water_absorption_pct": 0.01,
+   "embodied_CO2_kg_per_kg": null,
+   "sourced": [
+    "density_kg_m3",
+    "strength_MPa"
+   ],
+   "sources": [
+    {
+     "citation": "Kolhe, S., Deshpande, A., Wangikar, K. S., 2019, Wear Behavior of Polytetrafluoroethylene Composites: A Review (book chapter)",
+     "url": "https://scispace.com/papers/wear-behavior-of-polytetrafluoroethylene-composites-a-review-4d83u3sr9m"
+    },
+    {
+     "citation": "Zhang Dong-na, Kou Kai-chang, Zhang Yu, Effect of Stretching on Properties of Polytetrafluoroethylene (via SciSpace, year not shown)",
+     "url": "https://scispace.com/papers/effect-of-stretching-on-properties-of-qfafv1dbj28y"
+    },
+    {
+     "citation": "Menzel, B., Blanchet, T. A., 2002, Effect of particle size and volume fraction of irradiated FEP filler on the transfer wear of PTFE, Lubrication Engineering",
+     "url": "https://scispace.com/papers/effect-of-particle-size-and-volume-fraction-of-irradiated-47kn1qr5lr"
+    }
+   ]
+  },
+  {
+   "name": "Polycarbonate (bisphenol-A PC)",
+   "family": "Polymers and elastomers",
+   "fields": [
+    "electrical",
+    "automotive",
+    "construction glazing",
+    "optics"
+   ],
+   "strength_kind": "tensile yield",
+   "humidity_resistance_1to5": 3,
+   "humidity_reason": "Saturation uptake is low, about 0.35 % (typical; the sourced 0.04 mol water per ester group is roughly 0.3 wt %), but hot humid exposure causes hydrolytic chain scission and embrittlement.",
+   "wear_resistance_1to5": 2,
+   "wear_reason": "Tough but soft surface that scratches and abrades easily unless hard-coated.",
+   "main_limitation": "Hydrolysis in hot water or steam, stress cracking in many solvents and poor scratch resistance.",
+   "density_kg_m3": 1200,
+   "strength_MPa": 62,
+   "youngs_modulus_GPa": 2.35,
+   "max_service_temp_C": 120,
+   "thermal_conductivity_W_mK": 0.2,
+   "hardness_HV": null,
+   "water_absorption_pct": 0.35,
+   "embodied_CO2_kg_per_kg": 7.6,
+   "sourced": [
+    "density_kg_m3"
+   ],
+   "sources": [
+    {
+     "citation": "Ghorbel, I., Thominette, F., Spiteri, P., et al., 1995, Hydrolytic aging of polycarbonate. I: Physical aspects, Journal of Applied Polymer Science",
+     "url": "https://scispace.com/papers/hydrolytic-aging-of-polycarbonate-i-physical-aspects-20teiz0ka8"
+    },
+    {
+     "citation": "Gao Wei-bin, Han Shi-min, Xu Jun-qiang, Effect of Hot-water Aging on Properties and Structure of Bisphenol A Polycarbonate (via SciSpace)",
+     "url": "https://scispace.com/papers/effect-of-hot-water-aging-on-properties-and-structure-of-w464qctewqws"
+    }
+   ]
+  },
+  {
+   "name": "EPDM rubber (filled vulcanizate)",
+   "family": "Polymers and elastomers",
+   "fields": [
+    "automotive",
+    "construction",
+    "electrical",
+    "sealing"
+   ],
+   "strength_kind": "tensile ultimate",
+   "humidity_resistance_1to5": 4,
+   "humidity_reason": "Saturated non-polar backbone gives very low water uptake (no percent value seen tonight) and good weathering, though damp-heat ageing degrades seals faster than dry heat (sourced).",
+   "wear_resistance_1to5": 3,
+   "wear_reason": "Filled compounds have fair abrasion resistance, used as conveyor-belt covers, but below natural rubber or polyurethane.",
+   "main_limitation": "Very low stiffness (elastomer), swells in oils and hydrocarbon fuels, and properties depend strongly on compound recipe.",
+   "density_kg_m3": 1150,
+   "strength_MPa": 22.5,
+   "youngs_modulus_GPa": 0.005,
+   "max_service_temp_C": 150,
+   "thermal_conductivity_W_mK": 0.25,
+   "hardness_HV": null,
+   "water_absorption_pct": null,
+   "embodied_CO2_kg_per_kg": null,
+   "sourced": [
+    "strength_MPa",
+    "max_service_temp_C"
+   ],
+   "sources": [
+    {
+     "citation": "Borazan, A. A., 2017, Preparation and characterization of EPDM rubber mixture for a heat resistant conveyor belt cover, Anadolu University Journal of Science and Technology A: Applied Sciences and Engineering",
+     "url": "https://scispace.com/papers/preparation-and-characterization-of-epdm-rubber-mixture-for-44jlwjbm4j"
+    },
+    {
+     "citation": "Kim, J. K., Park, K., Paria, S., et al., 2026, Thermally and hygrothermally aging-induced properties and service life prediction of EPDM, Rubber Chemistry and Technology",
+     "url": "https://scispace.com/papers/thermally-and-hygrothermally-aging-induced-properties-and-q7i10ptlji9v"
+    }
+   ]
+  },
+  {
+   "name": "CFRP, quasi-isotropic epoxy laminate",
+   "family": "Composites and natural materials",
+   "fields": [
+    "aerospace",
+    "automotive",
+    "sports",
+    "wind energy"
+   ],
+   "strength_kind": "tensile ultimate",
+   "humidity_resistance_1to5": 4,
+   "humidity_reason": "Fibres are inert but the epoxy takes up roughly 1 wt% water, which lowers Tg and matrix-dominated strength; one study measured a 36% tensile loss after 12 months in artificial seawater.",
+   "wear_resistance_1to5": 2,
+   "wear_reason": "The epoxy surface abrades easily and exposed fibres fray, so it needs a coating or metal insert in sliding or abrasive contact.",
+   "main_limitation": "High cost and embodied carbon, brittle failure, and matrix softening above the cure-dependent glass transition.",
+   "density_kg_m3": 1540,
+   "strength_MPa": 372,
+   "youngs_modulus_GPa": 50,
+   "max_service_temp_C": 120,
+   "thermal_conductivity_W_mK": 5,
+   "hardness_HV": null,
+   "water_absorption_pct": 1.0,
+   "embodied_CO2_kg_per_kg": 33,
+   "sourced": [
+    "density_kg_m3",
+    "strength_MPa"
+   ],
+   "sources": [
+    {
+     "citation": "Kini, M. V., Pai, D., 2023, Durability study of quasi-isotropic carbon/epoxy composites under various environmental conditions, Iranian Polymer Journal",
+     "url": "https://scispace.com/papers/durability-study-of-quasi-isotropic-carbon-epoxy-composites-3o3qqdly"
+    }
+   ]
+  },
+  {
+   "name": "GFRP, E-glass/epoxy laminate",
+   "family": "Composites and natural materials",
+   "fields": [
+    "marine",
+    "wind energy",
+    "construction",
+    "automotive"
+   ],
+   "strength_kind": "tensile ultimate",
+   "humidity_resistance_1to5": 3,
+   "humidity_reason": "Saturates at about 1.0-1.1 wt% water, which attacks the glass/matrix interface; tensile strength fell 30% after five weeks at 90 C and 90% RH in one study.",
+   "wear_resistance_1to5": 2,
+   "wear_reason": "The resin-rich surface abrades and exposes glass fibres, so a gelcoat or liner is needed where there is abrasion.",
+   "main_limitation": "Low stiffness for its weight compared with carbon or metals, plus long-term strength loss in hot wet conditions.",
+   "density_kg_m3": 1900,
+   "strength_MPa": 350,
+   "youngs_modulus_GPa": 22,
+   "max_service_temp_C": 120,
+   "thermal_conductivity_W_mK": 0.4,
+   "hardness_HV": null,
+   "water_absorption_pct": 1.13,
+   "embodied_CO2_kg_per_kg": 8,
+   "sourced": [
+    "water_absorption_pct"
+   ],
+   "sources": [
+    {
+     "citation": "Ghabezi, P., Harrison, N. M., 2022, Hygrothermal deterioration in carbon/epoxy and glass/epoxy composite laminates aged in marine-based environment (degradation mechanism, mechanical and physicochemical properties), Journal of Materials Science",
+     "url": "https://scispace.com/papers/hygrothermal-deterioration-in-carbon-epoxy-and-glass-epoxy-ufkpnuhv"
+    },
+    {
+     "citation": "Dogan, A., Arman, Y., 2018, The Effect of Hygrothermal Aging on the Glass and Carbon Reinforced Epoxy Composites for different Stacking Sequences",
+     "url": "https://scispace.com/papers/the-effect-of-hygrothermal-aging-on-the-glass-and-carbon-39ghq3xdxx"
+    }
+   ]
+  },
+  {
+   "name": "Structural softwood timber (spruce / Douglas fir, along the grain)",
+   "family": "Composites and natural materials",
+   "fields": [
+    "construction",
+    "civil"
+   ],
+   "strength_kind": "compressive",
+   "humidity_resistance_1to5": 2,
+   "humidity_reason": "Wood is hygroscopic: from 12% moisture to the green state (fibre saturation about 30%) spruce lost 43% of its compressive strength and 11% of its stiffness, and sustained wetness invites decay.",
+   "wear_resistance_1to5": 2,
+   "wear_reason": "Softwoods are soft and dent and abrade readily, especially across the grain.",
+   "main_limitation": "Strongly anisotropic and variable, with strength that depends on moisture, load duration and defects such as knots.",
+   "density_kg_m3": 453,
+   "strength_MPa": 40,
+   "youngs_modulus_GPa": 11,
+   "max_service_temp_C": 65,
+   "thermal_conductivity_W_mK": 0.12,
+   "hardness_HV": null,
+   "water_absorption_pct": 12,
+   "embodied_CO2_kg_per_kg": 0.3,
+   "sourced": [
+    "density_kg_m3",
+    "water_absorption_pct"
+   ],
+   "sources": [
+    {
+     "citation": "Aicher, S., Stapf, G., 2016, Compressive strength parallel to the fiber of spruce with high moisture content, European Journal of Wood and Wood Products",
+     "url": "https://scispace.com/papers/compressive-strength-parallel-to-the-fiber-of-spruce-with-1fszllub70"
+    }
+   ]
+  },
+  {
+   "name": "Cross-laminated timber / glulam (softwood)",
+   "family": "Composites and natural materials",
+   "fields": [
+    "construction",
+    "civil"
+   ],
+   "strength_kind": "flexural",
+   "humidity_resistance_1to5": 2,
+   "humidity_reason": "Stiffness falls as moisture rises and drying cracks the layers; air-dry CLT was 127% stronger in bending than wet CLT in one study, and glulam lost about 7% stiffness over 30 months of humidity cycling.",
+   "wear_resistance_1to5": 2,
+   "wear_reason": "The softwood faces dent and abrade like sawn timber, so floors and exposed faces need a wearing layer.",
+   "main_limitation": "Intended for dry or protected service; wetting causes swelling, cracking, glue-line stress and decay risk.",
+   "density_kg_m3": 450,
+   "strength_MPa": 24,
+   "youngs_modulus_GPa": 11.5,
+   "max_service_temp_C": 65,
+   "thermal_conductivity_W_mK": 0.12,
+   "hardness_HV": null,
+   "water_absorption_pct": 12,
+   "embodied_CO2_kg_per_kg": 0.45,
+   "sourced": [
+    "water_absorption_pct"
+   ],
+   "sources": [
+    {
+     "citation": "Gulzow, A., Richter, K., Steiger, R., 2011, Influence of wood moisture content on bending and shear stiffness of cross laminated timber panels, European Journal of Wood and Wood Products",
+     "url": "https://scispace.com/papers/influence-of-wood-moisture-content-on-bending-and-shear-3bgq08tkz7"
+    },
+    {
+     "citation": "Bal, B. C., Avsaroglu, E., 2024, Effect of moisture on selected mechanical properties of cross-laminated timber produced from black pine wood (in Turkish), Kahramanmaras Sutcu Imam Universitesi Muhendislik Bilimleri Dergisi",
+     "url": "https://scispace.com/papers/karacam-odunundan-uretilen-capraz-lamine-ahsabin-secilmis-1r0n78w379"
+    },
+    {
+     "citation": "Mirski, R., Kulinski, M., Kawalerczyk, J., 2023, The Effect of Storage Conditions on the Strength Characteristic of Glulam Beams, Forests",
+     "url": "https://scispace.com/papers/the-effect-of-storage-conditions-on-the-strength-2esbz6g9"
+    }
+   ]
+  },
+  {
+   "name": "Bamboo, structural culm (Moso / Guadua, along the grain)",
+   "family": "Composites and natural materials",
+   "fields": [
+    "construction",
+    "civil",
+    "furniture"
+   ],
+   "strength_kind": "compressive",
+   "humidity_resistance_1to5": 2,
+   "humidity_reason": "Below fibre saturation (about 23% moisture) Moso loses about 2.5 MPa of compressive strength and 0.52 MPa of shear strength per 1% moisture gained, and untreated culms rot and attract insects when damp.",
+   "wear_resistance_1to5": 3,
+   "wear_reason": "The dense silica-rich outer skin is harder than softwood, but the inner wall is soft and culms split along the grain.",
+   "main_limitation": "Natural variability, splitting, difficult connections and poor durability unless treated and kept dry.",
+   "density_kg_m3": 700,
+   "strength_MPa": 60,
+   "youngs_modulus_GPa": 12,
+   "max_service_temp_C": 65,
+   "thermal_conductivity_W_mK": null,
+   "hardness_HV": null,
+   "water_absorption_pct": 12,
+   "embodied_CO2_kg_per_kg": 0.3,
+   "sourced": [
+    "water_absorption_pct"
+   ],
+   "sources": [
+    {
+     "citation": "Jiang, Z., Wang, H., Tian, G., et al., 2012, Sensitivity of several selected mechanical properties of moso bamboo to moisture content change under the fibre saturation point, BioResources",
+     "url": "https://scispace.com/papers/sensitivity-of-several-selected-mechanical-properties-of-u7bxhq06sx"
+    },
+    {
+     "citation": "Lorenzo, R., Godina, M., Mimendi, L., et al., 2020, Determination of the physical and mechanical properties of moso, guadua and oldhamii bamboo assisted by robotic fabrication, Journal of Wood Science",
+     "url": "https://scispace.com/papers/determination-of-the-physical-and-mechanical-properties-of-54u7n23ryi"
+    }
+   ]
+  }
+ ]
+}

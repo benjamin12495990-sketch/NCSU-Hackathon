@@ -108,3 +108,21 @@ tr.on td { background: var(--accent-soft); }
 @media (prefers-reduced-motion: reduce) {
   button[type='submit'], .chip, .pick { transition: none; }
 }
+
+/* Environment panel: a switch enables each slider. */
+.reqs { margin: 16px 0 0; padding: 16px 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); min-width: 0; }
+.reqs legend { padding: 0 6px; font-weight: 600; font-size: 0.9rem; }
+.fields.two { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); margin-bottom: 10px; }
+.req { display: grid; grid-template-columns: 230px minmax(120px, 1fr) minmax(0, 1.5fr); gap: 12px; align-items: center; padding: 7px 0; border-top: 1px solid var(--line); }
+.req .switch { display: flex; align-items: center; gap: 8px; margin: 0; font-weight: 600; font-size: 0.9rem; }
+.req input[type='range'] { width: 100%; padding: 0; border: 0; accent-color: var(--accent); }
+.req.off input[type='range'] { opacity: 0.35; }
+.req.off .reqvalue { color: var(--muted); }
+.reqvalue { font-size: 0.9rem; }
+@media (max-width: 720px) { .req { grid-template-columns: 1fr; gap: 4px; } .fields.two { grid-template-columns: 1fr; } }
+.srcdot { color: var(--accent); font-size: 0.7em; vertical-align: middle; }
+td .label { font-size: 0.75rem; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.mini { border: 1px solid var(--line); border-radius: 6px; background: var(--card); padding: 14px 16px; }
+.mini h3 { margin: 0 0 6px; font-size: 0.95rem; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.mini p { margin: 0 0 6px; font-size: 0.88rem; }

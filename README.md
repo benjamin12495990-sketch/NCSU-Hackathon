@@ -27,6 +27,22 @@ Enter a target strength in MPa and a curing age. In the browser, with no server,
 It also shows the lowest-CO2 mix that a lab has already tested for that target, so you can see
 whether a new candidate is worth a trial at all.
 
+## Environment sliders and the materials shortlist
+
+Under "What does it have to survive?" each requirement has a switch that enables its slider:
+humidity and water, freezing temperatures, highest service temperature, wear, and service life.
+Choosing a kind of work (building, pavement, marine, aerospace and so on) presets the switches.
+
+- **For the concrete design**, humidity and freezing map to ACI 318-19 exposure classes (W1, W2,
+  C1, C2, F1 to F3). Each class caps the water/binder ratio and sets a minimum strength; the
+  designer applies the strictest of the ones switched on. Wear adds a 28 MPa minimum.
+- **For everything else**, the page ranks 32 reference materials from six families (concrete and
+  masonry, ferrous metals, light alloys, high-temperature alloys and ceramics, polymers, composites
+  and timber). A material is left out if it fails a requirement that is switched on. The rest are
+  ranked by CO2 per unit of strength, mass per unit of strength, or strength.
+- **At the research frontier** lists eight research-stage materials, each with one headline number
+  read in the abstract of the linked paper.
+
 ## The 3D view
 
 The chosen mix is drawn as one cubic metre of particles (Three.js, `src/components/MixStage.jsx`).
@@ -47,6 +63,15 @@ Two kinds of numbers are not measured by us and are labelled on the page:
 - **CO2 factors and densities** come from published papers (table on the page, with links). Water is
   not counted because we found no sourced factor.
 - **The three preset strengths** are illustrative, not values from a building code.
+- **Environment limits** are ACI 318-19 values as reported by secondary sources. The code itself is
+  paywalled and we did not open it. Class C1 and the wear minimum are recalled values we could not
+  confirm, and the page marks them.
+- **The materials table** was compiled by AI research agents. 56 of its 232 numbers were seen in a
+  cited paper and carry a dot on the page. The other 176 are typical handbook-level values recalled
+  by the AI and not individually checked. The 1 to 5 humidity and wear ratings are AI judgments.
+- **Kinds of work and the service-life rule** (50 years or more asks for one more step of humidity
+  and wear resistance) are our own starting points, not values from a standard.
+- **The 3D model** is an illustration; the page says so under it.
 
 ## How the models were trained
 
@@ -99,6 +124,14 @@ the page reads them from there.
   superplasticizer factor is probably too high. Densities for slag, fly ash and superplasticizer
   come from a single paper and were not confirmed by a second search.
 - **"New" means "not in this dataset".** A candidate may exist in the literature.
+- **Exposure classes are only part of durability design.** ACI also requires air entrainment for
+  freezing exposure, which the dataset does not record and the app does not model. The service
+  temperature slider does not change the concrete design.
+- **The materials ranking compares unlike strengths.** Yield, ultimate, compressive and flexural
+  strengths sit in one column, and most values are single typical figures. It is a way to build a
+  shortlist, not a substitute for a datasheet.
+- **European limits were dropped.** We looked for the EN 206 exposure table too, but could confirm
+  only 11 of its 60 values tonight, so the app uses ACI 318 only.
 
 ## How we used MCP servers
 
@@ -118,6 +151,13 @@ number with a different search, one gathered expert objections, and one looked f
 
 What the checks changed: water has no CO2 factor because none could be sourced; slag and fly ash
 are labelled as secondary; three densities are labelled as unconfirmed.
+
+A second round of nine agents built the environment and materials data: two looked up exposure
+limits (ACI 318 and EN 206), six compiled the materials table one family each, and one wrote the
+frontier brief. They used SciSpace, Consensus and FastTrack Literature Open, plus web search for
+pages that summarise ACI 318. Their raw output, with citations and quotes, is in `research/`.
+Two reviewer agents also checked the code and the claims; their findings led to the stricter
+train/test split and several wording changes.
 
 ## Files
 
@@ -140,6 +180,16 @@ are labelled as secondary; three densities are labelled as unconfirmed.
 | `src/lib/nearest.js` | Distances to tested mixes and their lab results. |
 | `src/lib/design.js` | Generates, filters, ranks and checks the candidates. |
 | `src/lib/loadModel.js` | Downloads the JSON files when the page opens. |
+| `public/model/exposure.json` | ACI 318 exposure limits used by the sliders, with an evidence label per class. |
+| `public/model/materials.json` | The 32 reference materials, with which values were sourced. |
+| `public/model/frontier.json` | The eight frontier materials. |
+| `research/*.json` | Raw output of the research agents: citations, quotes and evidence labels. |
+| `src/lib/exposure.js` | Turns the environment sliders into concrete limits. |
+| `src/lib/rank.js` | Filters and ranks the reference materials. |
+| `src/lib/particles.js` | Turns a mix into particles for the 3D view. |
+| `src/components/Requirements.jsx` | The switches and sliders. |
+| `src/components/Shortlist.jsx` | The limits table, the materials shortlist and the frontier cards. |
+| `src/components/MixStage.jsx` | The 3D view (Three.js). |
 | `src/App.jsx` | The page. |
 | `scripts/parity.mjs` | Checks that JavaScript predictions match Python. |
 
@@ -184,6 +234,12 @@ concrete. *Journal of Cleaner Production*. https://doi.org/10.1016/j.jclepro.202
 
 Kubissa, W., Jaskulski, R. et al. (2019). *Architecture Civil Engineering Environment*: the
 secondary table for the slag and fly ash factors.
+
+Environment limits: ACI 318-19, Building Code Requirements for Structural Concrete, Table 19.3.2.1,
+as reported by the secondary sources listed in `research/aci318.json`.
+
+Materials and frontier entries: each row links its paper on the page; full citations are in
+`research/`.
 
 Densities: Sudharsan, C. P., Gosh, S. & Sood, H. (2022). https://doi.org/10.22214/ijraset.2022.41047
 

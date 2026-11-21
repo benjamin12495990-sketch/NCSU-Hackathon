@@ -1,0 +1,224 @@
+{
+  "family": "Composites and natural materials",
+  "notes": "Values marked 'sourced' were read from SciSpace MCP tool output on 2026-11-21 (extract_data summaries of the cited papers, not the PDFs themselves). Values marked 'typical' are handbook-level figures (Ashby / USDA Wood Handbook / EN 14080 class values / ICE database order of magnitude) recalled by the AI and NOT seen in tool output tonight. For timber, CLT/glulam and bamboo, water_absorption_pct is the reference equilibrium moisture content (about 20 C, 65% RH), not an immersion uptake. Ratings 1-5 are AI-assigned.",
+  "materials": [
+    {
+      "name": "CFRP, quasi-isotropic epoxy laminate",
+      "family": "Composites and natural materials",
+      "fields": ["aerospace", "automotive", "sports", "wind energy"],
+      "density_kg_m3": 1540,
+      "strength_MPa": 372,
+      "strength_kind": "tensile ultimate",
+      "youngs_modulus_GPa": 50,
+      "max_service_temp_C": 120,
+      "thermal_conductivity_W_mK": 5,
+      "hardness_HV": null,
+      "water_absorption_pct": 1.0,
+      "embodied_CO2_kg_per_kg": 33,
+      "cost_usd_per_kg": 40,
+      "humidity_resistance_1to5": 4,
+      "humidity_reason": "Fibres are inert but the epoxy takes up roughly 1 wt% water, which lowers Tg and matrix-dominated strength; one study measured a 36% tensile loss after 12 months in artificial seawater.",
+      "wear_resistance_1to5": 2,
+      "wear_reason": "The epoxy surface abrades easily and exposed fibres fray, so it needs a coating or metal insert in sliding or abrasive contact.",
+      "main_limitation": "High cost and embodied carbon, brittle failure, and matrix softening above the cure-dependent glass transition.",
+      "evidence": {
+        "density_kg_m3": "sourced",
+        "strength_MPa": "sourced",
+        "youngs_modulus_GPa": "typical",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "water_absorption_pct": "typical",
+        "embodied_CO2_kg_per_kg": "typical",
+        "cost_usd_per_kg": "typical"
+      },
+      "caveats": "The sourced strength (372 MPa) is from one autoclave-cured prepreg study and is lower than aerospace handbook values (about 500-800 MPa). The same paper reports a tensile modulus of 15.7 GPa, far below laminate-theory values for quasi-isotropic carbon/epoxy, so the handbook 50 GPa is used and labelled typical. Thermal conductivity is in-plane; through-thickness is under 1 W/mK.",
+      "sources": [
+        {
+          "citation": "Kini, M. V., Pai, D., 2023, Durability study of quasi-isotropic carbon/epoxy composites under various environmental conditions, Iranian Polymer Journal",
+          "url": "https://scispace.com/papers/durability-study-of-quasi-isotropic-carbon-epoxy-composites-3o3qqdly",
+          "supports": ["strength_MPa", "density_kg_m3", "humidity_reason"],
+          "quote": "The unaged quasi-isotropic carbon/epoxy laminate had a measured tensile strength of 372.16 MPa, tensile modulus of 15.7 GPa, and flexural strength of 748.91 MPa. The average experimental density was 1.54 g/cm3. Tensile properties decreased by 36.06% after ambient artificial-seawater ageing. (SciSpace extract_data summary)"
+        }
+      ]
+    },
+    {
+      "name": "GFRP, E-glass/epoxy laminate",
+      "family": "Composites and natural materials",
+      "fields": ["marine", "wind energy", "construction", "automotive"],
+      "density_kg_m3": 1900,
+      "strength_MPa": 350,
+      "strength_kind": "tensile ultimate",
+      "youngs_modulus_GPa": 22,
+      "max_service_temp_C": 120,
+      "thermal_conductivity_W_mK": 0.4,
+      "hardness_HV": null,
+      "water_absorption_pct": 1.13,
+      "embodied_CO2_kg_per_kg": 8,
+      "cost_usd_per_kg": 20,
+      "humidity_resistance_1to5": 3,
+      "humidity_reason": "Saturates at about 1.0-1.1 wt% water, which attacks the glass/matrix interface; tensile strength fell 30% after five weeks at 90 C and 90% RH in one study.",
+      "wear_resistance_1to5": 2,
+      "wear_reason": "The resin-rich surface abrades and exposes glass fibres, so a gelcoat or liner is needed where there is abrasion.",
+      "main_limitation": "Low stiffness for its weight compared with carbon or metals, plus long-term strength loss in hot wet conditions.",
+      "evidence": {
+        "density_kg_m3": "typical",
+        "strength_MPa": "typical",
+        "youngs_modulus_GPa": "typical",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "water_absorption_pct": "sourced",
+        "embodied_CO2_kg_per_kg": "typical",
+        "cost_usd_per_kg": "typical"
+      },
+      "caveats": "Strength and modulus are typical values for a woven/multiaxial E-glass/epoxy laminate at about 50% fibre volume. The Ghabezi and Harrison summary also listed 56.9 MPa and 6.8 GPa for the unaged glass/epoxy; these look too low for a fibre-direction laminate and were NOT used.",
+      "sources": [
+        {
+          "citation": "Ghabezi, P., Harrison, N. M., 2022, Hygrothermal deterioration in carbon/epoxy and glass/epoxy composite laminates aged in marine-based environment (degradation mechanism, mechanical and physicochemical properties), Journal of Materials Science",
+          "url": "https://scispace.com/papers/hygrothermal-deterioration-in-carbon-epoxy-and-glass-epoxy-ufkpnuhv",
+          "supports": ["water_absorption_pct"],
+          "quote": "Glass/epoxy moisture uptake: the reported saturation moisture content was 1.13 wt% at both temperatures. Saturation occurred after 1,918 hours at 60 C and 5,876 hours at room temperature. (SciSpace extract_data summary)"
+        },
+        {
+          "citation": "Dogan, A., Arman, Y., 2018, The Effect of Hygrothermal Aging on the Glass and Carbon Reinforced Epoxy Composites for different Stacking Sequences",
+          "url": "https://scispace.com/papers/the-effect-of-hygrothermal-aging-on-the-glass-and-carbon-39ghq3xdxx",
+          "supports": ["water_absorption_pct", "humidity_reason"],
+          "quote": "The glass/epoxy laminate (Type A) reached a saturated moisture uptake of 0.97 wt%. After five weeks of aging, its tensile strength decreased by 30%. Aging was at 90 C and 90% humidity. (SciSpace search abstract and extract_data summary)"
+        }
+      ]
+    },
+    {
+      "name": "Structural softwood timber (spruce / Douglas fir, along the grain)",
+      "family": "Composites and natural materials",
+      "fields": ["construction", "civil"],
+      "density_kg_m3": 453,
+      "strength_MPa": 40,
+      "strength_kind": "compressive",
+      "youngs_modulus_GPa": 11,
+      "max_service_temp_C": 65,
+      "thermal_conductivity_W_mK": 0.12,
+      "hardness_HV": null,
+      "water_absorption_pct": 12,
+      "embodied_CO2_kg_per_kg": 0.3,
+      "cost_usd_per_kg": 1.0,
+      "humidity_resistance_1to5": 2,
+      "humidity_reason": "Wood is hygroscopic: from 12% moisture to the green state (fibre saturation about 30%) spruce lost 43% of its compressive strength and 11% of its stiffness, and sustained wetness invites decay.",
+      "wear_resistance_1to5": 2,
+      "wear_reason": "Softwoods are soft and dent and abrade readily, especially across the grain.",
+      "main_limitation": "Strongly anisotropic and variable, with strength that depends on moisture, load duration and defects such as knots.",
+      "evidence": {
+        "density_kg_m3": "sourced",
+        "strength_MPa": "typical",
+        "youngs_modulus_GPa": "typical",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "water_absorption_pct": "sourced",
+        "embodied_CO2_kg_per_kg": "typical",
+        "cost_usd_per_kg": "typical"
+      },
+      "caveats": "Strength and modulus are typical small-clear-specimen values at 12% moisture (USDA Wood Handbook order of magnitude); graded structural design values are far lower. water_absorption_pct is the dry-state reference moisture content, not immersion uptake. Embodied CO2 excludes biogenic carbon storage. Thermal conductivity is across the grain.",
+      "sources": [
+        {
+          "citation": "Aicher, S., Stapf, G., 2016, Compressive strength parallel to the fiber of spruce with high moisture content, European Journal of Wood and Wood Products",
+          "url": "https://scispace.com/papers/compressive-strength-parallel-to-the-fiber-of-spruce-with-1fszllub70",
+          "supports": ["density_kg_m3", "water_absorption_pct", "humidity_reason"],
+          "quote": "Mean density at 12% moisture content was 453 kg/m3 for the dry pile specimens. Spruce and fir fibre saturation is reported as a range of 30-34%. From dry to green, the pile-specimen mean-strength reduction factor was 0.57, equivalent to a 43% reduction; the modulus factor was 0.89. (SciSpace extract_data summary)"
+        }
+      ]
+    },
+    {
+      "name": "Cross-laminated timber / glulam (softwood)",
+      "family": "Composites and natural materials",
+      "fields": ["construction", "civil"],
+      "density_kg_m3": 450,
+      "strength_MPa": 24,
+      "strength_kind": "flexural",
+      "youngs_modulus_GPa": 11.5,
+      "max_service_temp_C": 65,
+      "thermal_conductivity_W_mK": 0.12,
+      "hardness_HV": null,
+      "water_absorption_pct": 12,
+      "embodied_CO2_kg_per_kg": 0.45,
+      "cost_usd_per_kg": 1.5,
+      "humidity_resistance_1to5": 2,
+      "humidity_reason": "Stiffness falls as moisture rises and drying cracks the layers; air-dry CLT was 127% stronger in bending than wet CLT in one study, and glulam lost about 7% stiffness over 30 months of humidity cycling.",
+      "wear_resistance_1to5": 2,
+      "wear_reason": "The softwood faces dent and abrade like sawn timber, so floors and exposed faces need a wearing layer.",
+      "main_limitation": "Intended for dry or protected service; wetting causes swelling, cracking, glue-line stress and decay risk.",
+      "evidence": {
+        "density_kg_m3": "typical",
+        "strength_MPa": "typical",
+        "youngs_modulus_GPa": "typical",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "water_absorption_pct": "sourced",
+        "embodied_CO2_kg_per_kg": "typical",
+        "cost_usd_per_kg": "typical"
+      },
+      "caveats": "Strength (24 MPa) and modulus (11.5 GPa) are the characteristic bending strength and mean modulus of the common GL24h / C24 class, not test means; no absolute strength values were found in tool output tonight. Embodied CO2 excludes biogenic carbon storage.",
+      "sources": [
+        {
+          "citation": "Gulzow, A., Richter, K., Steiger, R., 2011, Influence of wood moisture content on bending and shear stiffness of cross laminated timber panels, European Journal of Wood and Wood Products",
+          "url": "https://scispace.com/papers/influence-of-wood-moisture-content-on-bending-and-shear-3bgq08tkz7",
+          "supports": ["water_absorption_pct", "humidity_reason"],
+          "quote": "Specimens were tested at approximately 12% at the reference climate (20 C, 65% relative humidity). With increased moisture, the mean values of all measured stiffness parameters decreased. (SciSpace extract_data summary)"
+        },
+        {
+          "citation": "Bal, B. C., Avsaroglu, E., 2024, Effect of moisture on selected mechanical properties of cross-laminated timber produced from black pine wood (in Turkish), Kahramanmaras Sutcu Imam Universitesi Muhendislik Bilimleri Dergisi",
+          "url": "https://scispace.com/papers/karacam-odunundan-uretilen-capraz-lamine-ahsabin-secilmis-1r0n78w379",
+          "supports": ["humidity_reason"],
+          "quote": "Compared with wet specimens, air-dry specimens had 127% higher bending strength, 118% higher modulus of elasticity and 87% higher shear strength. (SciSpace extract_data summary)"
+        },
+        {
+          "citation": "Mirski, R., Kulinski, M., Kawalerczyk, J., 2023, The Effect of Storage Conditions on the Strength Characteristic of Glulam Beams, Forests",
+          "url": "https://scispace.com/papers/the-effect-of-storage-conditions-on-the-strength-2esbz6g9",
+          "supports": ["humidity_reason"],
+          "quote": "The average MOE decreased by approximately 7% after 30 months of storage compared with the initial value. Modulus of rupture showed no statistically significant effect of storage conditions. (SciSpace extract_data summary)"
+        }
+      ]
+    },
+    {
+      "name": "Bamboo, structural culm (Moso / Guadua, along the grain)",
+      "family": "Composites and natural materials",
+      "fields": ["construction", "civil", "furniture"],
+      "density_kg_m3": 700,
+      "strength_MPa": 60,
+      "strength_kind": "compressive",
+      "youngs_modulus_GPa": 12,
+      "max_service_temp_C": 65,
+      "thermal_conductivity_W_mK": null,
+      "hardness_HV": null,
+      "water_absorption_pct": 12,
+      "embodied_CO2_kg_per_kg": 0.3,
+      "cost_usd_per_kg": 1.5,
+      "humidity_resistance_1to5": 2,
+      "humidity_reason": "Below fibre saturation (about 23% moisture) Moso loses about 2.5 MPa of compressive strength and 0.52 MPa of shear strength per 1% moisture gained, and untreated culms rot and attract insects when damp.",
+      "wear_resistance_1to5": 3,
+      "wear_reason": "The dense silica-rich outer skin is harder than softwood, but the inner wall is soft and culms split along the grain.",
+      "main_limitation": "Natural variability, splitting, difficult connections and poor durability unless treated and kept dry.",
+      "evidence": {
+        "density_kg_m3": "typical",
+        "strength_MPa": "typical",
+        "youngs_modulus_GPa": "typical",
+        "max_service_temp_C": "typical",
+        "water_absorption_pct": "sourced",
+        "embodied_CO2_kg_per_kg": "typical",
+        "cost_usd_per_kg": "typical"
+      },
+      "caveats": "Strength, modulus and density are typical values for Moso culm wall at 12% moisture; no absolute values were found in tool output tonight. max_service_temp_C is set by analogy with timber and is uncertain. water_absorption_pct is the reference moisture content used for reporting, not immersion uptake.",
+      "sources": [
+        {
+          "citation": "Jiang, Z., Wang, H., Tian, G., et al., 2012, Sensitivity of several selected mechanical properties of moso bamboo to moisture content change under the fibre saturation point, BioResources",
+          "url": "https://scispace.com/papers/sensitivity-of-several-selected-mechanical-properties-of-u7bxhq06sx",
+          "supports": ["humidity_reason"],
+          "quote": "The reported FSP was about 23% MC for bamboo aged 1.5, 2.5, and 4.5 years. The linear fits gave a decrease of 2.50 MPa in compressive strength, 0.52 MPa in shear strength, 0.21 GPa in longitudinal tensile modulus per 1 percentage-point increase in MC. (SciSpace extract_data summary)"
+        },
+        {
+          "citation": "Lorenzo, R., Godina, M., Mimendi, L., et al., 2020, Determination of the physical and mechanical properties of moso, guadua and oldhamii bamboo assisted by robotic fabrication, Journal of Wood Science",
+          "url": "https://scispace.com/papers/determination-of-the-physical-and-mechanical-properties-of-54u7n23ryi",
+          "supports": ["water_absorption_pct"],
+          "quote": "Results were adjusted to a reference moisture content of 12%. (SciSpace extract_data summary)"
+        }
+      ]
+    }
+  ]
+}

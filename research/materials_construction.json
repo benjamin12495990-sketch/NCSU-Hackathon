@@ -1,0 +1,282 @@
+{
+  "family": "Concrete, masonry and glass",
+  "generated_note": "Values marked 'sourced' were seen in SciSpace MCP tool output on 2026-11-21 (per-m3 CO2 figures were converted to per-kg by dividing by a typical density; see each material's notes). Values marked 'typical' are handbook-level figures not seen in tool output tonight. Ratings 1-5 are AI-assigned judgments.",
+  "materials": [
+    {
+      "name": "Normal-strength Portland cement concrete (~30 MPa)",
+      "family": "Concrete, masonry and glass",
+      "fields": ["civil", "buildings", "infrastructure"],
+      "density_kg_m3": 2400,
+      "strength_MPa": 30,
+      "strength_kind": "compressive",
+      "youngs_modulus_GPa": 30,
+      "max_service_temp_C": 300,
+      "thermal_conductivity_W_mK": 1.7,
+      "hardness_HV": null,
+      "water_absorption_pct": 5.0,
+      "embodied_CO2_kg_per_kg": 0.13,
+      "cost_usd_per_kg": 0.05,
+      "humidity_resistance_1to5": 4,
+      "humidity_reason": "Hydrated cement paste is stable when wet, but its capillary porosity lets moisture, CO2 and chlorides reach and corrode embedded steel over time.",
+      "wear_resistance_1to5": 3,
+      "wear_reason": "Moderate abrasion resistance that depends on aggregate hardness and surface finish; ordinary paste dusts and wears under heavy traffic.",
+      "main_limitation": "Low tensile strength (needs steel reinforcement) and a cement-driven carbon footprint.",
+      "evidence": {
+        "density_kg_m3": "typical",
+        "strength_MPa": "typical",
+        "youngs_modulus_GPa": "typical",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "hardness_HV": null,
+        "water_absorption_pct": "typical",
+        "embodied_CO2_kg_per_kg": "sourced",
+        "cost_usd_per_kg": "typical"
+      },
+      "notes": "Embodied CO2 is a unit conversion: sourced 290-320 kg CO2-e/m3 (midpoint 305) divided by a typical density of 2400 kg/m3 = 0.127 kg/kg, rounded to 0.13.",
+      "sources": [
+        {
+          "citation": "Flower, D.J.M. and Sanjayan, J.G., 2007, Green house gas emissions due to concrete manufacture, International Journal of Life Cycle Assessment",
+          "url": "https://scispace.com/papers/green-house-gas-emissions-due-to-concrete-manufacture-3ha3dn0y3m",
+          "supports": ["embodied_CO2_kg_per_kg"],
+          "quote": "Typical normal-strength concrete using Portland cement as the sole binder emits 0.29-0.32 t CO2-e per m3 (290-320 kg CO2-e/m3). [SciSpace extract_data summary of the paper]"
+        }
+      ]
+    },
+    {
+      "name": "High-strength concrete (~70 MPa)",
+      "family": "Concrete, masonry and glass",
+      "fields": ["civil", "high-rise buildings", "bridges"],
+      "density_kg_m3": 2450,
+      "strength_MPa": 70,
+      "strength_kind": "compressive",
+      "youngs_modulus_GPa": 40,
+      "max_service_temp_C": 300,
+      "thermal_conductivity_W_mK": 1.9,
+      "hardness_HV": null,
+      "water_absorption_pct": 2.5,
+      "embodied_CO2_kg_per_kg": 0.19,
+      "cost_usd_per_kg": 0.08,
+      "humidity_resistance_1to5": 4,
+      "humidity_reason": "Low water-to-binder ratio gives a dense, low-permeability matrix that slows moisture and chloride ingress, though reinforcement still needs cover.",
+      "wear_resistance_1to5": 4,
+      "wear_reason": "Abrasion resistance rises with compressive strength and paste density, so it wears more slowly than normal concrete.",
+      "main_limitation": "High cement content raises embodied CO2 per kg, and the dense matrix is brittle and prone to explosive spalling in fire.",
+      "evidence": {
+        "density_kg_m3": "typical",
+        "strength_MPa": "sourced",
+        "youngs_modulus_GPa": "typical",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "hardness_HV": null,
+        "water_absorption_pct": "typical",
+        "embodied_CO2_kg_per_kg": "typical",
+        "cost_usd_per_kg": "typical"
+      },
+      "notes": "Embodied CO2 is a handbook-level estimate (about 450-500 kg cement per m3 at roughly 0.9 kg CO2 per kg cement, divided by 2450 kg/m3); no per-kg figure for a plain 70 MPa mix was seen in tool output tonight.",
+      "sources": [
+        {
+          "citation": "Zende, A.A., Momin, A.I.A., Alsabhan, A.H. et al., 2023, Mechanical Properties of High-Strength Self-Compacting Concrete, ACS Omega",
+          "url": "https://scispace.com/papers/mechanical-properties-of-high-strength-self-compacting-30jyzgd9",
+          "supports": ["strength_MPa"],
+          "quote": "Three mixes were selected, having compressive strengths of more than 70, 80, and 90 MPa, respectively."
+        },
+        {
+          "citation": "Burg, R.G. and Ost, B.W., 1994, Engineering properties of commercially available high-strength concretes (including three-year data), Portland Cement Association report",
+          "url": "https://scispace.com/papers/engineering-properties-of-commercially-available-high-468v4roztj",
+          "supports": ["strength_MPa"],
+          "quote": "Six concretes in the range of 10,000 to 20,000 psi (69 to 138 MPa) were studied."
+        }
+      ]
+    },
+    {
+      "name": "Ultra-high-performance concrete (UHPC)",
+      "family": "Concrete, masonry and glass",
+      "fields": ["civil", "infrastructure", "marine"],
+      "density_kg_m3": 2450,
+      "strength_MPa": 150,
+      "strength_kind": "compressive",
+      "youngs_modulus_GPa": 50,
+      "max_service_temp_C": 300,
+      "thermal_conductivity_W_mK": 1.8,
+      "hardness_HV": null,
+      "water_absorption_pct": 1.0,
+      "embodied_CO2_kg_per_kg": 0.33,
+      "cost_usd_per_kg": 1.0,
+      "humidity_resistance_1to5": 5,
+      "humidity_reason": "Very low water-to-binder ratio and optimised particle packing leave almost no connected capillary porosity for water or chlorides to enter.",
+      "wear_resistance_1to5": 4,
+      "wear_reason": "Very dense, high-strength matrix with fine hard quartz filler resists abrasion well.",
+      "main_limitation": "Very high binder content makes it costly and carbon-intensive per kg, and it needs careful mixing and curing.",
+      "evidence": {
+        "density_kg_m3": "typical",
+        "strength_MPa": "sourced",
+        "youngs_modulus_GPa": "sourced",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "hardness_HV": null,
+        "water_absorption_pct": "typical",
+        "embodied_CO2_kg_per_kg": "sourced",
+        "cost_usd_per_kg": "typical"
+      },
+      "notes": "Embodied CO2 is a unit conversion: the upper end of the sourced range (812.8 kg CO2-e/m3) divided by a typical density of 2450 kg/m3 = 0.33 kg/kg. The source mixes are silica-fume-free and the range runs down to 570.3 kg/m3 (0.23 kg/kg); steel fibres would add to this.",
+      "sources": [
+        {
+          "citation": "Magureanu, C., Sosa, I., Negrutiu, C. et al., 2012, Mechanical Properties and Durability of Ultra-High-Performance Concrete, Materials",
+          "url": "https://scispace.com/papers/mechanical-properties-and-durability-of-ultra-high-26b6j5mc91",
+          "supports": ["strength_MPa", "youngs_modulus_GPa"],
+          "quote": "UHPC can achieve a compressive strength of approximately 150 N/mm2 (21,756 psi) and a modulus of elasticity greater than 50,000 N/mm2"
+        },
+        {
+          "citation": "Sifan, M., Nagaratnam, B., Railton, J. et al., 2026, Silica-fume-free UHPC with basalt, dolomite and limestone: fresh and hardened properties and embodied carbon characteristics, Magazine of Concrete Research",
+          "url": "https://scispace.com/papers/silica-fume-free-uhpc-with-basalt-dolomite-and-limestone-trmsbvqd5v7l",
+          "supports": ["embodied_CO2_kg_per_kg"],
+          "quote": "high compressive strength (190.7 MPa), and reduced embodied carbon (570.3-812.8 kgEC/m3)"
+        },
+        {
+          "citation": "Choi, D., Hong, K., Ochirbud, M. et al., 2023, Mechanical Properties of UHPC and UHPFRC with Recycled Sand, International Journal of Concrete Structures and Materials",
+          "url": "https://scispace.com/papers/mechanical-properties-of-ultra-high-performance-concrete-27cs7lzqek",
+          "supports": ["strength_MPa", "youngs_modulus_GPa"],
+          "quote": "achieving compressive strength of 128 MPa and elastic modulus of 46.9 GPa"
+        }
+      ]
+    },
+    {
+      "name": "Geopolymer concrete (fly ash / slag based)",
+      "family": "Concrete, masonry and glass",
+      "fields": ["civil", "low-carbon construction", "precast"],
+      "density_kg_m3": 2350,
+      "strength_MPa": 30,
+      "strength_kind": "compressive",
+      "youngs_modulus_GPa": 25,
+      "max_service_temp_C": 600,
+      "thermal_conductivity_W_mK": 1.3,
+      "hardness_HV": null,
+      "water_absorption_pct": 4.0,
+      "embodied_CO2_kg_per_kg": 0.05,
+      "cost_usd_per_kg": null,
+      "humidity_resistance_1to5": 4,
+      "humidity_reason": "The reported water absorption is lower than conventional concrete, but alkali leaching can cause efflorescence in damp conditions.",
+      "wear_resistance_1to5": 3,
+      "wear_reason": "Abrasion resistance is broadly comparable to Portland cement concrete of the same strength grade.",
+      "main_limitation": "Needs caustic alkali activators, lacks mature design standards, and depends on fly ash and slag supply.",
+      "evidence": {
+        "density_kg_m3": "typical",
+        "strength_MPa": "sourced",
+        "youngs_modulus_GPa": "typical",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "hardness_HV": null,
+        "water_absorption_pct": "typical",
+        "embodied_CO2_kg_per_kg": "typical",
+        "cost_usd_per_kg": null
+      },
+      "notes": "Embodied CO2 is labelled typical because it is an estimate, not a number seen directly: the sourced 40-80% reduction (midpoint 60%) applied to the sourced OPC concrete baseline of about 0.127 kg/kg gives about 0.05 kg/kg (range 0.025-0.076). No numeric water absorption was returned by the tools; only the qualitative finding that it is lower than conventional concrete.",
+      "sources": [
+        {
+          "citation": "Nagajothi, S., Elavenil, S., Angalaeswari, S. et al., 2022, Durability Studies on Fly Ash Based Geopolymer Concrete Incorporated with Slag and Alkali Solutions, Advances in Civil Engineering",
+          "url": "https://scispace.com/papers/durability-studies-on-fly-ash-based-geopolymer-concrete-ogx3stev",
+          "supports": ["strength_MPa", "humidity_resistance_1to5"],
+          "quote": "the durability of G30 grade geopolymer concrete has been investigated using tests acid resistance, water absorption, sulphate resistance, Rapid Chloride Penetration Test (RCPT), and rate of absorption (Sorptivity) test"
+        },
+        {
+          "citation": "Sureshkumar, P., 2026, Low-carbon and Geopolymer Concrete: Advances, Challenges, and Future Directions (review)",
+          "url": "https://scispace.com/papers/low-carbon-and-geopolymer-concrete-advances-challenges-and-v1xt1gzs1hf1",
+          "supports": ["embodied_CO2_kg_per_kg"],
+          "quote": "highlighting CO2 reductions of 40-80% and comparable compressive strengths"
+        },
+        {
+          "citation": "Sorathiya, D.R., Khoker, P., Sain, R. et al., 2025, Study on the Effect of Geopolymer Concrete in Reducing Carbon Footprint",
+          "url": "https://scispace.com/papers/study-on-the-effect-of-geopolymer-concrete-in-reducing-epcqchey4io7",
+          "supports": ["embodied_CO2_kg_per_kg"],
+          "quote": "comparable or superior compressive strength and up to 80% lower CO2 emissions compared to traditional OPC concrete"
+        }
+      ]
+    },
+    {
+      "name": "Fired clay brick",
+      "family": "Concrete, masonry and glass",
+      "fields": ["buildings", "masonry", "architecture"],
+      "density_kg_m3": 1720,
+      "strength_MPa": 21,
+      "strength_kind": "compressive",
+      "youngs_modulus_GPa": 15,
+      "max_service_temp_C": 900,
+      "thermal_conductivity_W_mK": 0.7,
+      "hardness_HV": null,
+      "water_absorption_pct": 17.5,
+      "embodied_CO2_kg_per_kg": 0.24,
+      "cost_usd_per_kg": 0.3,
+      "humidity_resistance_1to5": 4,
+      "humidity_reason": "The fired ceramic body is chemically stable in wet air, but its high open porosity takes up water and can suffer frost damage and efflorescence.",
+      "wear_resistance_1to5": 3,
+      "wear_reason": "The sintered body is hard but porous and brittle, so edges and faces chip and erode under abrasion.",
+      "main_limitation": "Brittle and weak in tension, with energy-intensive kiln firing at around 900-1100 C.",
+      "evidence": {
+        "density_kg_m3": "sourced",
+        "strength_MPa": "sourced",
+        "youngs_modulus_GPa": "typical",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "hardness_HV": null,
+        "water_absorption_pct": "sourced",
+        "embodied_CO2_kg_per_kg": "typical",
+        "cost_usd_per_kg": "typical"
+      },
+      "notes": "Density is from a plain (no additive) control brick. Strength and water absorption are the midpoints of ranges reported for clay bricks containing 10-30% dolomite powder fired at 1000 C, so treat them as representative of fired clay brick rather than of one plain product.",
+      "sources": [
+        {
+          "citation": "Abadir, M.F., Abd El-razik, M.M., El-Naggar, K.A.M. et al., 2022, Performance assessment of fired bricks incorporating pomegranate peels waste, Innovative Infrastructure Solutions",
+          "url": "https://scispace.com/papers/performance-assessment-of-fired-bricks-incorporating-2h52k6et",
+          "supports": ["density_kg_m3"],
+          "quote": "Control/reference brick (0% pomegranate peel waste): Bulk density was 1,715 kg/m3 at 900 C and 1,720 kg/m3 at 1,000 C. [SciSpace extract_data summary of the paper]"
+        },
+        {
+          "citation": "Kizinievic, O., Kizinievic, V., Skamat, J. et al., 2023, Characteristics of fired clay bricks with dolomite powder addition, Steklo i Keramika (Glass and Ceramics)",
+          "url": "https://scispace.com/papers/characteristics-of-fired-clay-bricks-with-dolomite-powder-1dy7lpezgg",
+          "supports": ["strength_MPa", "water_absorption_pct"],
+          "quote": "clay bricks density is 1.55 - 1.75 g/m3, compressive strength 14 - 28 MPa, water absorption 15.3 - 19.7 %, total porosity 31,0 - 40.4 %"
+        }
+      ]
+    },
+    {
+      "name": "Soda-lime float glass",
+      "family": "Concrete, masonry and glass",
+      "fields": ["architecture", "glazing", "automotive", "solar"],
+      "density_kg_m3": 2500,
+      "strength_MPa": 45,
+      "strength_kind": "flexural",
+      "youngs_modulus_GPa": 72.4,
+      "max_service_temp_C": 250,
+      "thermal_conductivity_W_mK": 1.0,
+      "hardness_HV": 455,
+      "water_absorption_pct": 0,
+      "embodied_CO2_kg_per_kg": 1.2,
+      "cost_usd_per_kg": 1.4,
+      "humidity_resistance_1to5": 5,
+      "humidity_reason": "Non-porous and impervious to water; only slow surface weathering occurs under prolonged stagnant condensation.",
+      "wear_resistance_1to5": 3,
+      "wear_reason": "Harder than most metals, but silica grit scratches it and surface flaws sharply reduce its strength.",
+      "main_limitation": "Brittle with low, flaw-controlled tensile strength and poor thermal-shock resistance unless tempered.",
+      "evidence": {
+        "density_kg_m3": "typical",
+        "strength_MPa": "typical",
+        "youngs_modulus_GPa": "sourced",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "hardness_HV": "sourced",
+        "water_absorption_pct": "typical",
+        "embodied_CO2_kg_per_kg": "typical",
+        "cost_usd_per_kg": "typical"
+      },
+      "notes": "Modulus and hardness were measured on commercial soda-lime-silica cover slip glass (same glass family, thin sheet rather than float plate). Hardness is a unit conversion of the sourced 4.46 GPa Vickers hardness (4460 MPa / 9.807 = 455 HV); handbook values for float glass are often somewhat higher.",
+      "sources": [
+        {
+          "citation": "Seal, A., Dalui, A.K., Banerjee, M. et al., 2001, Mechanical properties of very thin cover slip glass disk, Bulletin of Materials Science",
+          "url": "https://scispace.com/papers/mechanical-properties-of-very-thin-cover-slip-glass-disk-4kk33tgv17",
+          "supports": ["youngs_modulus_GPa", "hardness_HV"],
+          "quote": "Young's modulus: 72.4 GPa by biaxial flexure with LVDT measurement; 84.9 GPa by ultrasonic measurement. Vickers hardness: 4.46 GPa (about 5-20 N indentation load). [SciSpace extract_data summary of the paper]"
+        }
+      ]
+    }
+  ]
+}

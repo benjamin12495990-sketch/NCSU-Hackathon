@@ -1,0 +1,288 @@
+{
+  "family": "Polymers and elastomers",
+  "note": "Values marked 'sourced' were seen in SciSpace MCP tool output on 2026-11-21 (search abstracts or extract_data). Values marked 'typical' are handbook-level figures not verified tonight. Evidence 'n/a' means the field is null.",
+  "materials": [
+    {
+      "name": "HDPE (high-density polyethylene)",
+      "family": "Polymers and elastomers",
+      "fields": ["civil", "chemical", "marine", "packaging"],
+      "density_kg_m3": 952,
+      "strength_MPa": 26.9,
+      "strength_kind": "tensile yield",
+      "youngs_modulus_GPa": 1.0,
+      "max_service_temp_C": 80,
+      "thermal_conductivity_W_mK": 0.48,
+      "hardness_HV": null,
+      "water_absorption_pct": 0.01,
+      "embodied_CO2_kg_per_kg": 1.9,
+      "cost_usd_per_kg": 1.2,
+      "humidity_resistance_1to5": 5,
+      "humidity_reason": "Non-polar polyolefin; 24 h water absorption is about 0.01 % (typical) so properties do not change in wet air.",
+      "wear_resistance_1to5": 3,
+      "wear_reason": "Low friction and fair abrasion resistance, but soft and well below UHMWPE or filled engineering plastics.",
+      "main_limitation": "Low stiffness, creep under sustained load, service limit near 80 C and UV degradation unless stabilised.",
+      "evidence": {
+        "density_kg_m3": "sourced",
+        "strength_MPa": "sourced",
+        "youngs_modulus_GPa": "typical",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "hardness_HV": "n/a",
+        "water_absorption_pct": "typical",
+        "embodied_CO2_kg_per_kg": "typical",
+        "cost_usd_per_kg": "typical"
+      },
+      "sources": [
+        {
+          "citation": "Wibawa, I P. A., Abdullah, K., Sumardiono, 2022, The Analysis of Tensile Strength of High-Density Polyethylene for Shipbuilding (journal article, via SciSpace)",
+          "url": "https://scispace.com/papers/the-analysis-of-tensile-strength-of-high-density-59nnd3jxji",
+          "supports": ["strength_MPa"],
+          "quote": "HDPE ROCHLING met Turk Loydu standards with an ultimate tensile strength of 32.7 MPa and yield strength of 26.89 MPa"
+        },
+        {
+          "citation": "Qiao Tong-sen, Chen Hong, Wang Xiong, Comparative Study on Properties of Three Types of Injection Specialty High Density Polyethylene Resin (via SciSpace, year not shown)",
+          "url": "https://scispace.com/papers/comparative-study-on-properties-of-three-types-of-injection-ea2xkepdd5n0",
+          "supports": ["density_kg_m3"],
+          "quote": "the molecular weight distribution, density, ... were 5.36, 951.9kg/m3"
+        }
+      ]
+    },
+    {
+      "name": "Polyamide 6,6 (nylon 66, dry as moulded)",
+      "family": "Polymers and elastomers",
+      "fields": ["automotive", "mechanical", "electrical"],
+      "density_kg_m3": 1140,
+      "strength_MPa": 82,
+      "strength_kind": "tensile yield",
+      "youngs_modulus_GPa": 3.0,
+      "max_service_temp_C": 100,
+      "thermal_conductivity_W_mK": 0.25,
+      "hardness_HV": null,
+      "water_absorption_pct": 5,
+      "embodied_CO2_kg_per_kg": 7.9,
+      "cost_usd_per_kg": 3.5,
+      "humidity_resistance_1to5": 2,
+      "humidity_reason": "Hygroscopic: about 2 % moisture at 50 % RH and about 5 % wet-conditioned (sourced; full saturation of neat PA66 is typically near 8.5 %), which lowers Tg, stiffness and strength and causes swelling.",
+      "wear_resistance_1to5": 4,
+      "wear_reason": "Tough semi-crystalline polymer widely used for gears and bearings with good abrasion resistance.",
+      "main_limitation": "Stiffness, strength and dimensions change strongly with absorbed moisture, so dry-as-moulded data overstate wet performance.",
+      "evidence": {
+        "density_kg_m3": "typical",
+        "strength_MPa": "typical",
+        "youngs_modulus_GPa": "typical",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "hardness_HV": "n/a",
+        "water_absorption_pct": "sourced",
+        "embodied_CO2_kg_per_kg": "typical",
+        "cost_usd_per_kg": "typical"
+      },
+      "sources": [
+        {
+          "citation": "Hassan, A., Salleh, N. M., Yahya, R., 2011, Fiber length, thermal, mechanical, and dynamic mechanical properties of injection-molded glass-fiber/polyamide 6,6: Plasticization effect, Journal of Reinforced Plastics and Composites",
+          "url": "https://scispace.com/papers/fiber-length-thermal-mechanical-and-dynamic-mechanical-3e06pybf2v",
+          "supports": ["water_absorption_pct"],
+          "quote": "about 2% and 5% levels of moisture have been absorbed by the specimens subjected to 50% RH and wet conditions, respectively (specimen set covers unreinforced and glass-fibre-reinforced PA 6,6)"
+        },
+        {
+          "citation": "Wetzel, P., Sambale, A., Uhlig, K., et al., 2023, Hygromechanical Behavior of Polyamide 6.6: Experiments and Modeling, Polymers",
+          "url": "https://scispace.com/papers/hygromechanical-behavior-of-polyamide-6-6-experiments-and-dlaip9ftdi",
+          "supports": ["humidity_reason"],
+          "quote": "The water sorption is accompanied by a decrease in the glass transition temperature and a significant reduction in stiffness and strength."
+        }
+      ]
+    },
+    {
+      "name": "PEEK (polyetheretherketone, unfilled)",
+      "family": "Polymers and elastomers",
+      "fields": ["aerospace", "biomedical", "chemical", "energy"],
+      "density_kg_m3": 1320,
+      "strength_MPa": 97,
+      "strength_kind": "tensile yield",
+      "youngs_modulus_GPa": 3.7,
+      "max_service_temp_C": 250,
+      "thermal_conductivity_W_mK": 0.25,
+      "hardness_HV": null,
+      "water_absorption_pct": 0.43,
+      "embodied_CO2_kg_per_kg": null,
+      "cost_usd_per_kg": 90,
+      "humidity_resistance_1to5": 5,
+      "humidity_reason": "Saturation water uptake is only 0.43 wt % (sourced, immersion at 75 C) and the polymer resists hydrolysis in hot water and steam.",
+      "wear_resistance_1to5": 4,
+      "wear_reason": "Hard, tough high-temperature thermoplastic used unlubricated in bearings and seals; filled grades are better still.",
+      "main_limitation": "Very high material and processing cost, and stiffness drops above the glass transition near 143 C.",
+      "evidence": {
+        "density_kg_m3": "sourced",
+        "strength_MPa": "typical",
+        "youngs_modulus_GPa": "typical",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "hardness_HV": "n/a",
+        "water_absorption_pct": "sourced",
+        "embodied_CO2_kg_per_kg": "n/a",
+        "cost_usd_per_kg": "typical"
+      },
+      "sources": [
+        {
+          "citation": "Boinard, E., Pethrick, R. A., MacFarlane, C. J., 2001, Ageing Study of Polyetheretherketone Exposed to Water and Brine by Thermal Analysis and Dielectric Spectroscopy (book chapter)",
+          "url": "https://scispace.com/papers/ageing-study-of-polyetheretherketone-exposed-to-water-and-49zm5b44w5",
+          "supports": ["water_absorption_pct"],
+          "quote": "The water and brine sorption behaviour follows a Fickian Case I process with a maximum solubility of 0.43 w/w % at 75°C."
+        },
+        {
+          "citation": "Schwitalla, A. D., Spintig, T., Kallage, I., et al., 2016, Pressure behavior of different PEEK materials for dental implants, Journal of the Mechanical Behavior of Biomedical Materials",
+          "url": "https://scispace.com/papers/pressure-behavior-of-different-peek-materials-for-dental-k5ty5oq6zd",
+          "supports": ["density_kg_m3"],
+          "quote": "SciSpace extract_data: neat PEEK has a density of 1.32 g/cm3; unfilled PEEK elastic modulus approximately 2.65-2.98 GPa in compression"
+        },
+        {
+          "citation": "Babaci, A. M., Nurbas, M., 2026, Polyetheretherketone (PEEK): A Comprehensive Review of Advanced Polymer Engineering, Biomedical Applications, and Emerging Technological Frontiers, Gazi University Journal of Science Part A",
+          "url": "https://scispace.com/papers/polyetheretherketone-peek-a-comprehensive-review-of-advanced-2v4eisawsctt",
+          "supports": ["main_limitation"],
+          "quote": "thermal stability (Tg = 143°C, Tm ≈ 343°C)"
+        }
+      ]
+    },
+    {
+      "name": "PTFE (polytetrafluoroethylene, unfilled)",
+      "family": "Polymers and elastomers",
+      "fields": ["chemical", "electrical", "mechanical", "food"],
+      "density_kg_m3": 2200,
+      "strength_MPa": 27.3,
+      "strength_kind": "tensile ultimate",
+      "youngs_modulus_GPa": 0.5,
+      "max_service_temp_C": 260,
+      "thermal_conductivity_W_mK": 0.25,
+      "hardness_HV": null,
+      "water_absorption_pct": 0.01,
+      "embodied_CO2_kg_per_kg": null,
+      "cost_usd_per_kg": 15,
+      "humidity_resistance_1to5": 5,
+      "humidity_reason": "Hydrophobic and chemically inert fluoropolymer; 24 h water absorption is below about 0.01 % (typical).",
+      "wear_resistance_1to5": 1,
+      "wear_reason": "Very low friction but unfilled PTFE has a high wear rate, roughly 1e-3 mm3/Nm in dry sliding (sourced), so fillers are needed for wear duty.",
+      "main_limitation": "Soft, creeps (cold flow) under load and wears quickly unless filled; cannot be melt processed conventionally.",
+      "evidence": {
+        "density_kg_m3": "sourced",
+        "strength_MPa": "sourced",
+        "youngs_modulus_GPa": "typical",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "hardness_HV": "n/a",
+        "water_absorption_pct": "typical",
+        "embodied_CO2_kg_per_kg": "n/a",
+        "cost_usd_per_kg": "typical"
+      },
+      "sources": [
+        {
+          "citation": "Kolhe, S., Deshpande, A., Wangikar, K. S., 2019, Wear Behavior of Polytetrafluoroethylene Composites: A Review (book chapter)",
+          "url": "https://scispace.com/papers/wear-behavior-of-polytetrafluoroethylene-composites-a-review-4d83u3sr9m",
+          "supports": ["density_kg_m3", "wear_reason"],
+          "quote": "high density (2.2 g/cm3) ... due to extreme ductile nature, it shears off easily and possess high wear rate"
+        },
+        {
+          "citation": "Zhang Dong-na, Kou Kai-chang, Zhang Yu, Effect of Stretching on Properties of Polytetrafluoroethylene (via SciSpace, year not shown)",
+          "url": "https://scispace.com/papers/effect-of-stretching-on-properties-of-qfafv1dbj28y",
+          "supports": ["strength_MPa"],
+          "quote": "Tensile strength of the non-drawn one is 27.34MPa"
+        },
+        {
+          "citation": "Menzel, B., Blanchet, T. A., 2002, Effect of particle size and volume fraction of irradiated FEP filler on the transfer wear of PTFE, Lubrication Engineering",
+          "url": "https://scispace.com/papers/effect-of-particle-size-and-volume-fraction-of-irradiated-47kn1qr5lr",
+          "supports": ["wear_reason"],
+          "quote": "wear rates which dropped monotonically with increasing FEP volume fraction, from roughly 10 -3 mm 3 /Nm for"
+        }
+      ]
+    },
+    {
+      "name": "Polycarbonate (bisphenol-A PC)",
+      "family": "Polymers and elastomers",
+      "fields": ["electrical", "automotive", "construction glazing", "optics"],
+      "density_kg_m3": 1200,
+      "strength_MPa": 62,
+      "strength_kind": "tensile yield",
+      "youngs_modulus_GPa": 2.35,
+      "max_service_temp_C": 120,
+      "thermal_conductivity_W_mK": 0.2,
+      "hardness_HV": null,
+      "water_absorption_pct": 0.35,
+      "embodied_CO2_kg_per_kg": 7.6,
+      "cost_usd_per_kg": 3.0,
+      "humidity_resistance_1to5": 3,
+      "humidity_reason": "Saturation uptake is low, about 0.35 % (typical; the sourced 0.04 mol water per ester group is roughly 0.3 wt %), but hot humid exposure causes hydrolytic chain scission and embrittlement.",
+      "wear_resistance_1to5": 2,
+      "wear_reason": "Tough but soft surface that scratches and abrades easily unless hard-coated.",
+      "main_limitation": "Hydrolysis in hot water or steam, stress cracking in many solvents and poor scratch resistance.",
+      "evidence": {
+        "density_kg_m3": "sourced",
+        "strength_MPa": "typical",
+        "youngs_modulus_GPa": "typical",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "hardness_HV": "n/a",
+        "water_absorption_pct": "typical",
+        "embodied_CO2_kg_per_kg": "typical",
+        "cost_usd_per_kg": "typical"
+      },
+      "sources": [
+        {
+          "citation": "Ghorbel, I., Thominette, F., Spiteri, P., et al., 1995, Hydrolytic aging of polycarbonate. I: Physical aspects, Journal of Applied Polymer Science",
+          "url": "https://scispace.com/papers/hydrolytic-aging-of-polycarbonate-i-physical-aspects-20teiz0ka8",
+          "supports": ["density_kg_m3", "humidity_reason"],
+          "quote": "SciSpace extract_data: Density: 1.20 g/cm3; Glass transition temperature: 154 C. Abstract: at equilibrium, the polymer absorbs about 0.04 mol water per ester group and that the equilibrium is reached after about 10-40 h exposure"
+        },
+        {
+          "citation": "Gao Wei-bin, Han Shi-min, Xu Jun-qiang, Effect of Hot-water Aging on Properties and Structure of Bisphenol A Polycarbonate (via SciSpace)",
+          "url": "https://scispace.com/papers/effect-of-hot-water-aging-on-properties-and-structure-of-w464qctewqws",
+          "supports": ["humidity_reason", "main_limitation"],
+          "quote": "water is beneficial for the hydrolysis of PC under thermal condition, and the main mechanism of aging in hot-water is mainly caused by hydrolysis"
+        }
+      ]
+    },
+    {
+      "name": "EPDM rubber (filled vulcanizate)",
+      "family": "Polymers and elastomers",
+      "fields": ["automotive", "construction", "electrical", "sealing"],
+      "density_kg_m3": 1150,
+      "strength_MPa": 22.5,
+      "strength_kind": "tensile ultimate",
+      "youngs_modulus_GPa": 0.005,
+      "max_service_temp_C": 150,
+      "thermal_conductivity_W_mK": 0.25,
+      "hardness_HV": null,
+      "water_absorption_pct": null,
+      "embodied_CO2_kg_per_kg": null,
+      "cost_usd_per_kg": 2.5,
+      "humidity_resistance_1to5": 4,
+      "humidity_reason": "Saturated non-polar backbone gives very low water uptake (no percent value seen tonight) and good weathering, though damp-heat ageing degrades seals faster than dry heat (sourced).",
+      "wear_resistance_1to5": 3,
+      "wear_reason": "Filled compounds have fair abrasion resistance, used as conveyor-belt covers, but below natural rubber or polyurethane.",
+      "main_limitation": "Very low stiffness (elastomer), swells in oils and hydrocarbon fuels, and properties depend strongly on compound recipe.",
+      "evidence": {
+        "density_kg_m3": "typical",
+        "strength_MPa": "sourced",
+        "youngs_modulus_GPa": "typical",
+        "max_service_temp_C": "sourced",
+        "thermal_conductivity_W_mK": "typical",
+        "hardness_HV": "n/a",
+        "water_absorption_pct": "n/a",
+        "embodied_CO2_kg_per_kg": "n/a",
+        "cost_usd_per_kg": "typical"
+      },
+      "sources": [
+        {
+          "citation": "Borazan, A. A., 2017, Preparation and characterization of EPDM rubber mixture for a heat resistant conveyor belt cover, Anadolu University Journal of Science and Technology A: Applied Sciences and Engineering",
+          "url": "https://scispace.com/papers/preparation-and-characterization-of-epdm-rubber-mixture-for-44jlwjbm4j",
+          "supports": ["strength_MPa", "max_service_temp_C"],
+          "quote": "SciSpace extract_data: reported tensile strengths (22.5 and 22.9 MPa) are for filled formulations; EPDM conveyor-belt coating is reported to withstand 150-160 C under normal conditions"
+        },
+        {
+          "citation": "Kim, J. K., Park, K., Paria, S., et al., 2026, Thermally and hygrothermally aging-induced properties and service life prediction of EPDM, Rubber Chemistry and Technology",
+          "url": "https://scispace.com/papers/thermally-and-hygrothermally-aging-induced-properties-and-q7i10ptlji9v",
+          "supports": ["humidity_reason"],
+          "quote": "hygrothermal conditions have a more significant effect on deterioration than thermal aging alone, with a 25% compression set as the failure criterion"
+        }
+      ]
+    }
+  ]
+}

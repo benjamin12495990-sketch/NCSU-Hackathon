@@ -1,6 +1,10 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { loadModel } from './lib/loadModel.js'
 import { design } from './lib/design.js'
+import { concreteLimits } from './lib/exposure.js'
+import { rankMaterials } from './lib/rank.js'
+import Requirements, { DEFAULT_REQ } from './components/Requirements.jsx'
+import Shortlist from './components/Shortlist.jsx'
 
 // Three.js is big, so the 3D stage is downloaded only when a result is shown.
 const MixStage = lazy(() => import('./components/MixStage.jsx'))
@@ -57,6 +61,9 @@ export default function App() {
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
   const [view, setView] = useState('row0') // which mix the 3D stage shows
+  const [req, setReq] = useState(DEFAULT_REQ) // environment switches and sliders
+  const [field, setField] = useState('general')
+  const [objective, setObjective] = useState('co2')
 
   useEffect(() => {
     loadModel().then(setData, (e) => setLoadError(e.message))
@@ -76,7 +83,14 @@ export default function App() {
       return setError('Choose a strength between 5 and 80 MPa. The lab results behind the model run from about 2 to 83 MPa.')
     }
     try {
-      setResult({ ...design({ targetMPa: mpa, ageDays: age, allowSlag, allowFlyAsh, cautious, onlySupported }, data), cautious, onlySupported })
+      // The environment can cap the water/binder ratio and raise the strength the concrete needs.
+      const limits = concreteLimits(req, data.exposure)
+      const needed = Math.max(mpa, limits.minStrengthMPa)
+      setResult({
+        ...design({ targetMPa: needed, ageDays: age, allowSlag, allowFlyAsh, cautious, onlySupported, maxWaterBinder: limits.maxWaterBinder }, data),
+        cautious, onlySupported, asked: mpa, limits, req, objective,
+        shortlist: rankMaterials(data.materialFile.materials, req, mpa, objective),
+      })
       setError('')
     } catch (e) {
       setResult(null)
@@ -157,6 +171,7 @@ export default function App() {
             </button>
           ))}
         </div>
+        <Requirements req={req} setReq={setReq} field={field} setField={setField} objective={objective} setObjective={setObjective} />
         <div className="options">
           <label><input type="checkbox" checked={allowSlag} onChange={(e) => setAllowSlag(e.target.checked)} /> Blast furnace slag available</label>
           <label><input type="checkbox" checked={allowFlyAsh} onChange={(e) => setAllowFlyAsh(e.target.checked)} /> Fly ash available</label>
@@ -195,6 +210,14 @@ export default function App() {
             )}
             <div className="readout">
             <h2>{result.targetMPa} MPa at {result.ageDays} days</h2>
+            {(result.targetMPa > result.asked || result.limits.maxWaterBinder != null) && (
+              <p className="note">
+                Your environment changes the concrete brief:
+                {result.targetMPa > result.asked && ` strength raised from ${result.asked} to ${result.targetMPa} MPa`}
+                {result.targetMPa > result.asked && result.limits.maxWaterBinder != null && ' and'}
+                {result.limits.maxWaterBinder != null && ` water / binder capped at ${result.limits.maxWaterBinder}`}. Details below.
+              </p>
+            )}
             <div className="picks">
               {picks.map((p) => (
                 <button
@@ -295,6 +318,7 @@ export default function App() {
               </p>
             </section>
           )}
+          <Shortlist result={result} data={data} />
         </>
       )}
 
@@ -327,6 +351,11 @@ export default function App() {
               <li>
                 CO<sub>2</sub> totals use one fixed factor per ingredient and typical densities (table below).
                 Real values vary by plant, region and transport distance.
+              </li>
+              <li>
+                Environment limits come from ACI 318 as reported by secondary sources, and the materials
+                shortlist is a reference table compiled by AI research agents. Most of its values are typical
+                figures, not individually checked; the dots show which ones were seen in a paper.
               </li>
             </ul>
             <figure>

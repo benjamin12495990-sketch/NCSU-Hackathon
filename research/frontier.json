@@ -1,0 +1,113 @@
+{
+  "frontier": [
+    {
+      "name": "High-entropy alloys",
+      "best_at": "Staying tough instead of turning brittle at very low temperatures, which most steels cannot do.",
+      "headline_number": "Fracture toughness 459 MPa·m^0.5 at 20 K for the CrCoNi alloy (262 MPa·m^0.5 for CrMnFeCoNi)",
+      "headline_evidence": "sourced",
+      "readiness": "lab",
+      "helps_with": ["temperature", "strength", "wear"],
+      "main_barrier": "They rely on costly elements such as cobalt and nickel and have little service history or design-code data compared with stainless steels.",
+      "citation": "Liu D., Yu Q., Kabra S. et al. (13 authors), 2022, Exceptional fracture toughness of CrCoNi-based medium- and high-entropy alloys at 20 kelvin, Science",
+      "url": "https://doi.org/10.1126/science.abp8070",
+      "quote": "exceptionally high crack-initiation fracture toughnesses of 262 and 459 megapascal-meters ½ (MPa·m ½) for CrMnFeCoNi and CrCoNi, respectively",
+      "note": "The number is sourced from the abstract. The main_barrier sentence is general background knowledge, not a quote from this paper."
+    },
+    {
+      "name": "Bulk metallic glasses",
+      "best_at": "Very high strength, hardness and wear and corrosion resistance in small, precisely shaped metal parts.",
+      "headline_number": "Compressive strength about 1925 MPa with fracture toughness 165 ± 15 MPa·m^0.5 (Zr20Cu20Hf20Ti20Ni20 glass)",
+      "headline_evidence": "sourced",
+      "readiness": "early commercial",
+      "helps_with": ["strength", "wear", "humidity"],
+      "main_barrier": "The melt must be cooled very fast to stay glassy, so part size and shape are limited and manufacturing is difficult.",
+      "citation": "Wu Y., Cao D., Yao Y. et al. (17 authors), 2021, Substantially enhanced plasticity of bulk metallic glasses by densifying local atomic packing, Nature Communications",
+      "url": "https://doi.org/10.1038/s41467-021-26858-9",
+      "quote": "strength (from ∼1725 to 1925 MPa) and toughness (from 87 ± 10 to 165 ± 15 MPa√m), as exemplarily demonstrated for the Zr20Cu20Hf20Ti20Ni20 BMG",
+      "note": "Barrier is supported by Zhang P. et al., 2021, Int. J. Adv. Manuf. Technol., https://doi.org/10.1007/s00170-021-07990-8: \"BMGs are difficult to apply in industry due to their difficulty in manufacturing and secondary operation\". Readiness 'early commercial' is our judgement (niche products exist), not a statement from these papers."
+    },
+    {
+      "name": "Graphene or carbon-nanotube reinforced composites",
+      "best_at": "Adding stiffness, strength and electrical conductivity to plastics and fibre composites with a very small amount of filler.",
+      "headline_number": "Tensile strength up 45.63% (to 46.34 MPa) and stiffness up 43.7% for epoxy with 1.0 wt% graphene oxide",
+      "headline_evidence": "sourced",
+      "readiness": "pilot",
+      "helps_with": ["strength"],
+      "main_barrier": "The nanoparticles clump together when too much is added or mixing is poor, so real parts get far less than the theoretical benefit.",
+      "citation": "Kumar A., Singh S., Varshney D. et al. (6 authors), 2025, Comparison of the tensile and flexural properties of epoxy nanocomposites reinforced by graphene oxide and reduced graphene oxide, Polymer Composites",
+      "url": "https://doi.org/10.1002/pc.29875",
+      "quote": "maximum tensile strength and modulus of GO/epoxy nanocomposites were estimated as 46.34 MPa and 3.65 GPa, indicating a 45.63% and 43.7% improvement with an optimum loading of 1.0 wt% compared to pure epoxy samples",
+      "note": "This is one lab study on a plain epoxy resin, not a finished structural part; the gain is relative to unfilled epoxy. Review for background: Papageorgiou D.G. et al., 2020, Nanoscale, https://doi.org/10.1039/c9nr06952f. Barrier is supported by Dileep D. et al., 2026, Frattura ed Integrita Strutturale, https://doi.org/10.3221/igf-esis.78.03: \"The excessive filler content caused agglomeration due to which the performance was lowered\". Readiness 'pilot' is our judgement."
+    },
+    {
+      "name": "Silica aerogels",
+      "best_at": "Thermal insulation: they conduct heat less well than still air while being extremely light.",
+      "headline_number": "Thermal conductivity 12.3 to 14.0 mW/(m·K) for silica aerogel reinforced with a polyurethane foam skeleton",
+      "headline_evidence": "sourced",
+      "readiness": "early commercial",
+      "helps_with": ["temperature"],
+      "main_barrier": "Plain silica aerogel is brittle and crumbles under load, and the drying step used to make it is expensive.",
+      "citation": "Merillas B., Lamy-Mendes A.C., Villafañe F. et al. (5 authors), 2022, Polyurethane foam scaffold for silica aerogels: effect of cell size on the mechanical properties and thermal insulation, Materials Today Chemistry",
+      "url": "https://doi.org/10.1016/j.mtchem.2022.101257",
+      "quote": "excellent insulating capacities, reaching values between 14.0 and 12.3 mW/(m·K) for the surface-modified composites that were dried under supercritical conditions",
+      "note": "The number is for a reinforced aerogel composite, not a pure silica monolith. Barrier is supported by Mei X. et al., 2023, Crystals, https://doi.org/10.3390/cryst13050755: \"the applications of SAs are restricted by their mechanical fragility\". Readiness 'early commercial' is our judgement (aerogel blankets are sold), not a statement from these papers."
+    },
+    {
+      "name": "MAX phases (for example Ti3SiC2)",
+      "best_at": "Behaving like a ceramic at high temperature while still conducting heat and electricity and being machinable like a metal.",
+      "headline_number": "Hardness 1153 HV5 at density 4.43 g/cm3 for a Ti3AlC2 MAX phase with 10% SiC, sintered at 1400 °C",
+      "headline_evidence": "sourced",
+      "readiness": "lab",
+      "helps_with": ["temperature", "wear"],
+      "main_barrier": "Pure, fully dense material is hard to make reproducibly, and properties depend strongly on the processing route.",
+      "citation": "Woźniak J., Petrus M., Cygan T. et al. (6 authors), 2023, Synthesis of Ti3SiC2 Phases and Consolidation of MAX/SiC Composites - Microstructure and Mechanical Properties, Materials",
+      "url": "https://doi.org/10.3390/ma16030889",
+      "quote": "These parameters significantly increase for composites sintered at 1400 °C (maximum density 4.43 g/cm3 and hardness 1153 HV5, for Ti3AlC2—10% SiC)",
+      "note": "The number is for a SiC-reinforced MAX composite, which is harder than plain Ti3SiC2. best_at and barrier are supported by Tabares E. et al., 2022, Ceramics, https://doi.org/10.3390/ceramics5010006: \"Their combination of metallic and ceramic properties makes MAX phases great candidates\" and \"the effect of the processing method on properties such as wear and mechanical behavior needs to be further established\"."
+    },
+    {
+      "name": "Limestone calcined clay cement (LC3)",
+      "best_at": "Cutting the carbon footprint of cement while keeping strength similar to ordinary Portland cement and improving chloride resistance.",
+      "headline_number": "CO2 emissions reduced by approximately 40% compared with ordinary Portland cement",
+      "headline_evidence": "sourced",
+      "readiness": "early commercial",
+      "helps_with": ["low_carbon", "humidity"],
+      "main_barrier": "Setting time and workability are less predictable than with Portland cement, and suitable clay and calcining plant must be available locally.",
+      "citation": "Zunino F., Martirena F., Scrivener K.L., 2021, Limestone Calcined Clay Cements (LC3), ACI Materials Journal",
+      "url": "https://doi.org/10.14359/51730422",
+      "quote": "achieves equivalent mechanical performance to OPC, better durability against chloride, and alkali-silica reaction reduction of CO2 emissions by approximately 40%",
+      "note": "Barrier is supported by Zhao Y. and Zhang Y., 2023, Solids, https://doi.org/10.3390/solids4010003: \"LC3 has not been commonly adopted in reality because of uncertain setting times during the transportation and construction processes\". The clay-supply part of the barrier is background knowledge."
+    },
+    {
+      "name": "Self-healing concrete",
+      "best_at": "Sealing its own small cracks, using bacteria or capsules that deposit limestone when water enters, so water and salts are kept out.",
+      "headline_number": "A crack 0.4 mm wide at the surface was fully sealed by bacteria, but healing deeper in the crack reached only 14% of that at the surface",
+      "headline_evidence": "sourced",
+      "readiness": "pilot",
+      "helps_with": ["humidity"],
+      "main_barrier": "Healing mostly seals the surface of the crack, it needs water to be present, and the up-front cost is higher than ordinary concrete.",
+      "citation": "Algaifi H.A., Abu Bakar S., Alyousef R. et al. (8 authors), 2021, Bio-inspired self-healing of concrete cracks using new B. pseudomycoides species, Journal of Materials Research and Technology",
+      "url": "https://doi.org/10.1016/j.jmrt.2021.03.037",
+      "quote": "a crack mouth width of 0.4 mm was fully healed through microbial precipitation ... the maximum healing ratio in the deeper part of the crack was only 14% compared to the crack mouth",
+      "note": "One lab study. A 2020 review reports a larger upper bound: Roy R. et al., Nordic Concrete Research, https://doi.org/10.2478/ncr-2020-0006: \"quantification of crack-healing by light microscopy revealed maximum crack width of 1.80mm healed\". Water dependence is supported by Mohamed A. et al., 2023, Constr. Build. Mater., https://doi.org/10.1016/j.conbuildmat.2023.131550; cost by Topçu I.B. et al., 2020, https://doi.org/10.26417/206rzh38o: \"The high initial cost leads to a reduction in producer demand\". Readiness 'pilot' is our judgement."
+    },
+    {
+      "name": "Ultra-high-temperature ceramics (for example ZrB2, HfC)",
+      "best_at": "Surviving the hottest environments in engineering, such as hypersonic leading edges and re-entry surfaces.",
+      "headline_number": "Melting points over 3000 °C, with useful function retained beyond 2000 °C",
+      "headline_evidence": "sourced",
+      "readiness": "lab",
+      "helps_with": ["temperature"],
+      "main_barrier": "They are brittle and hard to make in large or complex shapes, and processing needs very high temperatures and a lot of energy.",
+      "citation": "Lynam A., Rincón Romero A., Xu F. et al. (5 authors), 2022, Thermal Spraying of Ultra-High Temperature Ceramics: A Review on Processing Routes and Performance, Journal of Thermal Spray Technology",
+      "url": "https://doi.org/10.1007/s11666-022-01381-5",
+      "quote": "Ultra-high temperature ceramics (UHTCs) are materials defined as having melting points over 3000 °C and withstand temperatures beyond 2000 °C without losing functionality",
+      "note": "Barrier is supported by the same paper (\"size and shape limitations encountered by current processing methods of bulk UHTCs\") and by Mukasyan A.S. and Rogachev A.S., 2025, Int. J. Appl. Ceram. Technol., https://doi.org/10.1111/ijac.70044: \"traditional powder metallurgy methods for producing these materials are complex, energy-intensive\"."
+    }
+  ],
+  "meta": {
+    "generated": "2026-11-21",
+    "source_tool": "FastTrack Literature Open MCP (OpenAlex abstracts). Numbers marked sourced were read in abstract text returned by the tool tonight.",
+    "caveats": "All sourced numbers come from abstracts, not full text. 'readiness' is the research agent's judgement, not a measured value. Author lists show the first three authors returned by the tool."
+  }
+}

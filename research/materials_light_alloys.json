@@ -1,0 +1,252 @@
+{
+  "family": "Light and non-ferrous alloys",
+  "notes": "Values marked 'typical' are handbook-level figures recalled by the research agent, not seen in tool output. Embodied CO2 values are typical primary-production figures (Ashby / ICE-style) and vary strongly with recycled content and energy mix. Cost left null: commodity prices move too much to state without a live source. 7075-T6 strength is a sourced ULTIMATE tensile value for T651 base plate (typical yield about 503 MPa); the other four use tensile yield. Copper yield (250 MPa) is a typical half-hard value; annealed C11000 yields at only about 70 MPa.",
+  "materials": [
+    {
+      "name": "Aluminium 6061-T6",
+      "family": "Light and non-ferrous alloys",
+      "fields": [
+        "aerospace",
+        "automotive",
+        "marine",
+        "construction"
+      ],
+      "density_kg_m3": 2700,
+      "strength_MPa": 270,
+      "strength_kind": "tensile yield",
+      "youngs_modulus_GPa": 69,
+      "max_service_temp_C": 150,
+      "thermal_conductivity_W_mK": 167,
+      "hardness_HV": 112,
+      "water_absorption_pct": 0,
+      "embodied_CO2_kg_per_kg": 8.2,
+      "cost_usd_per_kg": null,
+      "humidity_resistance_1to5": 4,
+      "humidity_reason": "Self-passivating oxide film gives good atmospheric corrosion resistance, though chlorides cause pitting.",
+      "wear_resistance_1to5": 2,
+      "wear_reason": "Soft (about 110 HV) and prone to galling unless hard-anodised.",
+      "main_limitation": "Loses T6 strength above about 150 C and in weld heat-affected zones.",
+      "evidence": {
+        "density_kg_m3": "typical",
+        "strength_MPa": "sourced",
+        "youngs_modulus_GPa": "typical",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "hardness_HV": "sourced",
+        "water_absorption_pct": "typical",
+        "embodied_CO2_kg_per_kg": "typical"
+      },
+      "sources": [
+        {
+          "citation": "Ambriz R.R., Chicot D., Benseddiq N., et al., 2011, Local mechanical properties of the 6061-T6 aluminium weld using micro-traction and instrumented indentation, European Journal of Mechanics A/Solids",
+          "url": "https://scispace.com/papers/local-mechanical-properties-of-the-6061-t6-aluminium-weld-1so7seqryc",
+          "supports": [
+            "strength_MPa",
+            "hardness_HV"
+          ],
+          "quote": "SciSpace extraction: 'The base metal yield strength is approximately 270 MPa' (UTS approximately 310 MPa); 'base metal hardness was approximately 1.1 GPa (about 112 HV, converted from the reported pressure value)'"
+        },
+        {
+          "citation": "Alalkawi H.J.M., Aziz G.A., Mazel S.R., 2021, Effect of Oil-Corrosion on Tensile and Fatigue S-N Curve Properties of AA6061-T6, Engineering and Technology Journal",
+          "url": "https://scispace.com/papers/effect-of-oil-corrosion-on-tensile-and-fatigue-s-n-curve-1afgeey19c",
+          "supports": [],
+          "quote": "Cross-check only: 'UTS and YS were raised from 307 to 316 MPa and from 248 to 254 MPa' (as-received YS 248 MPa)"
+        }
+      ]
+    },
+    {
+      "name": "Aluminium 7075-T6",
+      "family": "Light and non-ferrous alloys",
+      "fields": [
+        "aerospace",
+        "defence",
+        "sporting goods"
+      ],
+      "density_kg_m3": 2810,
+      "strength_MPa": 600,
+      "strength_kind": "tensile ultimate",
+      "youngs_modulus_GPa": 72,
+      "max_service_temp_C": 120,
+      "thermal_conductivity_W_mK": 130,
+      "hardness_HV": 175,
+      "water_absorption_pct": 0,
+      "embodied_CO2_kg_per_kg": 8.2,
+      "cost_usd_per_kg": null,
+      "humidity_resistance_1to5": 3,
+      "humidity_reason": "High-zinc, copper-bearing alloy is susceptible to stress-corrosion cracking and exfoliation in the T6 temper in humid or salty air.",
+      "wear_resistance_1to5": 2,
+      "wear_reason": "Harder than 6061 but still a soft metal that galls without a hard coating.",
+      "main_limitation": "Poor weldability and stress-corrosion susceptibility in the T6 temper; note strength here is ultimate (typical yield is about 500 MPa).",
+      "evidence": {
+        "density_kg_m3": "typical",
+        "strength_MPa": "sourced",
+        "youngs_modulus_GPa": "typical",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "hardness_HV": "typical",
+        "water_absorption_pct": "typical",
+        "embodied_CO2_kg_per_kg": "typical"
+      },
+      "sources": [
+        {
+          "citation": "Alatorre N., Ambriz R.R., et al., 2014, Tensile Properties and Fusion Zone Hardening for GMAW and MIEA Welds of a 7075-T651 Aluminum Alloy, Acta Metallurgica Sinica (English Letters)",
+          "url": "https://scispace.com/papers/tensile-properties-and-fusion-zone-hardening-for-gmaw-and-16dsn1od0h",
+          "supports": [
+            "strength_MPa"
+          ],
+          "quote": "the base material along rolling direction exhibited a tensile strength of around 600 MPa and elongation of 11%"
+        }
+      ]
+    },
+    {
+      "name": "Titanium Ti-6Al-4V",
+      "family": "Light and non-ferrous alloys",
+      "fields": [
+        "aerospace",
+        "biomedical",
+        "marine",
+        "energy"
+      ],
+      "density_kg_m3": 4430,
+      "strength_MPa": 880,
+      "strength_kind": "tensile yield",
+      "youngs_modulus_GPa": 110,
+      "max_service_temp_C": 350,
+      "thermal_conductivity_W_mK": 6.7,
+      "hardness_HV": 340,
+      "water_absorption_pct": 0,
+      "embodied_CO2_kg_per_kg": 40,
+      "cost_usd_per_kg": null,
+      "humidity_resistance_1to5": 5,
+      "humidity_reason": "Stable TiO2 passive film makes it essentially immune to humid air and seawater corrosion.",
+      "wear_resistance_1to5": 2,
+      "wear_reason": "Poor tribological behaviour with a strong tendency to gall and adhesive wear unless surface-treated.",
+      "main_limitation": "High cost, high embodied energy and difficult machining.",
+      "evidence": {
+        "density_kg_m3": "typical",
+        "strength_MPa": "typical",
+        "youngs_modulus_GPa": "sourced",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "sourced",
+        "hardness_HV": "typical",
+        "water_absorption_pct": "typical",
+        "embodied_CO2_kg_per_kg": "typical"
+      },
+      "sources": [
+        {
+          "citation": "Kalienko M.S., Zhelnina A.V., et al., 2020, A New Approach to Estimation of the Thermal Conductivity of Titanium Alloys, Crystallography Reports",
+          "url": "https://scispace.com/papers/a-new-approach-to-estimation-of-the-thermal-conductivity-of-6bars6nfo8",
+          "supports": [
+            "thermal_conductivity_W_mK"
+          ],
+          "quote": "the room-temperature thermal conductivity of the investigated alloys varies from 6.4 to 7 W/(m K)"
+        },
+        {
+          "citation": "Veiga C., Davim J.P., Loureiro A.J.R., 2012, Properties and applications of titanium alloys: a brief review, Reviews on Advanced Materials Science",
+          "url": "https://scispace.com/papers/properties-and-applications-of-titanium-alloys-a-brief-3s2c81khst",
+          "supports": [
+            "youngs_modulus_GPa",
+            "thermal_conductivity_W_mK"
+          ],
+          "quote": "SciSpace extraction: 'Young's modulus: Ti-6Al-4V is reported at approximately 110 GPa'; near room temperature thermal conductivity 'about 6.6-6.8 W/(m K)'; abstract: tensile strength 'for Ti-6Al-4V the range is from about 900 to 1200 MPa'"
+        }
+      ]
+    },
+    {
+      "name": "Magnesium AZ31B",
+      "family": "Light and non-ferrous alloys",
+      "fields": [
+        "automotive",
+        "aerospace",
+        "consumer electronics"
+      ],
+      "density_kg_m3": 1770,
+      "strength_MPa": 201,
+      "strength_kind": "tensile yield",
+      "youngs_modulus_GPa": 43.8,
+      "max_service_temp_C": 120,
+      "thermal_conductivity_W_mK": 96,
+      "hardness_HV": 55,
+      "water_absorption_pct": 0,
+      "embodied_CO2_kg_per_kg": 36,
+      "cost_usd_per_kg": null,
+      "humidity_resistance_1to5": 2,
+      "humidity_reason": "Magnesium's surface film is not protective in wet or salty air and it corrodes galvanically against most metals without coating.",
+      "wear_resistance_1to5": 1,
+      "wear_reason": "Very soft (about 50 to 60 HV) so it abrades easily.",
+      "main_limitation": "Poor corrosion resistance and rapid strength loss above about 120 C.",
+      "evidence": {
+        "density_kg_m3": "typical",
+        "strength_MPa": "sourced",
+        "youngs_modulus_GPa": "sourced",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "hardness_HV": "typical",
+        "water_absorption_pct": "typical",
+        "embodied_CO2_kg_per_kg": "typical"
+      },
+      "sources": [
+        {
+          "citation": "Kumar R., Harmain G.A., Mursaleen M., 2026, Experimental Investigation of the Mechanical Behaviour of AZ31B Magnesium Alloy at Elevated Temperatures, Mechanics of Solids",
+          "url": "https://scispace.com/papers/experimental-investigation-of-the-mechanical-behaviour-of-smm9lthq806o",
+          "supports": [
+            "strength_MPa",
+            "youngs_modulus_GPa"
+          ],
+          "quote": "temperatures from 25 to 300 C. The yield strength decreased from 201 to 75 MPa, the ultimate tensile strength decreased from 256 to 104 MPa, the modulus of elasticity decreased from 43.80 to 17 GPa"
+        }
+      ]
+    },
+    {
+      "name": "Copper C11000 (ETP, half-hard rod)",
+      "family": "Light and non-ferrous alloys",
+      "fields": [
+        "electrical",
+        "electronics",
+        "construction",
+        "energy"
+      ],
+      "density_kg_m3": 8940,
+      "strength_MPa": 250,
+      "strength_kind": "tensile yield",
+      "youngs_modulus_GPa": 117,
+      "max_service_temp_C": 200,
+      "thermal_conductivity_W_mK": 390,
+      "hardness_HV": 105,
+      "water_absorption_pct": 0,
+      "embodied_CO2_kg_per_kg": 3.5,
+      "cost_usd_per_kg": null,
+      "humidity_resistance_1to5": 4,
+      "humidity_reason": "Tarnishes but forms a slow-growing protective patina in humid air.",
+      "wear_resistance_1to5": 2,
+      "wear_reason": "Fairly soft (about 105 HV as supplied, about 50 HV annealed) and wears quickly under abrasion.",
+      "main_limitation": "Heavy (8.9 g/cm3) and softens when heated above about 150 to 200 C.",
+      "evidence": {
+        "density_kg_m3": "typical",
+        "strength_MPa": "typical",
+        "youngs_modulus_GPa": "typical",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "hardness_HV": "sourced",
+        "water_absorption_pct": "typical",
+        "embodied_CO2_kg_per_kg": "typical"
+      },
+      "sources": [
+        {
+          "citation": "Lipinska M., Olejnik L., Lewandowska M., 2018, The influence of an ECAP-based deformation process on the microstructure and properties of electrolytic tough pitch copper, Journal of Materials Science",
+          "url": "https://scispace.com/papers/the-influence-of-an-ecap-based-deformation-process-on-the-16gmvnmth8",
+          "supports": [
+            "hardness_HV"
+          ],
+          "quote": "SciSpace extraction: 'The base (undeformed) material had a Vickers hardness of approximately 105 HV0.2'; electrical conductivity '100.2% IACS before processing' (temper of the as-received rod not stated in tool output)"
+        },
+        {
+          "citation": "Alloy Digest, 2022, Mueller Brass C11000 (electrolytic tough pitch copper), Alloy Digest datasheet",
+          "url": "https://scispace.com/papers/mueller-brass-c11000-1qpjo7c0",
+          "supports": [],
+          "quote": "Context only: 'contains a minimum of 99.90% copper ... It has a minimum electrical conductivity of 100% IACS'"
+        }
+      ]
+    }
+  ]
+}

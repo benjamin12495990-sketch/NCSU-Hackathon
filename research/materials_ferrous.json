@@ -1,0 +1,249 @@
+{
+  "family": "Ferrous metals",
+  "notes": [
+    "evidence = 'sourced' means the number was seen in SciSpace MCP tool output on 2026-11-21; 'typical' means a handbook-level value recalled by the AI and NOT verified tonight.",
+    "hardness_HV for ductile iron and H13 was converted by the AI from the sourced HB / HRC reading using standard hardness conversion tables (180 HB ~ 189 HV; 52 HRC ~ 544 HV).",
+    "cost_usd_per_kg values are rough order-of-magnitude market prices (typical, unverified, volatile); set to null on the page if any unverified price is unacceptable.",
+    "Embodied CO2 for carbon steel is the blast furnace - basic oxygen furnace (primary) route; the same paper gives 1.33 kg/kg for the scrap electric furnace route.",
+    "A SciSpace paper (Jing et al. 2019) reported 1.44-1.76 kg CO2e/kg for Chinese stainless steel with an unspecified boundary; it was NOT used because it looks gate-to-gate. The 6.2 for 316L is a typical cradle-to-gate value."
+  ],
+  "materials": [
+    {
+      "name": "Structural carbon steel (ASTM A36)",
+      "family": "Ferrous metals",
+      "fields": ["construction", "bridges", "machinery frames", "shipbuilding"],
+      "density_kg_m3": 7850,
+      "strength_MPa": 250,
+      "strength_kind": "tensile yield",
+      "youngs_modulus_GPa": 200,
+      "max_service_temp_C": 400,
+      "thermal_conductivity_W_mK": 50,
+      "hardness_HV": 130,
+      "water_absorption_pct": 0,
+      "embodied_CO2_kg_per_kg": 2.6,
+      "cost_usd_per_kg": 0.8,
+      "humidity_resistance_1to5": 2,
+      "humidity_reason": "Unalloyed steel rusts steadily in humid or wet air unless painted, galvanised or otherwise protected.",
+      "wear_resistance_1to5": 2,
+      "wear_reason": "Soft ferrite-pearlite structure of roughly 130 HV abrades quickly compared with hardened steels.",
+      "main_limitation": "Needs corrosion protection, and loses strength and creep resistance above roughly 400 to 500 C.",
+      "evidence": {
+        "density_kg_m3": "typical",
+        "strength_MPa": "typical",
+        "youngs_modulus_GPa": "typical",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "hardness_HV": "typical",
+        "water_absorption_pct": "typical",
+        "embodied_CO2_kg_per_kg": "sourced",
+        "cost_usd_per_kg": "typical"
+      },
+      "sources": [
+        {
+          "citation": "Na H., Qiu Z., Sun J. et al., 2024, Revealing cradle-to-gate CO2 emissions for steel product producing by different technological pathways based on material flow analysis, Resources Conservation and Recycling",
+          "url": "https://scispace.com/papers/revealing-cradle-to-gate-co2-emissions-for-steel-product-5265ngy7ap",
+          "supports": ["embodied_CO2_kg_per_kg"],
+          "quote": "Blast furnace-basic oxygen furnace (BF-BOF): 2,598.54 kg CO2/t steel ... Scrap-electric furnace: 1,330.22 kg CO2/t steel"
+        },
+        {
+          "citation": "Hasanbeigi A., Arens M., Rojas Cardenas J.C. et al., 2016, Comparison of carbon dioxide emissions intensity of steel production in China, Germany, Mexico, and the United States, Resources Conservation and Recycling",
+          "url": "https://scispace.com/papers/comparison-of-carbon-dioxide-emissions-intensity-of-steel-27ucprkgfm",
+          "supports": ["embodied_CO2_kg_per_kg"],
+          "quote": "2,148 kg CO2 per tonne of crude steel in China, 1,708 kg CO2 per tonne in Germany ... 1,736 kg CO2 per tonne in the United States (cross-check, industry average 2010)"
+        },
+        {
+          "citation": "Lukmawan S., Fato A., 2025, Analisis Kekuatan Sambungan Las Butt joint pada Struktur Logam Baja A36 Menggunakan Simulasi SolidWorks, Jurnal Teknik Mesin",
+          "url": "https://scispace.com/papers/analisis-kekuatan-sambungan-las-butt-joint-pada-struktur-gx4v3oa61njo",
+          "supports": [],
+          "quote": "Context only (welded A36 specimens, not the 250 MPa specification minimum used above): tensile test produced an ultimate tensile strength of 498.4 MPa and a yield strength of 361.4 MPa, whereas the simulation yielded 475 MPa and 250 MPa"
+        },
+        {
+          "citation": "Brnic J., Canadija M., Turkalj G., 2010, Behaviour of S 355JO steel subjected to uniaxial stress at lowered and elevated temperatures and creep, Bulletin of Materials Science",
+          "url": "https://scispace.com/papers/behaviour-of-s-355jo-steel-subjected-to-uniaxial-stress-at-lxgj2mz1mk",
+          "supports": [],
+          "quote": "Context only (SciSpace extraction): the material is described as practically unsuitable above 500 C; its creep resistance is considered negligible above that temperature"
+        }
+      ]
+    },
+    {
+      "name": "Stainless steel 316L",
+      "family": "Ferrous metals",
+      "fields": ["marine", "chemical processing", "biomedical", "food processing"],
+      "density_kg_m3": 8000,
+      "strength_MPa": 170,
+      "strength_kind": "tensile yield",
+      "youngs_modulus_GPa": 193,
+      "max_service_temp_C": 870,
+      "thermal_conductivity_W_mK": 14.3,
+      "hardness_HV": 190,
+      "water_absorption_pct": 0,
+      "embodied_CO2_kg_per_kg": 6.2,
+      "cost_usd_per_kg": 5,
+      "humidity_resistance_1to5": 5,
+      "humidity_reason": "A chromium-rich passive oxide film, strengthened by molybdenum, prevents rusting in humid and wet air.",
+      "wear_resistance_1to5": 2,
+      "wear_reason": "Annealed austenite is soft at about 190 HV and is prone to galling in sliding contact.",
+      "main_limitation": "Low yield strength for its cost, and it can pit or crevice-corrode in warm stagnant chloride water.",
+      "evidence": {
+        "density_kg_m3": "typical",
+        "strength_MPa": "typical",
+        "youngs_modulus_GPa": "typical",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "sourced",
+        "hardness_HV": "sourced",
+        "water_absorption_pct": "typical",
+        "embodied_CO2_kg_per_kg": "typical",
+        "cost_usd_per_kg": "typical"
+      },
+      "sources": [
+        {
+          "citation": "Souza L.B., Santos M.R.N., Garcia R.P. et al., 2022, Characterization of an austenitic stainless steel preform deposited by wire arc additive manufacturing, The International Journal of Advanced Manufacturing Technology",
+          "url": "https://scispace.com/papers/characterization-of-an-austenitic-stainless-steel-preform-ltg3auyv",
+          "supports": ["hardness_HV"],
+          "quote": "SciSpace extraction: the annealed reference material has a hardness of 190 HV"
+        },
+        {
+          "citation": "Simmons J.C., Chen X., Azizi A. et al., 2020, Influence of processing and microstructure on the local and bulk thermal conductivity of selective laser melted 316L stainless steel, Additive Manufacturing",
+          "url": "https://scispace.com/papers/influence-of-processing-and-microstructure-on-the-local-and-2fn32v6s6v",
+          "supports": ["thermal_conductivity_W_mK"],
+          "quote": "SciSpace extraction: thermal conductivity values of 10.4-19.8 W/m.K locally, with an average of 14.3 W/m.K for the lowest-porosity sample (laser-melted 316L; wrought handbook value is about 15 to 16)"
+        }
+      ]
+    },
+    {
+      "name": "Alloy steel AISI 4140 (quenched and tempered)",
+      "family": "Ferrous metals",
+      "fields": ["automotive", "oil and gas", "machinery shafts and gears", "tooling"],
+      "density_kg_m3": 7850,
+      "strength_MPa": 1109,
+      "strength_kind": "tensile ultimate",
+      "youngs_modulus_GPa": 205,
+      "max_service_temp_C": 400,
+      "thermal_conductivity_W_mK": 42.6,
+      "hardness_HV": 296,
+      "water_absorption_pct": 0,
+      "embodied_CO2_kg_per_kg": 2.6,
+      "cost_usd_per_kg": 1.2,
+      "humidity_resistance_1to5": 2,
+      "humidity_reason": "About 1 percent chromium is far too little to passivate, so it rusts in humid air unless oiled, plated or coated.",
+      "wear_resistance_1to5": 4,
+      "wear_reason": "Tempered martensite of roughly 300 to 550 HV resists abrasion well and can be nitrided or induction hardened further.",
+      "main_limitation": "Requires heat treatment and corrosion protection, and softens if used above its tempering temperature.",
+      "evidence": {
+        "density_kg_m3": "typical",
+        "strength_MPa": "sourced",
+        "youngs_modulus_GPa": "typical",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "hardness_HV": "sourced",
+        "water_absorption_pct": "typical",
+        "embodied_CO2_kg_per_kg": "typical",
+        "cost_usd_per_kg": "typical"
+      },
+      "sources": [
+        {
+          "citation": "Bhagyalaxmi, Sharma S., Kini V.M., 2018, Effect of heat treatment and mechanical characterization of AISI 4140 steel (journal article indexed by SciSpace)",
+          "url": "https://scispace.com/papers/effect-of-heat-treatment-and-mechanical-characterization-of-4h8ibh6qgs",
+          "supports": ["strength_MPa"],
+          "quote": "hardened specimen showed a hardness of RC45 and wear rate of near zero ... the tempered specimen had a tensile strength of 1109.4 N/mm"
+        },
+        {
+          "citation": "Basan R., Kunc R., Franulovic M., 2008, Monotonic behaviour of normalised and quenched and tempered steel 42CrMo4, Engineering Review",
+          "url": "https://scispace.com/papers/monotonic-behaviour-of-normalised-and-quenched-and-tempered-20i0g8bu61",
+          "supports": ["hardness_HV"],
+          "quote": "SciSpace extraction: normalized material 195 HV and the quenched-and-tempered specimens 296 HV, 420 HV, 546 HV, and 570 HV (the 296 HV temper is used here)"
+        }
+      ]
+    },
+    {
+      "name": "Ductile (nodular) cast iron",
+      "family": "Ferrous metals",
+      "fields": ["water and sewer pipe", "automotive", "wind energy castings", "heavy machinery"],
+      "density_kg_m3": 7100,
+      "strength_MPa": 500,
+      "strength_kind": "tensile ultimate",
+      "youngs_modulus_GPa": 169,
+      "max_service_temp_C": 425,
+      "thermal_conductivity_W_mK": 36,
+      "hardness_HV": 189,
+      "water_absorption_pct": 0,
+      "embodied_CO2_kg_per_kg": 2.2,
+      "cost_usd_per_kg": 0.7,
+      "humidity_resistance_1to5": 3,
+      "humidity_reason": "It rusts in moist air, but more slowly than mild steel in many exposures, and pipe is normally coated or lined.",
+      "wear_resistance_1to5": 3,
+      "wear_reason": "Graphite nodules give some self-lubrication and a pearlitic matrix resists sliding wear, but hardness is only about 180 HB as cast.",
+      "main_limitation": "Lower stiffness, toughness and weldability than steel, and properties depend on casting section size and quality.",
+      "evidence": {
+        "density_kg_m3": "typical",
+        "strength_MPa": "sourced",
+        "youngs_modulus_GPa": "typical",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "hardness_HV": "sourced",
+        "water_absorption_pct": "typical",
+        "embodied_CO2_kg_per_kg": "sourced",
+        "cost_usd_per_kg": "typical"
+      },
+      "sources": [
+        {
+          "citation": "Bai J., Xu H., Wang Y. et al., 2022, Microstructures and Mechanical Properties of Ductile Cast Iron with Different Crystallizer Inner Diameters, Crystals",
+          "url": "https://scispace.com/papers/microstructures-and-mechanical-properties-of-ductile-cast-204howu9",
+          "supports": ["strength_MPa", "hardness_HV"],
+          "quote": "SciSpace extraction: as-cast ductile iron had an average ultimate tensile strength of about 500 MPa, while austempered ductile iron reached about 1,100 MPa; Brinell hardness of approximately 180 HB for the as-cast material (converted by the AI to about 189 HV)"
+        },
+        {
+          "citation": "Zhu Y., Keoleian G.A., Cooper D.R., 2023, A parametric life cycle assessment model for ductile cast iron components, Resources Conservation and Recycling",
+          "url": "https://scispace.com/papers/a-parametric-life-cycle-assessment-model-for-ductile-cast-3tzdassl",
+          "supports": ["embodied_CO2_kg_per_kg"],
+          "quote": "SciSpace extraction: cradle-to-gate greenhouse gas intensity is 1.6-3.0 kg CO2-eq per kg of product, with a mean of 2.2 kg CO2-eq/kg"
+        }
+      ]
+    },
+    {
+      "name": "Tool steel AISI H13 (hardened and tempered)",
+      "family": "Ferrous metals",
+      "fields": ["die casting dies", "extrusion and forging tooling", "injection moulds"],
+      "density_kg_m3": 7800,
+      "strength_MPa": 1500,
+      "strength_kind": "tensile yield",
+      "youngs_modulus_GPa": 210,
+      "max_service_temp_C": 540,
+      "thermal_conductivity_W_mK": 24,
+      "hardness_HV": 544,
+      "water_absorption_pct": 0,
+      "embodied_CO2_kg_per_kg": null,
+      "cost_usd_per_kg": 7,
+      "humidity_resistance_1to5": 2,
+      "humidity_reason": "With about 5 percent chromium it is not stainless and will rust in humid air unless oiled, nitrided or coated.",
+      "wear_resistance_1to5": 5,
+      "wear_reason": "Tempered martensite with alloy carbides at about 52 HRC, retained at working temperatures up to roughly 540 C.",
+      "main_limitation": "Expensive, hard to machine after hardening, and far less tough than structural steels.",
+      "evidence": {
+        "density_kg_m3": "typical",
+        "strength_MPa": "typical",
+        "youngs_modulus_GPa": "typical",
+        "max_service_temp_C": "typical",
+        "thermal_conductivity_W_mK": "typical",
+        "hardness_HV": "sourced",
+        "water_absorption_pct": "typical",
+        "embodied_CO2_kg_per_kg": "typical",
+        "cost_usd_per_kg": "typical"
+      },
+      "sources": [
+        {
+          "citation": "Bejarano Gaitan G., Gomez Botero M.A., Arroyave Franco M., 2012, Deposition and characterization of duplex treated coating system applied on hot work steel AISI H13",
+          "url": "https://scispace.com/papers/deposition-and-characterization-of-duplex-treated-coating-14oeom4wcm",
+          "supports": ["hardness_HV"],
+          "quote": "SciSpace extraction: the tempered, uncoated AISI H13 steel measured approximately 52 HRC (converted by the AI to about 544 HV); abstract: high toughness, strength and hardness around 56 HRC"
+        },
+        {
+          "citation": "Shelar A., Ronge B.P., 2023, Characterization of the mechanical properties and microstructural evolution of martensitic steel in repeated tempering cycles, Fracture and Structural Integrity",
+          "url": "https://scispace.com/papers/characterization-of-the-mechanical-properties-and-5fnu8l7n01",
+          "supports": [],
+          "quote": "Context only (softer temper than the 52 HRC condition above): quenched-and-single-tempered H13 reported as 952 MPa yield strength and 1122 MPa ultimate tensile strength; hardness 46 HRC to 38 HRC across repeated tempering"
+        }
+      ]
+    }
+  ]
+}
