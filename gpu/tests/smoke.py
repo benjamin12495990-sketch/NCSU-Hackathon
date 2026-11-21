@@ -72,12 +72,16 @@ def main():
             else:
                 raise AssertionError(f'guard let {p} through')
         link = tmp / 'innocent.json'
-        os.symlink(REPO / 'public/model/nn_data.json', link)
         try:
-            read_bytes(link)
-            raise AssertionError('guard let a symlink to nn_data.json through')
-        except SealedDataError:
-            refused += 1
+            os.symlink(REPO / 'public/model/nn_data.json', link)
+        except OSError:  # Windows without Developer Mode cannot create symlinks; skip this sub-check
+            link = None
+        if link is not None:
+            try:
+                read_bytes(link)
+                raise AssertionError('guard let a symlink to nn_data.json through')
+            except SealedDataError:
+                refused += 1
         guard_path(REPO / 'public/model/materials/nn_data.json')  # a family file is allowed
         ds = load_concrete()
         assert set(ds.sources) == {'lab/data/train.json', 'lab/data/reward.json', 'lab/data/monitor.json'}, ds.sources

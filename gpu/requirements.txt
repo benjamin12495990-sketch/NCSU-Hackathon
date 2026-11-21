@@ -1,0 +1,5 @@
+# Python packages for gpu/ (Python 3.10-3.13). PyTorch is NOT listed: install it first from
+# https://pytorch.org/get-started/locally/ (CUDA build for the laptop; see gpu/README.md).
+numpy>=1.24
+pandas>=2.0
+scikit-learn>=1.3

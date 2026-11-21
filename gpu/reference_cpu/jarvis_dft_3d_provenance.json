@@ -1,0 +1,14 @@
+{
+ "dataset": "dft_3d",
+ "description": "3D dataset 94k (9-24-2025)",
+ "url": "https://ndownloader.figshare.com/files/64391379",
+ "json_name": "jdft_3d-9-24-2025.json",
+ "path": "gpu/data_cache/jarvis/jdft_3d-9-24-2025.json.zip",
+ "bytes": 48447610,
+ "content_length": 48447610,
+ "sha256": "f9e0a3309f0000d5de1ec9e49c93963109ea45e63f451103f8f6595d2eabf7f5",
+ "download_started": "2026-11-21T21:12:08+00:00",
+ "download_finished": "2026-11-21T21:12:08+00:00",
+ "source_map": "jarvis-tools 2026.6.12 jarvis/db/figshare.py get_db_info()",
+ "licence": "CC BY 4.0 (figshare 10.6084/m9.figshare.6815699)"
+}

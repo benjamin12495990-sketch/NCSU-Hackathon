@@ -1,0 +1,40 @@
+{
+ "created": "2026-11-21T21:15:46+00:00",
+ "git": {
+  "commit": "5a8beb66295bfd7aa8e9ad1a4f3d97fca2191973",
+  "branch": "gpu-kit",
+  "dirty": false
+ },
+ "device": "cpu",
+ "hardware": {
+  "python": "3.13.18",
+  "platform": "Linux-6.18.44-fc-v726-x86_64-with-glibc2.39",
+  "machine": "x86_64",
+  "processor": "x86_64",
+  "cpu_count": 4,
+  "torch": "2.15.0+cu132",
+  "torch_cuda_build": "13.2",
+  "cuda_available": false
+ },
+ "cudnn": 92600,
+ "cuda_arch_list": [],
+ "nvidia_smi": null,
+ "matmul": [
+  {
+   "n": 2048,
+   "dtype": "float32",
+   "reps": 10,
+   "seconds_per_matmul": 0.042652191299998775,
+   "tflops": 0.40278983706050514,
+   "checksum_finite": true
+  },
+  {
+   "n": 1024,
+   "dtype": "float64",
+   "reps": 10,
+   "seconds_per_matmul": 0.008787285900007191,
+   "tflops": 0.24438531674475764,
+   "checksum_finite": true
+  }
+ ]
+}

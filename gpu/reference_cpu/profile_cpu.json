@@ -1,0 +1,85 @@
+{
+ "created": "2026-11-21T21:15:56+00:00",
+ "git": {
+  "commit": "5a8beb66295bfd7aa8e9ad1a4f3d97fca2191973",
+  "branch": "gpu-kit",
+  "dirty": false
+ },
+ "device": "cpu",
+ "dtype": "float32",
+ "hardware": {
+  "python": "3.13.18",
+  "platform": "Linux-6.18.44-fc-v726-x86_64-with-glibc2.39",
+  "machine": "x86_64",
+  "processor": "x86_64",
+  "cpu_count": 4,
+  "torch": "2.15.0+cu132",
+  "torch_cuda_build": "13.2",
+  "cuda_available": false
+ },
+ "threads": 2,
+ "workload": {
+  "rows": 8000,
+  "inputs": 17,
+  "layers": [
+   17,
+   96,
+   48,
+   1
+  ],
+  "batch": 32,
+  "loss": "huber",
+  "data": "synthetic (chemistry-family shape), not a model result"
+ },
+ "peak_memory_note": "CUDA: torch.cuda.max_memory_allocated per bank; CPU: process peak RSS so far (Linux/macOS only)",
+ "results": [
+  {
+   "K": 1,
+   "epochs": 3,
+   "rows": 8000,
+   "wall_seconds": 0.32917404800014083,
+   "seconds_per_epoch": 0.1097246826667136,
+   "model_rows_per_second": 72909.75745448114,
+   "weights_per_model": 6433,
+   "peak_memory_mb": 764.85546875,
+   "final_batch_loss_mean": 0.11268889158964157,
+   "speedup_vs_first_count": 1.0
+  },
+  {
+   "K": 5,
+   "epochs": 3,
+   "rows": 8000,
+   "wall_seconds": 0.6384159360000012,
+   "seconds_per_epoch": 0.2128053120000004,
+   "model_rows_per_second": 187965.23274757314,
+   "weights_per_model": 6433,
+   "peak_memory_mb": 766.10546875,
+   "final_batch_loss_mean": 0.01903938055038452,
+   "speedup_vs_first_count": 2.5780531894503036
+  },
+  {
+   "K": 32,
+   "epochs": 3,
+   "rows": 8000,
+   "wall_seconds": 1.880803435999951,
+   "seconds_per_epoch": 0.6269344786666503,
+   "model_rows_per_second": 408336.13194229617,
+   "weights_per_model": 6433,
+   "peak_memory_mb": 772.984375,
+   "final_batch_loss_mean": 0.00468524731695652,
+   "speedup_vs_first_count": 5.6005690623402185
+  },
+  {
+   "K": 128,
+   "epochs": 3,
+   "rows": 8000,
+   "wall_seconds": 4.654486577999933,
+   "seconds_per_epoch": 1.5514955259999776,
+   "model_rows_per_second": 660008.3486157695,
+   "weights_per_model": 6433,
+   "peak_memory_mb": 797.984375,
+   "final_batch_loss_mean": 0.0071423957124352455,
+   "speedup_vs_first_count": 9.052400826155875
+  }
+ ]
+}

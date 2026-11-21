@@ -1,0 +1,190 @@
+{
+ "created": "2026-11-21T21:15:58+00:00",
+ "git": {
+  "commit": "5a8beb66295bfd7aa8e9ad1a4f3d97fca2191973",
+  "branch": "gpu-kit",
+  "dirty": false
+ },
+ "device": "cpu",
+ "dtype": "float32",
+ "hardware": {
+  "python": "3.13.18",
+  "platform": "Linux-6.18.44-fc-v726-x86_64-with-glibc2.39",
+  "machine": "x86_64",
+  "processor": "x86_64",
+  "cpu_count": 4,
+  "torch": "2.15.0+cu132",
+  "torch_cuda_build": "13.2",
+  "cuda_available": false
+ },
+ "threads": 2,
+ "argv": [
+  "gpu/train_tabular.py",
+  "--family",
+  "alloys",
+  "--mode",
+  "cv",
+  "--device",
+  "cpu",
+  "--threads",
+  "2",
+  "--compare-reference",
+  "--tag",
+  "cpu_ref"
+ ],
+ "data": {
+  "family": "alloys",
+  "target": "Vickers hardness, HV",
+  "features": 37,
+  "train_rows": 426,
+  "train_groups": 301,
+  "test_rows": 104,
+  "cv_folds": 3,
+  "folds_source": "domains/materials/work/cv_folds.json (3 grouped folds used by the family agent)",
+  "extra_sets": {},
+  "data_sha256": "069270f25570c5665e19a5368af441b80f88dd7ff580f5440f0d9eb89a800c6c",
+  "sources": {
+   "public/model/materials/nn_data.json": "acbf986c5c2288d098f35a60bd07ad9e685c54a70f5bb8098db7d20c3ceb60ec",
+   "domains/materials/work/cv_folds.json": "6e4fd171fefa14b49a248b99958ae6d0c0d0ea9b60e812b98dc8caa91a98b73f"
+  },
+  "notes": []
+ },
+ "configs": [
+  {
+   "hidden": [
+    32,
+    16
+   ],
+   "epochs": 300,
+   "batch": 32,
+   "lr": 0.004,
+   "decay": 0.01,
+   "loss": "squared",
+   "inputClip": 3,
+   "clampOutput": true,
+   "logTarget": false,
+   "log1pAuto": false
+  }
+ ],
+ "seeds": [
+  11,
+  112,
+  213,
+  314,
+  415
+ ],
+ "parity_note": "PyTorch mirror of nnFamily.js; exact bit parity with the JavaScript trainer is not expected",
+ "modes": {
+  "cv": {
+   "train_seconds": 4.999089858999923,
+   "naive_train_mean": {
+    "val": {
+     "n": 426,
+     "mae": 173.8341989066878,
+     "rmse": 212.1092479317365,
+     "r2": -0.005378763803496556
+    }
+   },
+   "configs": [
+    {
+     "config": {
+      "hidden": [
+       32,
+       16
+      ],
+      "epochs": 300,
+      "batch": 32,
+      "lr": 0.004,
+      "decay": 0.01,
+      "loss": "squared",
+      "inputClip": 3,
+      "clampOutput": true,
+      "logTarget": false,
+      "log1pAuto": false
+     },
+     "sets": {
+      "val": {
+       "members": [
+        {
+         "n": 426,
+         "mae": 76.02927345794097,
+         "rmse": 105.58218909654106,
+         "r2": 0.7508896202198354
+        },
+        {
+         "n": 426,
+         "mae": 80.05583516549726,
+         "rmse": 111.34459254317605,
+         "r2": 0.7229559929464973
+        },
+        {
+         "n": 426,
+         "mae": 80.34055276554835,
+         "rmse": 110.65244084729781,
+         "r2": 0.726389666136811
+        },
+        {
+         "n": 426,
+         "mae": 83.51861938237835,
+         "rmse": 116.62902491289259,
+         "r2": 0.6960348537150907
+        },
+        {
+         "n": 426,
+         "mae": 75.86474210558406,
+         "rmse": 104.47615629463195,
+         "r2": 0.7560814261095455
+        }
+       ],
+       "member_mae_mean": 79.1618045753898,
+       "member_mae_sd": 2.8932315975680667,
+       "seed_mean_ensemble": {
+        "n": 426,
+        "mae": 77.71051171440448,
+        "rmse": 107.56270766934567,
+        "r2": 0.7414563047628078
+       },
+       "per_fold_mae_ensemble": [
+        66.59978215102174,
+        93.02240462206987,
+        70.47753523140669
+       ]
+      }
+     }
+    }
+   ]
+  }
+ },
+ "wall_seconds": 5.089620704000026,
+ "peak_memory_mb": 767.578125,
+ "reference": {
+  "file": "domains/materials/work/result.json",
+  "parity_note": "JavaScript reference (float64, its own RNG); bit parity is not expected",
+  "cv_network_ensemble": {
+   "mae": 75.34004065284446,
+   "rmse": 105.13969898032803,
+   "r2": 0.7529732651933999,
+   "per_fold_mae": [
+    64.34631528528617,
+    89.99066519314229,
+    68.73186890430426
+   ]
+  },
+  "cv_network_single": {
+   "mae": 75.96395959298741,
+   "rmse": 104.90475717557091,
+   "r2": 0.7540760277798263
+  },
+  "cv_naive": {
+   "mae": 173.8341989066878,
+   "rmse": 212.1092479317365,
+   "r2": -0.005378763803496556
+  },
+  "fixed_test_network_ensemble": {
+   "mae": 78.15917451234517,
+   "rmse": 121.58252645918333,
+   "r2": 0.6720922932621207
+  },
+  "mode_run": "cv"
+ }
+}
