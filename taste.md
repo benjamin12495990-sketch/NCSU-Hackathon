@@ -17,7 +17,10 @@ status badges are gone. Simulations are now picked from the three-bar menu at th
 
 ## MUST
 
-- **Light theme only.** No dark mode.
+- **Light is the default look; dark is a switch in the top bar** (it follows the system setting
+  until the person chooses, then remembers the choice). Dark swaps only the CSS variables in
+  `index.css`, so every rule below holds in both. Never hardcode a colour in a component; use a
+  variable, or add a dark value like the cement colour in `particles.js`.
 - **No drop shadows, glows or gradients.** Separate things with 1px borders (`--line`).
 - **One accent, a flat colour**, used for the primary button, links, the selected mix and the
   highlighted ingredient in 3D. Everything else is ink, grey or white.
@@ -33,6 +36,8 @@ status badges are gone. Simulations are now picked from the three-bar menu at th
   one flat colour. It is also the colour of cement in the 3D stage.
 - **Type:** the system sans-serif stack everywhere. No webfont, no serif.
 - **Borders:** `#DEDCD3`. Page background `#F6F5F1`. Text `#1C1C19`. Muted text `#5E5D56`.
+- **Dark palette:** page `#131312`, cards `#1C1C1A`, borders `#36352F`, text `#ECEBE6`, muted
+  `#A09F96`, accent `#7B9CFF` (button text `#0D1530`).
 - **Spacing:** generous. Sections sit 32px apart; cards have 18 to 22px padding.
 
 ## TRY (context rules)
@@ -56,7 +61,7 @@ Everything respects `prefers-reduced-motion`.
 
 ## Do not
 
-- Add a dark hero, neon, glassmorphism, gradients, glows or particle backgrounds.
+- Add a dark hero (dark mode is fine; a dark marketing banner is not), neon, glassmorphism, gradients, glows or particle backgrounds.
 - Add pill chips or status badges to navigation. Put them in the menu as plain text.
 - Animate table rows or count numbers up.
 - Add a second accent colour.

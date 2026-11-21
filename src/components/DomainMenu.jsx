@@ -3,7 +3,7 @@ import './domainmenu.css'
 
 // The top bar. The three-bar button at the top left opens the list of
 // simulations (the families of materials); choosing one switches the page.
-export default function DomainMenu({ domains, activeId, onSelect }) {
+export default function DomainMenu({ domains, activeId, onSelect, children }) {
   const [open, setOpen] = useState(false)
   const burger = useRef(null)
   const drawer = useRef(null)
@@ -53,6 +53,7 @@ export default function DomainMenu({ domains, activeId, onSelect }) {
           Formulation Designer
           <span className="crumb">{active.label}</span>
         </p>
+        <div className="topbar-end">{children}</div>
       </header>
       {open && (
         <>

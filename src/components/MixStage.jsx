@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import { buildParticles } from '../lib/particles.js'
+import { buildParticles, ingredientColor } from '../lib/particles.js'
 import { busy } from '../lib/busy.js'
+import { useTheme } from '../lib/theme.js'
 
 // The 3D stage: one cubic metre of the chosen mix, drawn with Three.js.
 // Particles fly in and pack into the cube, the cube turns slowly, and the
 // ingredient named in `highlight` pulses. Drag to rotate.
 export default function MixStage({ mix, factors, ingredients, highlight }) {
   const mountRef = useRef(null)
+  const materialsRef = useRef(new Map()) // the live materials, so a theme change can recolour them
+  const theme = useTheme()
   const [failed, setFailed] = useState(false)
   // Keyed on the amounts, not the array, so pressing Design mixes again with
   // the same result does not tear down and rebuild the WebGL scene.
@@ -46,6 +49,7 @@ export default function MixStage({ mix, factors, ingredients, highlight }) {
 
     const sphere = new THREE.SphereGeometry(1, 24, 16)
     const materials = new Map()
+    materialsRef.current = materials
     for (const { name, color } of model.legend) {
       const hot = name === highlight
       materials.set(
@@ -134,15 +138,21 @@ export default function MixStage({ mix, factors, ingredients, highlight }) {
     }
   }, [model, highlight])
 
+  // Recolour in place when the theme changes (and after a rebuild), so toggling
+  // does not replay the fly-in.
+  useEffect(() => {
+    for (const [name, material] of materialsRef.current) material.color.set(ingredientColor(name, theme))
+  }, [theme, model, highlight])
+
   return (
     <div className="stage">
       <div className="canvas" ref={mountRef} aria-label="Rotating 3D model of one cubic metre of the mix">
         {failed && <p className="note">The 3D view needs WebGL, which this browser has turned off.</p>}
       </div>
       <ul className="legend">
-        {model.legend.map(({ name, label, color, kg, share }) => (
+        {model.legend.map(({ name, label, kg, share }) => (
           <li key={name} className={(name === highlight ? 'hot' : '') + (kg === 0 ? ' none' : '')}>
-            <span className="dot" style={{ background: color }} />
+            <span className="dot" style={{ background: ingredientColor(name, theme) }} />
             {label} <b>{kg} kg</b> · {(share * 100).toFixed(share < 0.01 && kg > 0 ? 1 : 0)}%
           </li>
         ))}

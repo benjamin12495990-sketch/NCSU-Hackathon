@@ -13,6 +13,9 @@ const LOOK = {
   coarse: { color: '#a3a8b8', radius: 0.46 },
   fine: { color: '#e3c88f', radius: 0.3 },
 }
+// Cement is navy on the light page, which would vanish on the dark one.
+const DARK = { cement: '#7b9cff' }
+export const ingredientColor = (name, theme) => (theme === 'dark' && DARK[name]) || LOOK[name].color
 const SIDE = 6 // 6 x 6 x 6 sites in the cube
 
 function seeded(seed) {

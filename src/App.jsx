@@ -9,6 +9,7 @@ import Planned from './components/Planned.jsx'
 import NeuralNet from './components/NeuralNet.jsx'
 import Formula from './components/Formula.jsx'
 import DomainMenu from './components/DomainMenu.jsx'
+import ThemeToggle from './components/ThemeToggle.jsx'
 import { DOMAINS } from './lib/domains.js'
 
 // Three.js is big, so the 3D stage is downloaded only when a result is shown.
@@ -175,7 +176,9 @@ export default function App() {
   }
   return (
     <>
-    <DomainMenu domains={DOMAINS} activeId={domainId} onSelect={setDomainId} />
+    <DomainMenu domains={DOMAINS} activeId={domainId} onSelect={setDomainId}>
+      <ThemeToggle />
+    </DomainMenu>
     <main>
       {domainId !== 'concrete' ? (
         <Planned domain={DOMAINS.find((d) => d.id === domainId)} onBack={() => setDomainId('concrete')} />
