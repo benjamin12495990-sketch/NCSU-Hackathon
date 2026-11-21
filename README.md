@@ -8,6 +8,14 @@ embodied CO2. Built from scratch at TRIANGULATE, an AI hackathon at NC State.
 - **Problem:** every strength test means casting a mix and waiting up to 28 days for it to cure, so
   only a handful of the possible mixes ever get tried.
 
+## The page
+
+The page is titled **Formulation Designer**. A row of pills at the top lists seven families of
+materials. **Concrete is live.** The other six (polymers, corrosive solutions, cleaning products,
+insulators, general materials, general chemistry) are marked "Planned": pressing one shows what it
+would predict, vary and rank by, and says that nothing is generated for it yet. The page follows
+the visual rules in [`taste.md`](taste.md).
+
 ## What it does
 
 Enter a target strength in MPa and a curing age. In the browser, with no server, the app:
@@ -77,6 +85,14 @@ Two kinds of numbers are not measured by us and are labelled on the page:
 - **Kinds of work and the service-life rule** (50 years or more asks for one more step of humidity
   and wear resistance) are our own starting points, not values from a standard.
 - **The 3D model** is an illustration; the page says so under it.
+- **The chemical formula** under each mix name is an estimate. Concrete is a mixture, not one
+  compound, so the page shows the bulk composition of the paste (cement, slag, fly ash and water)
+  per silicon atom, for example `Ca0.93 Si Al0.53 Fe0.11 Mg0.11 S0.01 O4.02 · 4.09 H2O`. Aggregates
+  and admixture are left out. The oxide analyses behind it are of mixed quality and none is a
+  single verified analysis: cement and slag are midpoints of published ranges (the slag one from a
+  patent abstract), and fly ash comes from one abstract with three oxides missing, counted as zero.
+  They describe other materials than the dataset's own, whose chemistry is not recorded. The
+  calcium figure depends most on the slag value, which is uncertain.
 
 Not used by the live page: the neural network in `pipeline/` (an alternative model that turned out
 less accurate) and the folders `domains/` and `docs/`, which hold plans for other domains. Only
@@ -190,6 +206,11 @@ train/test split and several wording changes.
 | `src/lib/nearest.js` | Distances to tested mixes and their lab results. |
 | `src/lib/design.js` | Generates, filters, ranks and checks the candidates. |
 | `src/lib/name.js` | Builds each mix's formula name from its recipe. |
+| `src/lib/formula.js` | Estimates the paste's chemical formula per silicon atom from oxide analyses. |
+| `src/lib/domains.js` | The seven families of materials and which one is live. |
+| `src/components/Formula.jsx` | Shows the formula with subscripts. |
+| `src/components/Planned.jsx` | The "Planned, not built" card for the six other families. |
+| `public/model/oxides.json` | Oxide analyses of cement, slag and fly ash, with an evidence label each. |
 | `src/lib/loadModel.js` | Downloads the JSON files when the page opens. |
 | `public/model/exposure.json` | ACI 318 exposure limits used by the sliders, with an evidence label per class. |
 | `public/model/materials.json` | The 32 reference materials, with which values were sourced. |

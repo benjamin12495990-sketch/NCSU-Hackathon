@@ -1,0 +1,50 @@
+{
+ "note": "Concrete is a mixture, not a single compound, so it has no true chemical formula. The page shows an estimate: the bulk composition of the paste (cement, slag, fly ash and water) written per silicon atom. Aggregates and superplasticizer are left out. The inputs below are of mixed quality and none is a single verified analysis: they are midpoints of published ranges, or values from one abstract, and they describe other materials than the ones in the dataset, which does not record the chemistry of its own cement, slag or fly ash. Oxides that a source did not report are counted as zero, so the magnesium and sulfur figures are low. The calcium figure depends most on the slag value, which is uncertain: 35.4% CaO here, 42 to 44% in a second source.",
+ "molar_masses_g_per_mol": {
+  "CaO": 56.08,
+  "SiO2": 60.08,
+  "Al2O3": 101.96,
+  "Fe2O3": 159.69,
+  "MgO": 40.3,
+  "SO3": 80.06,
+  "H2O": 18.015
+ },
+ "binders": {
+  "cement": {
+   "label": "Portland cement",
+   "CaO": 62.17,
+   "SiO2": 22.12,
+   "Al2O3": 4.88,
+   "Fe2O3": 2.96,
+   "MgO": 2.34,
+   "SO3": 0,
+   "evidence": "Midpoint of a published range, seen tonight in a search tool's summary of the paper (general-use cements sold in Costa Rica, XRF, cement type not specified). A second source gave similar ranges. SO3 was not seen and is counted as zero.",
+   "citation": "Venegas Padilla, Calderón Jiménez, Sibaja Brenes et al. (2017), Ingeniería",
+   "url": "https://scispace.com/papers/contenido-de-metales-pesados-y-composicion-quimica-de-los-8etfv1et3u"
+  },
+  "slag": {
+   "label": "Blast furnace slag",
+   "CaO": 35.36,
+   "SiO2": 33.5,
+   "Al2O3": 13.39,
+   "Fe2O3": 0.15,
+   "MgO": 5.35,
+   "SO3": 0.96,
+   "evidence": "Midpoint of a range in one patent abstract (1996), seen tonight; the record has scanning errors. CaO is uncertain: a second source gives 42 to 44%.",
+   "citation": "Masuda (1996), patent: High sulfate slag cement / high early strength slag ash cement",
+   "url": "https://lens.org/113-203-067-325-342"
+  },
+  "flyash": {
+   "label": "Fly ash (Class F)",
+   "CaO": 0,
+   "SiO2": 48.04,
+   "Al2O3": 27.62,
+   "Fe2O3": 11.78,
+   "MgO": 0,
+   "SO3": 0,
+   "evidence": "SiO2, Al2O3 and Fe2O3 seen tonight in one paper's abstract (XRF of a Class F fly ash). CaO, MgO and SO3 were not seen and are counted as zero.",
+   "citation": "Syahyadi, Saidi, Hasan et al. (2026), Civil Engineering Journal",
+   "url": "https://doi.org/10.28991/cej-2026-012-02-015"
+  }
+ }
+}

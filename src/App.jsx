@@ -6,6 +6,7 @@ import { rankMaterials } from './lib/rank.js'
 import Requirements, { DEFAULT_REQ } from './components/Requirements.jsx'
 import Shortlist from './components/Shortlist.jsx'
 import Planned from './components/Planned.jsx'
+import Formula from './components/Formula.jsx'
 import { DOMAINS } from './lib/domains.js'
 
 // Three.js is big, so the 3D stage is downloaded only when a result is shown.
@@ -221,6 +222,7 @@ export default function App() {
                   <span className="label">{stage.label}</span>
                   <h2>{stage.title}: {kg(stage.item.co2)} kg CO<sub>2</sub>e per m³</h2>
                   <span className="mixname">{stage.item.name}</span>
+                  <Formula mix={stage.item.mix} oxides={data.oxides} />
                   <span className="flag hot">Cement pulses: it is {Math.round(cementShare * 100)}% of this mix's CO<sub>2</sub></span>
                 </div>
                 <Suspense fallback={<div className="stage"><div className="canvas" /></div>}>
@@ -301,7 +303,7 @@ export default function App() {
                   <thead>
                     <tr>
                       <th>#</th>
-                      <th>Formula name</th>
+                      <th>Formula name and paste formula</th>
                       <th className="num">Cement</th><th className="num">Slag</th><th className="num">Fly ash</th>
                       <th className="num">Water</th><th className="num">Super&shy;plasticizer</th>
                       <th className="num">Coarse agg.</th><th className="num">Fine agg.</th>
@@ -320,7 +322,7 @@ export default function App() {
                     {result.top.map((c, i) => (
                       <tr key={c.mix.join('|')} className={stage?.item === c ? 'on' : ''}>
                         <td>{i + 1}</td>
-                        <td className="strong">{c.name}</td>
+                        <td><strong>{c.name}</strong><Formula mix={c.mix} oxides={data.oxides} /></td>
                         {c.mix.map((v, k) => <td key={k} className="num">{v}</td>)}
                         <td className="num">{c.waterBinder.toFixed(2)}</td>
                         <td className="num">{c.strength.toFixed(1)} MPa</td>
@@ -346,6 +348,9 @@ export default function App() {
                 </table>
               </div>
               <p className="note small">
+                Concrete is a mixture, not one compound, so the chemical formula under each name is the bulk
+                composition of its paste (cement, slag, fly ash and water) per silicon atom, estimated from
+                published oxide analyses; aggregates and admixture are left out (sources at the bottom).{' '}
                 Formula names are made by the app from the recipe: C, S and F are the shares of cement, slag
                 and fly ash in the binder by mass (percent), and W is water ÷ binder × 100. They are labels for
                 this page, not standard designations.{' '}
@@ -438,6 +443,32 @@ export default function App() {
         </section>
       )}
 
+      {data && (
+        <section>
+          <h2>Where the chemical formula comes from</h2>
+          <p className="note">{data.oxides.note}</p>
+          <div className="tablewrap">
+            <table className="wrap">
+              <thead>
+                <tr>
+                  <th>Binder</th><th className="num">CaO</th><th className="num">SiO<sub>2</sub></th>
+                  <th className="num">Al<sub>2</sub>O<sub>3</sub></th><th className="num">Fe<sub>2</sub>O<sub>3</sub></th>
+                  <th className="num">MgO</th><th className="num">SO<sub>3</sub></th><th>Evidence (mass percent)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(data.oxides.binders).map(([id, b]) => (
+                  <tr key={id}>
+                    <td>{b.label}</td>
+                    {['CaO', 'SiO2', 'Al2O3', 'Fe2O3', 'MgO', 'SO3'].map((ox) => <td key={ox} className="num">{b[ox]}</td>)}
+                    <td>{b.evidence} {b.citation}. <a href={b.url}>Link</a></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
       </>
       )}
 

@@ -1,0 +1,129 @@
+{
+  "binders": {
+    "cement": {
+      "CaO": 63.0,
+      "SiO2": 22.0,
+      "Al2O3": 5.5,
+      "Fe2O3": 3.0,
+      "MgO": null,
+      "SO3": null,
+      "evidence": "sourced_range_midpoint",
+      "ranges_as_seen": {
+        "CaO": [
+          60,
+          66
+        ],
+        "SiO2": [
+          19,
+          25
+        ],
+        "Al2O3": [
+          3,
+          8
+        ],
+        "Fe2O3": [
+          1,
+          5
+        ]
+      },
+      "typical_fill_not_sourced": {
+        "MgO": 2.0,
+        "SO3": 2.8
+      },
+      "citation": "Saing, Zubair, 2021, Analisis kualitas batugamping kabupaten Fak Fak Papua sebagai bahan baku semen portland, repository record (via SciSpace)",
+      "url": "https://scispace.com/papers/analisis-kualitas-batugamping-kabupaten-fak-fak-papua-whd8mv76nci2",
+      "quote": "Komposisi kimia utama semen portland adalah CaO (60%-66%), SiO2 (19%-25%), Al2O3 (3%-8%), Fe2O3 (1%-5%), dan MgO (15-4%) [MgO range garbled in the record, so left null]",
+      "supporting_seen_tonight": [
+        "Omoniyi & Okunola 2015, Nigerian Journal of Technological Development: 'Br cement recorded the least CaO content (56.17%) while De cement had the highest CaO content being 63.48%'",
+        "Venegas Padilla et al. 2017, Ingenieria (Costa Rica cements, XRF): 'mass fraction in the range of (6122 - 6312) % of CaO' [decimal points dropped in record; reads as 61.22-63.12]"
+      ]
+    },
+    "slag": {
+      "CaO": 35.36,
+      "SiO2": 33.5,
+      "Al2O3": 13.385,
+      "Fe2O3": 0.145,
+      "MgO": 5.345,
+      "SO3": 0.955,
+      "evidence": "sourced_range_midpoint",
+      "ranges_as_seen": {
+        "CaO": [
+          28.3,
+          42.42
+        ],
+        "SiO2": [
+          31,
+          36
+        ],
+        "Al2O3": [
+          12.3,
+          14.47
+        ],
+        "Fe2O3": [
+          0.03,
+          0.26
+        ],
+        "MgO": [
+          5.2,
+          5.49
+        ],
+        "SO3": [
+          0.88,
+          1.03
+        ]
+      },
+      "citation": "Masuda Yoshitaka, 1996, High sulfate slag cement/high early strength slag ash cement and production of the same cement, patent (via SciSpace)",
+      "url": "https://lens.org/113-203-067-325-342",
+      "quote": "Blast furnace granulated slag ... comprising 31-36% SiO2, 12.3-14.47 Al2O3, 0.03-0.26% of Fe2O3, 28.3-42.42% of Cab [CaO, OCR], 0.88-1.03% of SO3, 5.2-5.49% of MgO, 0.16-0.48% of MnO and 0.46-0.82% of TiO2"
+    },
+    "flyash": {
+      "CaO": null,
+      "SiO2": 48.04,
+      "Al2O3": 27.62,
+      "Fe2O3": 11.78,
+      "MgO": null,
+      "SO3": null,
+      "evidence": "sourced",
+      "citation": "Syahyadi R., Saidi T., Hasan M., Akhyar, Fauzi A., Rachman A., 2026, Comprehensive Characterization of Fly Ash as a Sustainable Supplementary Cementitious Material, Civil Engineering Journal",
+      "url": "https://doi.org/10.28991/cej-2026-012-02-015",
+      "quote": "FANR was analyzed using XRF ... It mainly contained SiO2 (48.04%), Al2O3 (27.62%), and Fe2O3 (11.78%), meeting ASTM Class F fly ash standards."
+    }
+  },
+  "alternates_seen_tonight": {
+    "flyash_low_calcium_2": {
+      "CaO": 1.57,
+      "SiO2": 69.66,
+      "Al2O3": 21.34,
+      "Fe2O3": 2.78,
+      "MgO": null,
+      "SO3": null,
+      "evidence": "sourced",
+      "citation": "Rakhimova G., Syndarbekova G., Zhanikulov N., Yerkebayeva B., Potapova E., Rakhimov M., 2025, Obtaining of Composite Cements with Addition of Fly Ash, Buildings",
+      "url": "https://doi.org/10.3390/buildings15193523",
+      "quote": "the fly ash examined consists of 69.66 wt. % silicon oxide, 21.34 wt. % aluminum oxide, 1.57 wt. % calcium oxide and 2.78 wt. % iron oxide",
+      "caveat": "abstract does not use the words Class F; low CaO is consistent with it"
+    },
+    "blast_furnace_slag_2": {
+      "CaO": [
+        42.41,
+        44.1
+      ],
+      "SiO2": [
+        32.29,
+        35.56
+      ],
+      "Al2O3": [
+        12.2,
+        15.63
+      ],
+      "Fe2O3": null,
+      "MgO": null,
+      "SO3": null,
+      "evidence": "sourced (ranges; abstract truncated before MgO)",
+      "citation": "Ene A., Szabo G., XRF Assessment of Microcomposition and Basicity Index of Metallurgical Slags (via SciSpace; year and journal not shown in tool output)",
+      "url": "https://scispace.com/papers/xrf-assessment-of-microcomposition-and-basicity-index-of-k4zcdts1yjge",
+      "quote": "ranges of oxides concentrations were obtained in BF slags by ... (WXRF): 32.29-35.56% SiO2; 42.41-44.1 % CaO; 12.20-15.63% Al2O3"
+    }
+  },
+  "notes": "Routes used: Consensus (2 searches ran, 1 rate-limited), FastTrack Literature Open (2), SciSpace (3, different wording from the other agent). Evidence is abstract text only; no full-text tables were opened in the time limit, and no single paper gave all three binders. CEMENT: CaO, SiO2, Al2O3, Fe2O3 are midpoints I computed from general ranges stated in one repository abstract (ranges_as_seen is exactly what was shown); MgO and SO3 were NOT seen, are null, and typical_fill_not_sourced holds memory values to be labelled 'typical'. SLAG: midpoints computed from ranges in a 1996 patent abstract ('Cab' read as CaO, OCR noise); a second blast furnace slag source (alternates) gives CaO 42.41-44.1, higher than the patent midpoint 35.36, so slag CaO is uncertain by several points. FLY ASH: single measured Class F ash; only SiO2, Al2O3, Fe2O3 were stated; CaO, MgO, SO3 null. The alternate fly ash gives CaO 1.57 but is a different ash - do not merge rows. Oxide sets do not sum to 100 (minor oxides and loss on ignition omitted)."
+}

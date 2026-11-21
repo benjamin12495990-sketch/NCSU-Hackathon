@@ -120,7 +120,9 @@ tr.on td { background: var(--accent-soft); }
 .req.off .reqvalue { color: var(--muted); }
 .reqvalue { font-size: 0.9rem; }
 @media (max-width: 720px) { .req { grid-template-columns: 1fr; gap: 4px; } .fields.two { grid-template-columns: 1fr; } }
-.srcdot { color: var(--accent); font-size: 0.7em; vertical-align: middle; }
+/* taste.md: the accent is for the button, links and the selected item only, so data marks stay ink. */
+.srcdot { color: var(--ink); font-size: 0.7em; vertical-align: middle; }
+.flag.plain { background: var(--bg); color: var(--muted); border: 1px solid var(--line); font-weight: 600; }
 td .label { font-size: 0.75rem; }
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
 .mini { border: 1px solid var(--line); border-radius: 6px; background: var(--card); padding: 14px 16px; }

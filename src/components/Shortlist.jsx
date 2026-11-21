@@ -116,7 +116,7 @@ export default function Shortlist({ result, data }) {
         <div className="cards">
           {frontier.map((f) => (
             <article key={f.name} className="mini">
-              <h3>{f.name} <span className="flag hot">{f.readiness}</span></h3>
+              <h3>{f.name} <span className="flag plain">{f.readiness}</span></h3>
               <p>{f.best_at}</p>
               <p><strong>{f.headline_number}</strong></p>
               {f.note && <p className="fine">{f.note}</p>}

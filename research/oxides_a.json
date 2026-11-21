@@ -1,0 +1,52 @@
+{
+  "binders": {
+    "cement": {
+      "CaO": 63.5,
+      "SiO2": 20.5,
+      "Al2O3": 5.0,
+      "Fe2O3": 3.0,
+      "MgO": 2.0,
+      "SO3": 2.8,
+      "evidence": "typical",
+      "citation": "Scalar values are typical textbook figures for ordinary Portland cement (not seen in tool output). A sourced RANGE is in sourced_range: Venegas Padilla J., Calderon Jimenez B., Sibaja Brenes J.P. (first three authors as listed by SciSpace), 2017, Contenido de metales pesados y composicion quimica de los cementos hidraulicos de uso general comercializados en Costa Rica, Ingenieria.",
+      "url": "https://scispace.com/papers/contenido-de-metales-pesados-y-composicion-quimica-de-los-8etfv1et3u",
+      "quote": "SciSpace extract_data output: 'Hydraulic cement, general use (cement type not specified) | 61.22-63.12 | 18.10-26.14 | 3.70-6.05 | 2.57-3.36 | 0.60-4.09 | not reported' (columns CaO, SiO2, Al2O3, Fe2O3, MgO, SO3, mass %)",
+      "sourced_range": {
+        "evidence": "sourced",
+        "method": "XRF, per the paper abstract",
+        "material": "general-use hydraulic cements sold in Costa Rica, cement type not specified (may include blended cements, which would explain the high SiO2 upper bound)",
+        "CaO": [61.22, 63.12],
+        "SiO2": [18.10, 26.14],
+        "Al2O3": [3.70, 6.05],
+        "Fe2O3": [2.57, 3.36],
+        "MgO": [0.60, 4.09],
+        "SO3": null
+      }
+    },
+    "slag": {
+      "CaO": 40.0,
+      "SiO2": 35.0,
+      "Al2O3": 12.0,
+      "Fe2O3": 0.5,
+      "MgO": 8.0,
+      "SO3": 1.0,
+      "evidence": "typical",
+      "citation": "none - typical GGBS/GGBFS values from general knowledge, not seen in tool output tonight",
+      "url": null,
+      "quote": "No tool output tonight contained slag oxide numbers. SciSpace extract_data returned 'not reported' for the slag in all 12 papers queried."
+    },
+    "flyash": {
+      "CaO": 3.5,
+      "SiO2": 55.0,
+      "Al2O3": 25.0,
+      "Fe2O3": 7.0,
+      "MgO": 1.5,
+      "SO3": 0.8,
+      "evidence": "typical",
+      "citation": "none - typical Class F (low-calcium, siliceous) fly ash values from general knowledge, not seen in tool output tonight",
+      "url": null,
+      "quote": "No tool output tonight contained Class F fly ash oxide numbers. SciSpace extract_data returned 'not reported' for the fly ash in all 12 papers queried."
+    }
+  },
+  "notes": "NOTHING HERE IS A SINGLE-PAPER XRF TABLE. All 18 scalar oxide values are marked typical: they are general-knowledge figures, not read from tool output. The only numbers actually seen in tool output tonight are the cement RANGES in binders.cement.sourced_range (Costa Rica general-use hydraulic cements, XRF, cement type not specified, SO3 not reported); the typical cement scalars fall inside those ranges except SO3, which has no sourced check. SciSpace extract_data was run on 12 ternary/blended papers (including Sanjuan 2022 Materials, Rivera 2020 Sustainability, Rivera 2021 Materials, Kamau 2017, Rashad 2014, Snyder NIST 2009) and returned 'not reported' for the materials-table oxides every time - it appears not to read the composition tables, so those papers very likely DO contain the numbers and are the right ones to open by hand. The NIST report (Snyder, Stutzman, Philip 2009, Hydrated phases in blended cementitious systems for nuclear infrastructure) states oxide mass fractions are in its Table 2, but it uses ASTM Type III cement and Class C fly ash, not Class F. Typical values assume: cement = ordinary Portland cement (ASTM C150 Type I / CEM I); slag = ground granulated blast furnace slag; fly ash = ASTM C618 Class F (SiO2+Al2O3+Fe2O3 at least 70 percent, low CaO). Label these as typical in the app, not as measured."
+}
