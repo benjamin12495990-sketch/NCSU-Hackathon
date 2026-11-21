@@ -5,6 +5,8 @@ import { concreteLimits } from './lib/exposure.js'
 import { rankMaterials } from './lib/rank.js'
 import Requirements, { DEFAULT_REQ } from './components/Requirements.jsx'
 import Shortlist from './components/Shortlist.jsx'
+import Planned from './components/Planned.jsx'
+import { DOMAINS } from './lib/domains.js'
 
 // Three.js is big, so the 3D stage is downloaded only when a result is shown.
 const MixStage = lazy(() => import('./components/MixStage.jsx'))
@@ -64,6 +66,7 @@ export default function App() {
   const [req, setReq] = useState(DEFAULT_REQ) // environment switches and sliders
   const [field, setField] = useState('general')
   const [objective, setObjective] = useState('co2')
+  const [domainId, setDomainId] = useState('concrete') // which family of materials is shown
 
   useEffect(() => {
     loadModel().then(setData, (e) => setLoadError(e.message))
@@ -136,7 +139,26 @@ export default function App() {
     <main>
       <header>
         <p className="eyebrow">Engineer the Tools of Scientific Discovery</p>
-        <h1>Low-Carbon Concrete Mix Designer</h1>
+        <h1>Formulation Designer</h1>
+        <p className="lede">
+          Proposes new formulations for a property you need, and ranks them. Concrete is live. Six
+          more families of materials are planned and marked as planned.
+        </p>
+        <nav className="domains" aria-label="Family of materials">
+          {DOMAINS.map((d) => (
+            <button type="button" key={d.id} className="chip" aria-pressed={domainId === d.id} onClick={() => setDomainId(d.id)}>
+              {d.label} <span className={d.live ? 'tag live' : 'tag'}>{d.live ? 'Live' : 'Planned'}</span>
+            </button>
+          ))}
+        </nav>
+      </header>
+
+      {domainId !== 'concrete' ? (
+        <Planned domain={DOMAINS.find((d) => d.id === domainId)} onBack={() => setDomainId('concrete')} />
+      ) : (
+      <>
+      <section className="intro">
+        <h2>Low-carbon concrete mixes</h2>
         <p className="lede">
           Say how strong the concrete must be. The app proposes new mixes predicted to reach that
           strength and ranks them by embodied CO<sub>2</sub>. For civil and materials engineering
@@ -144,7 +166,7 @@ export default function App() {
           for the concrete to cure. Only concrete mixes are generated; every other material on the page is
           an existing one, shown for comparison.
         </p>
-      </header>
+      </section>
 
       <form
         onSubmit={(e) => {
@@ -414,6 +436,9 @@ export default function App() {
             </table>
           </div>
         </section>
+      )}
+
+      </>
       )}
 
       <footer>

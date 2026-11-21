@@ -126,4 +126,20 @@ td .label { font-size: 0.75rem; }
 .mini { border: 1px solid var(--line); border-radius: 6px; background: var(--card); padding: 14px 16px; }
 .mini h3 { margin: 0 0 6px; font-size: 0.95rem; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .mini p { margin: 0 0 6px; font-size: 0.88rem; }
-.mixname { display: block; font-weight: 600; font-size: 0.92rem; color: var(--accent); }
+.mixname { display: block; font-weight: 600; font-size: 0.92rem; color: var(--ink); }
+/* Family switcher: pills, because they are pressed. The accent marks only the selected one. */
+.domains { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
+.domains .chip { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; font-size: 0.9rem; }
+.tag { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.tag.live { color: var(--ok-ink); }
+.intro { margin-top: 24px; }
+.intro .lede { margin-bottom: 20px; }
+.planned h2 { margin: 10px 0 6px; font-size: 1.25rem; }
+.plan { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0; margin: 14px 0; border: 1px solid var(--line); border-radius: 6px; }
+.plan div { padding: 12px 14px; border-right: 1px solid var(--line); }
+.plan div:last-child { border-right: 0; }
+.plan dt { font-size: 0.8rem; color: var(--muted); margin-bottom: 4px; }
+.plan dd { margin: 0; font-weight: 600; font-size: 0.92rem; }
+@media (max-width: 720px) { .plan div { border-right: 0; border-bottom: 1px solid var(--line); } .plan div:last-child { border-bottom: 0; } }
+.chem { display: block; font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.chem sub { font-size: 0.72em; }
