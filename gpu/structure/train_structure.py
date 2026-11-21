@@ -117,6 +117,17 @@ def to_device(b, device):
     return {k: (torch.as_tensor(v, device=device) if k != 'n_graphs' else v) for k, v in b.items()}
 
 
+def save_predictions(path, recs, idx, y, preds):
+    """predictions.npz: for val and test, the record ids, reduced formulas, true and predicted log10 values."""
+    arrays = {}
+    for p in ('val', 'test'):
+        arrays[f'{p}_jid'] = np.array([recs[i]['jid'] for i in idx[p]])
+        arrays[f'{p}_formula'] = np.array([recs[i]['formula'] for i in idx[p]])
+        arrays[f'{p}_y'] = np.asarray(y[idx[p]])
+        arrays[f'{p}_pred'] = np.asarray(preds[p])
+    np.savez_compressed(path, **arrays)
+
+
 def run_model(model, graphs, idx, device, batch, amp):
     import torch
     out = []
@@ -275,7 +286,8 @@ def main(argv=None):
             raise SystemExit(3)
     model.load_state_dict(best_state)
     best_epoch = 1 + int(np.argmin([h['val_mae'] for h in history]))
-    res_model = {p: metrics(run_model(model, graphs, idx[p], device, 256, a.amp) * ys + ym, y[idx[p]]) for p in ('val', 'test')}
+    preds = {p: run_model(model, graphs, idx[p], device, 256, a.amp) * ys + ym for p in ('val', 'test')}
+    res_model = {p: metrics(preds[p], y[idx[p]]) for p in ('val', 'test')}
     result = {'created': now_iso(), 'git': git_info(), 'device': str(device), 'hardware': hardware(device), 'threads': torch.get_num_threads(),
               'argv': sys.argv, 'config': cfg, 'source': source, 'counts': counts,
               'target': 'log10(bulk_modulus_kv / GPa), JARVIS-DFT OptB88vdW computed Voigt bulk modulus' if not a.synthetic else 'synthetic (pipeline check)',
@@ -292,6 +304,7 @@ def main(argv=None):
               'history': history}
     write_json_new(run / 'result.json', result)
     torch.save(best_state, run / 'best_model.pt')
+    save_predictions(run / 'predictions.npz', recs, idx, y, preds)
     print('\nlog10(K/GPa)          val MAE   test MAE   test R2')
     print(f'mean baseline         {base["mean"]["val"]["mae"]:.4f}    {base["mean"]["test"]["mae"]:.4f}     {base["mean"]["test"]["r2"]:.3f}')
     rb = base['ridge_element_fractions']

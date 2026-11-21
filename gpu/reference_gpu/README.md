@@ -27,6 +27,18 @@ formula (a fixed SHA-256 rule); it is not a held-out chemical-system split. Best
 | Ridge on element fractions | 0.1631 | 0.1707 | 0.520 |
 | Crystal-graph network (best epoch 83 of 100) | 0.0953 | 0.0980 | 0.704 |
 
+Tree baselines on the same records and split (run on the cloud CPU with `gpu/structure/baseline_trees.py`; settings chosen
+on validation, test scored once; `../reference_cpu/structure_tree_baselines.json`):
+
+| log10(K / GPa) | Validation MAE | Test MAE | Test R2 |
+| --- | --- | --- | --- |
+| ExtraTrees on element fractions | 0.1290 | 0.1370 | 0.581 |
+| Gradient boosting on element fractions + volume per atom + atoms per cell | 0.1005 | 0.1063 | 0.723 |
+
+- The crystal network's test MAE (0.098) is 8% lower than the best cheap tree's (0.106), but its R2 is lower (0.704 against
+  0.723). It beats the ridge baseline by 43%, but against a tree given just two extra cell features the gap is small.
+  One run and no paired test cannot tell these apart. The finished run did not save its test predictions; recover them
+  from `best_model.pt` with `python -m gpu.structure.predict_run`, then compare with `compare_structure` (see `../README.md`).
 - Training time 615.9 s for 100 epochs (about 6.2 s per epoch), 4,129 structures per second on CUDA.
 - A test MAE of 0.098 log10 units is a typical error of about a factor of 1.25. The ridge baseline is 1.48, the mean 2.1.
 - The 2-epoch CPU reference (`../reference_cpu/`) had test MAE 0.126, so 100 epochs lowered the error by about 22%.

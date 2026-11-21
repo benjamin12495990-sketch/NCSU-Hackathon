@@ -225,3 +225,22 @@ full 100-epoch run (about 1.5 hours on this CPU) is the laptop's job.
   metrics. Alloy CV MAE is 77.7 here and 75.3 in JavaScript.
 - The structure model is a plain CGCNN with fixed hyperparameters (64 features, 3 convolutions, AdamW
   2e-3, 60 epochs by default). It has not been tuned, and it has no uncertainty estimate.
+
+
+## 4. Is the crystal network better than trees?
+
+The ridge baseline in `train_structure.py` is weak, so beating it proves little. `baseline_trees.py` trains tree models on
+the same records, target and split (element fractions; and fractions plus volume per atom and atoms per cell), choosing
+settings on validation rows only. `compare_structure.py` then does a paired bootstrap over whole formulas.
+
+```
+python -m gpu.structure.baseline_trees --threads 4 --output gpu/runs/structure/trees_laptop.json
+python -m gpu.structure.predict_run --run gpu/runs/structure/<a finished run without predictions.npz> --device cuda
+python -m gpu.structure.train_structure --device cuda --epochs 100 --seed 12 --tag seed12      # new runs save predictions.npz
+python -m gpu.structure.train_structure --device cuda --epochs 100 --seed 13 --tag seed13
+python -m gpu.structure.compare_structure --runs gpu/runs/structure/<run1> gpu/runs/structure/<run2> gpu/runs/structure/<run3> ^
+    --trees gpu/runs/structure/trees_laptop_predictions.npz --output gpu/runs/structure/compare_laptop.json
+```
+(`^` continues a line in PowerShell; use `\` on Linux.) A negative difference favours the network; the interval is
+the 95% bootstrap range. "Not distinguishable" means the intervals include zero. Do not claim the network is better than
+trees unless the interval lies below zero against the cell-feature tree baseline too.

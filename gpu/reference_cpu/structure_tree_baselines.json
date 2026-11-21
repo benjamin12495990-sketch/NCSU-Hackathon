@@ -1,0 +1,92 @@
+{
+ "task": "log10(bulk_modulus_kv / GPa), JARVIS-DFT 3D (DFT-calculated)",
+ "counts": {
+  "records": 93902,
+  "missing_or_non_numeric": 61469,
+  "non_positive": 536,
+  "kept": 31897,
+  "used": 31897
+ },
+ "source": {
+  "zip_sha256": "f9e0a3309f0000d5de1ec9e49c93963109ea45e63f451103f8f6595d2eabf7f5",
+  "json_name": "jdft_3d-9-24-2025.json"
+ },
+ "split_sizes": {
+  "train": 25432,
+  "val": 3174,
+  "test": 3291
+ },
+ "split_rule": "sha256('split-v1:' + reduced formula) % 100: <80 train, <90 val, else test",
+ "mean": {
+  "val": {
+   "n": 3174,
+   "mae": 0.32005227724746976,
+   "rmse": 0.4066141254235547,
+   "r2": -2.3696726922928235e-06
+  },
+  "test": {
+   "n": 3291,
+   "mae": 0.32375356284083573,
+   "rmse": 0.42648535979950297,
+   "r2": -1.3686306603588605e-06
+  }
+ },
+ "feature_sets": {
+  "composition": {
+   "n_features": 118,
+   "selected": "extratrees_300_leaf1",
+   "val": {
+    "n": 3174,
+    "mae": 0.1290219487048258,
+    "rmse": 0.24868362430405666,
+    "r2": 0.6259492910282997
+   },
+   "test": {
+    "n": 3291,
+    "mae": 0.13701317415406722,
+    "rmse": 0.2760212112084855,
+    "r2": 0.5811319316686849
+   },
+   "all_val_mae": {
+    "extratrees_300_leaf1": 0.1290219487048258,
+    "extratrees_300_leaf2": 0.13446227396975027,
+    "histgb_lr0.1": 0.13691236459567824,
+    "histgb_lr0.05": 0.13628413903226225
+   }
+  },
+  "comp+cell": {
+   "n_features": 120,
+   "selected": "histgb_lr0.05",
+   "val": {
+    "n": 3174,
+    "mae": 0.10048522191173846,
+    "rmse": 0.2009751943748725,
+    "r2": 0.7557013760729712
+   },
+   "test": {
+    "n": 3291,
+    "mae": 0.10626669298947941,
+    "rmse": 0.22443998149927652,
+    "r2": 0.7230554724476729
+   },
+   "all_val_mae": {
+    "extratrees_300_leaf1": 0.10343370644022408,
+    "extratrees_300_leaf2": 0.10695250867042254,
+    "histgb_lr0.1": 0.10141736180385061,
+    "histgb_lr0.05": 0.10048522191173846
+   }
+  }
+ },
+ "created": "2026-11-21T22:39:53+00:00",
+ "hardware": {
+  "python": "3.13.18",
+  "platform": "Linux-6.18.44-fc-v726-x86_64-with-glibc2.39",
+  "machine": "x86_64",
+  "processor": "x86_64",
+  "cpu_count": 4,
+  "torch": "2.15.0+cu132",
+  "torch_cuda_build": "13.2",
+  "cuda_available": false
+ },
+ "selection": "by validation MAE within each feature set; test scored once for the selected model"
+}
