@@ -30,4 +30,5 @@ How a candidate is checked against its nearest measured neighbours before it is 
 
 ---
 **Ground rules:** predictions labelled as predictions; every non-learned number cited; the tool
-narrows the experiment list, it does not replace the experiment. See `../../docs/AGENTS.md`.
+narrows the experiment list, it does not replace the experiment; chemistry & materials only, never
+biology. See `../../docs/AGENTS.md`.

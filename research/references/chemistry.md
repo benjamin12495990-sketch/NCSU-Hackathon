@@ -1,11 +1,11 @@
-# References — Chemistry / molecules
+# References — General chemistry (molecules & mixtures)
 
-Stub. For molecular-property or reaction-yield work, record sourced numbers here using
-`../templates/reference-entry.md`.
+Sourced numbers for the non-biological chemistry domain. Use `../templates/reference-entry.md`.
+Retrieve and cross-check via the research MCPs (`../connectors.md`).
 
-Suggested first sources to retrieve via OpenAlex / Wiley / Firecrawl:
-- benchmark datasets (e.g. QM9, MoleculeNet) and their property definitions + units;
-- synthesis-difficulty / synthetic-accessibility scoring references;
-- toxicity endpoints and their sources for the cost objective.
+First sources to confirm (licence + fields) before use:
+- **QM9** (quantum properties), **ESOL / Delaney** (aqueous solubility).
+- The **physico-chemical** subsets of MoleculeNet (avoid its toxicity/bio tasks — out of scope).
+- Synthesis-accessibility / cost references for the cost objective.
 
 _No entries yet._

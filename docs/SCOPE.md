@@ -1,49 +1,59 @@
-# Scope: from concrete to a tool for scientific discovery
+# Scope: a general engine for proposing physical formulations
 
 ## The grand challenge
 
 > Engineer the Tools of Scientific Discovery.
 
-The concrete app (`src/`, `train/`, `public/model/`) is the **first worked example**, not the
-whole project. It demonstrates a pattern that generalises far past concrete.
+The concrete app (`src/`, `train/`, `public/model/`) is the **first worked example**. The ambition
+is much larger: a single engine that proposes new, unseen **formulations and material
+compositions** for a target property and ranks them by cost — across chemistry and materials
+science, one domain after another.
 
-## The pattern
+## Out of scope (deliberately)
 
-Every physical experiment is slow and expensive. A concrete mix takes up to 28 days to cure; a
-new alloy, a candidate molecule, or a protein variant each carry their own long, costly loop. So
-only a handful of the possible candidates are ever tried.
+**Biology.** No proteins, sequences, assays, drugs, or living systems. It is a complete subject of
+its own with its own data, safety and regulatory world, and folding it in would dilute everything
+else. Everything here is **non-living chemistry and materials**: molecules, mixtures, solids, and
+solutions.
 
-The pattern this project applies to that problem:
+## The pattern (unchanged across every domain)
 
-1. **Learn a surrogate.** Train a model on a lab-tested dataset so it predicts the expensive
-   outcome (strength, conductivity, binding affinity, …) from cheap-to-compute inputs.
-2. **Quantify caution.** Pair the expected-value model with a conservative lower estimate, so the
-   tool proposes candidates that are *likely* to clear the bar, not just those that might.
-3. **Generate and rank candidates.** Perturb known-good examples to propose new, unseen ones;
-   drop duplicates; keep those the cautious model clears; rank by a cost objective (CO2, price,
-   toxicity, synthesis difficulty).
-4. **Check against the real data.** Flag a candidate as "lab-supported" only when its nearest
-   measured neighbours agree. Never pretend a prediction is a measurement.
-5. **Ground every assumption in the literature.** Any number the model does not learn from data
-   (CO2 factors, densities, physical constants) is sourced to a published paper, retrieved and
-   cross-checked through the research MCPs in `research/connectors.md`.
+Every physical experiment is slow and expensive, so only a handful of the possible candidates ever
+get tried. The engine:
 
-## Domains in scope
+1. **Learns a surrogate** on a lab-tested dataset: predict the expensive outcome from cheap inputs.
+2. **Quantifies caution**: pair the expected value with a calibrated lower (or upper) bound, so it
+   proposes candidates *likely* to clear the bar.
+3. **Generates and ranks candidates**: perturb known-good examples into new ones, drop duplicates,
+   keep those the cautious model clears, rank by a cost objective.
+4. **Checks against real data**: flag "lab-supported" only when nearest measured neighbours agree.
+5. **Grounds every assumption in the literature** via the research MCPs in `research/connectors.md`.
 
-Selected directions (see `domains/`):
+Two model families already exist for step 1–2: gradient-boosted trees (`train/train.py`) and a
+neural network (`pipeline/train_nn.py`). Both plug into any domain below.
 
-| Domain | Expensive outcome | Candidate space | Cost objective |
+## The domain map (be unreasonably ambitious)
+
+Each row reuses steps 1–5. What changes is the dataset, the featurisation, and the literature
+sources — **not the method**.
+
+| Domain | Expensive outcome to predict | Candidate space | Cost / objective |
 | --- | --- | --- | --- |
-| **Materials** (live: concrete) | compressive strength, cure time | mix / composition | embodied CO2 |
-| **Materials** (next) | alloy / polymer / battery properties | composition, processing | cost, CO2, scarcity |
-| **Chemistry** | molecular property, reaction yield | molecular structure | synthesis difficulty, toxicity |
-| **Biology** | binding, immunogenicity, MIC | sequence / variant | off-target risk, developability |
+| **Concrete** (live) | compressive strength, cure time | mix proportions | embodied CO2 |
+| **Carbon-based polymers** | glass transition, tensile strength, thermal stability | monomer choice, chain/composition | synthesis cost, CO2, recyclability |
+| **Corrosive solutions** | corrosion rate / material compatibility | acid·base·salt·inhibitor + concentration + temperature | material loss, hazard, cost |
+| **Cleaning products** | cleaning efficacy, critical micelle concentration, surface tension | surfactant blend + builders + solvent | cost, biodegradability, irritancy |
+| **Insulators** | thermal conductivity, dielectric breakdown strength | composition, porosity, processing | cost, weight, CO2 |
+| **General materials** | any measured property (hardness, conductivity, density) | composition + processing | cost, scarcity, CO2 |
+| **General chemistry** | solubility, boiling point, reaction yield, viscosity | molecular structure, mixture | synthesis difficulty, cost |
 
-Each domain reuses steps 1–5. What changes per domain is the dataset, the featurisation, and the
-literature sources — not the method.
+### Reach domains (same engine, later)
+coatings · adhesives · lubricants · electrolytes & battery chemistries · refrigerants · dyes &
+pigments · catalysts · propellants · sealants · composites · glasses & ceramics.
 
 ## What stays true across every domain
 
 - **Nothing is mocked.** Predictions are labelled as predictions; measurements as measurements.
-- **Every non-learned number is cited** to a retrievable source.
-- **The tool narrows the experiment list; it does not replace the experiment.**
+- **Every non-learned number is cited** to a retrievable source (`research/references/<domain>.md`).
+- **The engine narrows the experiment list; it does not replace the experiment.**
+- **Chemistry and materials only — never biology.**

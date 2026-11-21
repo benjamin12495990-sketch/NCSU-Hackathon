@@ -1,11 +1,11 @@
-# References — Materials (beyond concrete)
+# References — General materials
 
-Stub. As the materials scope grows past concrete (alloys, polymers, batteries), record each
-sourced number here using `../templates/reference-entry.md`.
+Sourced numbers for cross-cutting materials work. Use `../templates/reference-entry.md`. Retrieve
+and cross-check via the research MCPs (`../connectors.md`).
 
-Suggested first sources to retrieve via OpenAlex / Wiley / Scite:
-- embodied-carbon / energy factors per material class (ICE database and peer-reviewed updates);
-- property datasets (e.g. Materials Project, Matbench) and their licences;
-- element scarcity / price references for the cost objective.
+First sources to confirm (licence + fields) before use:
+- **Materials Project**, **Matbench**, **JARVIS-DFT** property datasets.
+- Embodied-carbon / energy factors per material class (ICE database + peer-reviewed updates).
+- Element scarcity / price references for the cost objective.
 
 _No entries yet._
