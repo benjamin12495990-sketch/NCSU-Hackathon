@@ -18,7 +18,8 @@ the visual rules in [`taste.md`](taste.md).
 
 ## What it does
 
-Enter a target strength in MPa and a curing age. In the browser, with no server, the app:
+Enter a target strength in MPa and a curing age. In the browser (or on the server, if you press
+"Ping server for a new batch"), the app:
 
 1. generates about 12,000 mixes by varying each of the 306 lab-tested mixes in the dataset
    (binder amount, share of slag and fly ash, water/binder ratio, superplasticizer dose), rescaling
