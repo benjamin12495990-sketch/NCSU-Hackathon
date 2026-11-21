@@ -64,6 +64,7 @@ export default function App() {
   const [onlySupported, setOnlySupported] = useState(true)
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
+  const [serverLoading, setServerLoading] = useState(false)
   const [view, setView] = useState('row0') // which mix the 3D stage shows
   const [req, setReq] = useState(DEFAULT_REQ) // environment switches and sliders
   const [field, setField] = useState('general')
@@ -74,34 +75,68 @@ export default function App() {
     loadModel().then(setData, (e) => setLoadError(e.message))
   }, [])
 
-  const run = (targetText = target) => {
-    setTarget(targetText)
-    setView('row0')
+  const parseTarget = (targetText) => {
     // Accept plain decimals only ("35", "35.5", "35,5", "35 MPa"); reject forms
     // such as 0x23 or 3e1 that JavaScript would quietly turn into a number.
     const text = String(targetText).trim().replace(/\s*mpa$/i, '').replace(',', '.')
     const mpa = /^\d+(\.\d+)?$/.test(text) ? Number(text) : NaN
     if (!Number.isFinite(mpa)) {
-      setResult(null)
-      return setError('Type the strength you need in MPa as a number, for example 35.')
+      setError('Type the strength you need in MPa as a number, for example 35.')
+      return null
     }
     if (mpa < 5 || mpa > 80) {
-      setResult(null)
-      return setError('Choose a strength between 5 and 80 MPa. The lab results behind the model run from about 2 to 83 MPa.')
+      setError('Choose a strength between 5 and 80 MPa. The lab results behind the model run from about 2 to 83 MPa.')
+      return null
     }
+    return mpa
+  }
+
+  const run = (targetText = target) => {
+    setTarget(targetText)
+    setView('row0')
+    const mpa = parseTarget(targetText)
+    if (mpa == null) return setResult(null)
     try {
       // The environment can cap the water/binder ratio and raise the strength the concrete needs.
       const limits = concreteLimits(req, data.exposure)
       const needed = Math.max(mpa, limits.minStrengthMPa)
       setResult({
         ...design({ targetMPa: needed, ageDays: age, allowSlag, allowFlyAsh, cautious, onlySupported, maxWaterBinder: limits.maxWaterBinder }, data),
-        cautious, onlySupported, asked: mpa, limits, req, objective,
+        cautious, onlySupported, asked: mpa, limits, req, objective, source: 'client',
         shortlist: rankMaterials(data.materialFile.materials, req, mpa, objective),
       })
       setError('')
     } catch (e) {
       setResult(null)
       setError(`Something went wrong while designing mixes: ${e.message}`)
+    }
+  }
+
+  // Pings the Vercel API route instead of designing locally: the same
+  // generate-and-rank pipeline runs server-side, with a fresh random seed
+  // each call, so repeated pings surface new candidates rather than the
+  // page's fixed demo batch.
+  const runServer = async (targetText = target) => {
+    setTarget(targetText)
+    setView('row0')
+    const mpa = parseTarget(targetText)
+    if (mpa == null) return setResult(null)
+    setServerLoading(true)
+    try {
+      const res = await fetch('/api/design', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetMPa: mpa, ageDays: age, allowSlag, allowFlyAsh, cautious, onlySupported, req, objective }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`)
+      setResult({ ...json, source: 'server' })
+      setError('')
+    } catch (e) {
+      setResult(null)
+      setError(`Something went wrong pinging the server for mixes: ${e.message}`)
+    } finally {
+      setServerLoading(false)
     }
   }
 
@@ -189,6 +224,9 @@ export default function App() {
             </select>
           </div>
           <button type="submit" disabled={!data}>{data ? 'Design mixes' : 'Loading model…'}</button>
+          <button type="button" disabled={!data || serverLoading} onClick={() => runServer()}>
+            {serverLoading ? 'Pinging server…' : 'Ping server for a new batch'}
+          </button>
         </div>
         <div className="examples">
           <span>Try:</span>
@@ -291,8 +329,8 @@ export default function App() {
             <section>
               <h2>Generated mixes, ranked</h2>
               <p className="note">
-                {result.stats.generated.toLocaleString()} mixes were generated in your browser by varying
-                the {data.known.entries.length} tested mixes in the dataset. {result.stats.removedKnown.toLocaleString()} already
+                {result.stats.generated.toLocaleString()} mixes were generated {result.source === 'server' ? 'on the server, just now' : 'in your browser'} by
+                varying the {data.known.entries.length} tested mixes in the dataset. {result.stats.removedKnown.toLocaleString()} already
                 exist (within 5 kg of a tested mix on every ingredient) and were removed.
                 {result.stats.overWaterLimit > 0 && ` ${result.stats.overWaterLimit.toLocaleString()} broke the water / binder limit from your environment.`}{' '}
                 {result.stats.meetTarget.toLocaleString()} of the rest have a {bar} of at least {result.targetMPa} MPa.
@@ -479,7 +517,9 @@ export default function App() {
         {m && (
           <p>
             Model: {m.model}, trained {m.trained_at.slice(0, 10)} on {m.train_rows} lab results from{' '}
-            {m.train_mixes} mixes. Everything on this page is computed in your browser.
+            {m.train_mixes} mixes. "Design mixes" runs entirely in your browser. "Ping server for a new
+            batch" calls the same pipeline as a Vercel API route (<code>api/design.js</code>) instead, with a
+            fresh random seed each call.
           </p>
         )}
         <p>

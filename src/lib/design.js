@@ -73,9 +73,9 @@ function variant(parent, rand, step, opts, data) {
 //      and actually reached the target in the lab.
 export function design(request, data, limit = 10) {
   const { spec, model, modelLow, known, metrics, factors } = data
-  const opts = { allowSlag: true, allowFlyAsh: true, onlySupported: true, cautious: true, maxWaterBinder: null, ...request }
+  const opts = { allowSlag: true, allowFlyAsh: true, onlySupported: true, cautious: true, maxWaterBinder: null, seed: 20261120, ...request }
   const { targetMPa, ageDays } = opts
-  const rand = seeded(20261120)
+  const rand = seeded(opts.seed)
   const stats = { generated: 0, removedKnown: 0, meetTarget: 0, hiddenUnsupported: 0, overWaterLimit: 0 }
   const waterBinder = (mix) => mix[3] / (mix[0] + mix[1] + mix[2])
   const withinWater = (mix) => opts.maxWaterBinder == null || waterBinder(mix) <= opts.maxWaterBinder + 1e-9
