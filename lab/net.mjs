@@ -101,6 +101,8 @@ class Mlp {
 
 export { seeded, Mlp }
 
+// Copied from src/lib/nn.js (net_parity.mjs checks the copy is identical).
+export const PANEL_DESIGN = { features: 'physics', physicsOn: 'base', physics: ['abrams', 'bolomey', 'feret', 'bolomeyAge'], decay: 0.003, loss: 'huber' }
 export const DEFAULTS = { hidden: [64, 32], epochs: 300, batch: 32, lr: 0.004, decay: 1e-3, seed: 11, features: 'base', loss: 'squared', kSlag: 0.9, kFly: 0.4 }
 const FEATURES = ['cement', 'slag', 'flyash', 'water', 'superplasticizer', 'coarse', 'fine', 'age', 'water_binder_ratio']
 

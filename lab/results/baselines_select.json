@@ -1,0 +1,89 @@
+{
+ "note": "Trained on TRAIN (age <= 7 d, 253 rows), scored on SELECT (14-28 d, 481 rows). reward = -MAE - lambda * violations.",
+ "models": {
+  "plain": {
+   "kind": "network",
+   "options": {},
+   "file": "results/models/plain.json.gz",
+   "sha256": "29058809cc31006738e07628a61765c61167f013b7a3dee82f855f459a2b7984",
+   "reward": -12.825192997933609,
+   "selectMae": 12.466690849376212,
+   "selectR2": -0.1970281340641693,
+   "violations": 0.1792510742786986,
+   "fallingShare": 0.14917127071823205,
+   "negativeShare": 0.030079803560466543,
+   "lambda": 2
+  },
+  "physics": {
+   "kind": "network",
+   "options": {
+    "features": "physics",
+    "physicsOn": "base",
+    "physics": [
+     "abrams",
+     "bolomey",
+     "feret",
+     "bolomeyAge"
+    ],
+    "decay": 0.003,
+    "loss": "huber"
+   },
+   "file": "results/models/physics.json.gz",
+   "sha256": "05be473ba647288b7a68e7083aeb0c44c84bcd1f266179189ce6d053cd3768d2",
+   "reward": -7.875681697481213,
+   "selectMae": 7.551556467278635,
+   "selectR2": 0.5081305310166984,
+   "violations": 0.16206261510128914,
+   "fallingShare": 0.15469613259668508,
+   "negativeShare": 0.007366482504604052,
+   "lambda": 2
+  },
+  "trees": {
+   "kind": "trees",
+   "file": "results/models/trees.pkl",
+   "sha256": "1171aef30f65db86fd0cfc3cdaf484ce82c77d8eba8db54cd5f66b482cdcb755",
+   "params": {
+    "n_estimators": 300,
+    "max_depth": 4,
+    "learning_rate": 0.05,
+    "subsample": 0.8,
+    "random_state": 42
+   },
+   "sklearn": "1.9.1",
+   "reward": -13.045890522236801,
+   "selectMae": 13.034840798479895,
+   "selectR2": -0.15917034796489116,
+   "violations": 0.0055248618784530384,
+   "fallingShare": 0.0055248618784530384,
+   "negativeShare": 0,
+   "lambda": 2
+  },
+  "curve": {
+   "kind": "curve",
+   "perMix": true,
+   "file": "results/models/curve.json",
+   "sha256": "ef6bc6aa4e6a0fa28a2c8cdaab517f705e87b9d53879add07d2d4247df509a5a",
+   "reward": -9.48015112314856,
+   "selectMae": 9.48015112314856,
+   "selectR2": 0.2179707754437855,
+   "violations": 0,
+   "fallingShare": 0,
+   "negativeShare": 0,
+   "lambda": 2
+  },
+  "curve_global": {
+   "kind": "curve",
+   "perMix": false,
+   "file": "results/models/curve.json",
+   "sha256": "ef6bc6aa4e6a0fa28a2c8cdaab517f705e87b9d53879add07d2d4247df509a5a",
+   "reward": -10.794291730945737,
+   "selectMae": 10.794291730945737,
+   "selectR2": -0.06525345615444711,
+   "violations": 0,
+   "fallingShare": 0,
+   "negativeShare": 0,
+   "lambda": 2
+  }
+ },
+ "selectRowsWhoseMixIsInTrain": 0.4865
+}

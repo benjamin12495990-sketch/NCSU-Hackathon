@@ -5,10 +5,13 @@ import './allow_full_data.mjs'
 import './guard.mjs'
 import { readFileSync } from 'node:fs'
 import { createTrainer, PANEL_DESIGN } from '../src/lib/nn.js'
-import { createNet, fromWeights } from './net.mjs'
+import { createNet, fromWeights, PANEL_DESIGN as LAB_PANEL } from './net.mjs'
 
 const nn = JSON.parse(readFileSync(new URL('../public/model/nn_data.json', import.meta.url), 'utf8'))
 let failed = 0
+const sameDesign = JSON.stringify(LAB_PANEL) === JSON.stringify(PANEL_DESIGN)
+if (!sameDesign) failed++
+console.log(`${sameDesign ? 'ok  ' : 'FAIL'} net.mjs PANEL_DESIGN is identical to src/lib/nn.js PANEL_DESIGN`)
 for (const [name, options] of [['{} (page default)', {}], ["{ features: 'rich' }", { features: 'rich' }], ['PANEL_DESIGN', PANEL_DESIGN]]) {
   const t0 = Date.now()
   const page = createTrainer(nn, options); page.runEpochs(1e9)
