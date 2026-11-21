@@ -68,8 +68,20 @@ The visual rules for the page are in [`taste.md`](taste.md).
 
 ## What is live
 
-Everything on the page is computed in your browser from the JSON files in `public/model/`. Nothing
-is mocked. There is no backend, no API and no API key.
+"Design mixes" computes everything in your browser from the JSON files in `public/model/`. Nothing
+is mocked, and no API key is needed for it.
+
+"Ping server for a new batch" calls the same generate-and-rank pipeline server-side instead, as a
+Vercel serverless function (`api/design.js`) that reuses `src/lib/design.js` directly. It takes a
+fresh random seed on every call, so repeated pings return different candidates instead of the
+page's fixed demo batch (the browser path keeps its fixed seed, so the demo still doesn't change
+between clicks). It can also be called directly, e.g.:
+
+```sh
+curl -s https://ncsu-hackathon.vercel.app/api/design \
+  -H 'Content-Type: application/json' \
+  -d '{"targetMPa": 35, "ageDays": 28}'
+```
 
 Two kinds of numbers are not measured by us and are labelled on the page:
 
@@ -246,6 +258,7 @@ train/test split and several wording changes.
 | `src/components/Requirements.jsx` | The switches and sliders. |
 | `src/components/Shortlist.jsx` | The limits table, the materials shortlist and the frontier cards. |
 | `src/components/MixStage.jsx` | The 3D view (Three.js). |
+| `api/design.js` | Vercel serverless function: same pipeline as `design.js` plus the exposure limits and materials shortlist, over HTTP, with a fresh random seed per call. |
 | `src/App.jsx` | The page. |
 | `pipeline/train_nn.py` | An alternative neural-network model in NumPy. Not used by the live page. |
 | `docs/SCOPE.md`, `domains/` | Plans for applying the same method to other domains. Nothing there is built. |
