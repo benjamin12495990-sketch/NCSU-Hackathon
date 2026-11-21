@@ -1,0 +1,20 @@
+{
+ "id": "chemistry",
+ "shipped": false,
+ "reason": "The training file is about 2 MB (680 kB compressed), too slow for a phone tonight.",
+ "folder": "domains/chemistry/",
+ "test": {
+  "network": 0.7613,
+  "trees": 0.8344,
+  "treesTuned": 0.777,
+  "mean": 1.9222,
+  "unit": "LogS (log10 mol/L)"
+ },
+ "source": {
+  "folder": "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/chemistry",
+  "files": [
+   "result.json: b_test_once",
+   "skeptic_check.json: my_trees_tuned"
+  ]
+ }
+}

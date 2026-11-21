@@ -1,0 +1,179 @@
+{
+ "id": "polymers",
+ "label": "Polymers (glass transition)",
+ "kind": "MEASURED",
+ "kindText": "MEASURED in labs: glass-transition temperatures collected from published papers",
+ "target": "Glass-transition temperature Tg",
+ "unit": "K",
+ "display": {
+  "kind": "identity",
+  "digits": 1
+ },
+ "task": "Predict measured glass-transition temperature Tg (K) of homopolymers and binary copolymers",
+ "data": {
+  "source": "source file experimental_dataset.csv, citation not confirmed",
+  "citation": "citation not confirmed",
+  "licence": "licence not confirmed",
+  "rows": 666,
+  "groups": 85,
+  "groupWord": "copolymer systems",
+  "homopolymerRows": 315,
+  "copolymerRows": 351,
+  "train": 514,
+  "test": 152,
+  "inputs": 56,
+  "inputsText": "structure descriptors of the two monomers (computed with RDKit), short structure fingerprints, the composition and a Fox-equation estimate from training homopolymers",
+  "splitRule": "split by copolymer system, never by row"
+ },
+ "options": {
+  "hidden": [
+   128,
+   64
+  ],
+  "epochs": 200,
+  "batch": 32,
+  "lr": 0.004,
+  "decay": 0.01,
+  "seed": 11,
+  "loss": "huber"
+ },
+ "members": 5,
+ "trainSecondsNode": 16.89,
+ "test": {
+  "network": 15.33,
+  "networkR2": 0.926,
+  "trees": 17.54,
+  "treesR2": 0.917,
+  "treesTuned": 16.37,
+  "treesTunedConfig": "GradientBoostingRegressor(n_estimators=300, max_depth=4, learning_rate=0.1, subsample=0.8, random_state=42). It won 8 configurations on 3-fold grouped CV over training rows only, using the folds in tasks.json cv0-cv2, which I checked are subsets of the training rows with no shared group. CV MAE was 15.22 K for the winner and 15.89 K for the fixed config. I scored the winner once on test: 16.37 K.",
+  "mean": 66.44
+ },
+ "eightSplits": {
+  "diff": -0.79,
+  "ci": [
+   -1.67,
+   0.08
+  ],
+  "wording": "On the seed-42 test split the network ensemble has lower MAE than the trees (15.33 vs 17.54 K). Over the eight other grouped splits the mean difference is -0.79 K with paired 95% t interval [-1.67, 0.08], which includes zero: the network is not shown to be better than the trees; it lost on 2 of 8 splits. On the unseen-monomer split they tie (18.51 vs 18.74 K)."
+ },
+ "subsets": [
+  {
+   "name": "True copolymers",
+   "rows": 93,
+   "network": 5.84,
+   "trees": 6.21,
+   "coverage": 1
+  },
+  {
+   "name": "Homopolymers",
+   "rows": 59,
+   "network": 30.28,
+   "trees": 35.39,
+   "coverage": 0.712
+  },
+  {
+   "name": "Fox estimate available",
+   "rows": 36,
+   "network": 5.97,
+   "trees": 5.5,
+   "coverage": 1
+  }
+ ],
+ "unseenMonomer": {
+  "network": 18.51,
+  "trees": 18.74
+ },
+ "interval": {
+  "q": 40.4,
+  "coverage": 0.888,
+  "rule": "absolute-error quantile of out-of-fold predictions from 3-fold grouped CV on the 514 training rows (split-conformal style), ceil((n+1)*0.9)-th smallest",
+  "liveMeasure": false,
+  "homopolymerCoverage": 0.712,
+  "failsOn": "homopolymers (coverage 71%)",
+  "noLiveReason": "The Fox inputs in this file were computed from this one split's training rows, so re-splitting in the browser would leak test values into training. The width shown is the one measured in Node with the Fox inputs recomputed for every fold."
+ },
+ "compositionSweep": {
+  "systems": 23,
+  "points": 21,
+  "network": 0.87,
+  "trees": 0.174,
+  "measured": 0.957
+ },
+ "verdict": "We held out whole copolymer systems the model never saw (152 of 666 measured rows). On those rows our from-scratch JavaScript neural network predicts glass-transition temperature with an average error of 15.3 K. Guessing the average gives 66 K, and gradient-boosted trees give 16.4 to 17.5 K. The error is about 6 K on real copolymers and about 30 K on pure homopolymers.",
+ "caveats": [
+  "The headline error mixes two problems. Test rows that are real copolymers (93 rows, 23 systems) get MAE about 6 K because their monomers mostly also occur in training rows, often with a measured homopolymer Tg that feeds the Fox input; test homopolymer rows (59), most of them chemistry seen nowhere else, get about 30 K. Only 85 copolymer systems exist in the file, and the unseen-monomer split holds out mostly rare monomers (frequent ones were skipped to keep the test share near 20%), so it understates how hard a truly new common monomer would be.",
+  "Network versus trees is not settled: the paired interval over eight splits includes zero, the eight splits reuse the same 666 rows so the interval is narrower than it should be, and the network settings and the Morgan-bits choice were picked on seed-42 training rows that overlap the other splits' test rows. The trees are piecewise constant, so only 17% of their composition sweeps are strictly monotonic against 87% for the network (96% of the measured systems are).",
+  "The 90% interval is one fixed width (plus or minus 40.4 K). It covers 88.8% of test rows overall but 100% of copolymer rows (far too wide for them) and only 71% of homopolymer rows (too narrow), and 87.3% on the unseen-monomer split. Labels are literature values with unknown method, heating rate and molar mass; the same structure differs by up to 54 K between the two source files. Whether composition is mole or weight percent is not stated in the file; mole percent was assumed."
+ ],
+ "trainingRange": [
+  130,
+  668
+ ],
+ "source": {
+  "folder": "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/polymers",
+  "files": {
+   "result.json": {
+    "mtime": "2026-11-21T02:38:17.074Z",
+    "paths": [
+     "task",
+     "data.rows_used_copolymer_file",
+     "data.copolymer_systems",
+     "data.rows_homopolymer",
+     "data.rows_true_copolymer",
+     "b_test_split_seed42.train_rows",
+     "b_test_split_seed42.test_rows",
+     "feature_count",
+     "network.chosen_settings.hidden",
+     "network.chosen_settings.epochs",
+     "network.chosen_settings.batch",
+     "network.chosen_settings.lr",
+     "network.chosen_settings.decay",
+     "network.chosen_settings.seed",
+     "network.chosen_settings.loss",
+     "network.chosen_settings.members",
+     "network.training_seconds_final_network",
+     "b_test_split_seed42.network.mae",
+     "b_test_split_seed42.network.r2",
+     "b_test_split_seed42.trees.mae",
+     "b_test_split_seed42.trees.r2",
+     "b_test_split_seed42.naive_mean.mae",
+     "c_eight_splits.mean_difference_network_minus_trees",
+     "c_eight_splits.paired_t95_interval",
+     "verdict_network_vs_trees",
+     "b_test_split_seed42.subsets.true_copolymer_rows.network.n",
+     "b_test_split_seed42.subsets.true_copolymer_rows.network.mae",
+     "b_test_split_seed42.subsets.true_copolymer_rows.trees.mae",
+     "b_test_split_seed42.subsets.true_copolymer_rows.interval90_coverage",
+     "b_test_split_seed42.subsets.homopolymer_rows.network.n",
+     "b_test_split_seed42.subsets.homopolymer_rows.network.mae",
+     "b_test_split_seed42.subsets.homopolymer_rows.trees.mae",
+     "b_test_split_seed42.subsets.homopolymer_rows.interval90_coverage",
+     "b_test_split_seed42.subsets.fox_available_rows.network.n",
+     "b_test_split_seed42.subsets.fox_available_rows.network.mae",
+     "b_test_split_seed42.subsets.fox_available_rows.trees.mae",
+     "b_test_split_seed42.subsets.fox_available_rows.interval90_coverage",
+     "e_hard_split_unseen_monomer.network.mae",
+     "e_hard_split_unseen_monomer.trees.mae",
+     "d_interval.half_width_K",
+     "d_interval.test_coverage",
+     "d_interval.method",
+     "sanity_composition_sweep.systems",
+     "sanity_composition_sweep.points_per_system",
+     "sanity_composition_sweep.network_monotonic_share_tol0K",
+     "sanity_composition_sweep.trees_monotonic_share_tol0K",
+     "sanity_composition_sweep.measured_monotonic_share_systems_with_3plus_points",
+     "caveats"
+    ]
+   },
+   "skeptic_check.json": {
+    "mtime": "2026-11-21T02:55:26.734Z",
+    "paths": [
+     "my_trees_tuned",
+     "tuned_trees_config",
+     "safe_sentence"
+    ]
+   }
+  },
+  "trainingRange": "min and max of train.y in nn_data.json"
+ }
+}

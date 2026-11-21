@@ -1,0 +1,159 @@
+{
+ "id": "insulators",
+ "label": "Insulators (dielectric constant)",
+ "kind": "CALCULATED",
+ "kindText": "CALCULATED by computer simulation (DFT), not measured in a lab",
+ "target": "Dielectric constant (polycrystalline total)",
+ "unit": "",
+ "display": {
+  "kind": "pow10",
+  "digits": 1
+ },
+ "task": "y = log10(poly_total); poly_total is the DFT-calculated polycrystalline total dielectric constant",
+ "important": "All target values are CALCULATED with density functional theory (DFPT, Materials Project; Petousis et al.), NOT measured in a lab. Every error below is error against that calculation, not against experiment. The model is a fast stand-in for a slow calculation.",
+ "data": {
+  "source": "Hugging Face foundry-ml/dielectric_constant_v1-1 (CC BY 4.0), Petousis et al., DOI 10.18126/racd-go9m",
+  "citation": "Petousis et al., DOI 10.18126/racd-go9m",
+  "licence": "CC BY 4.0",
+  "rows": 1056,
+  "groups": 964,
+  "groupWord": "distinct compounds (reduced formulas)",
+  "train": 843,
+  "test": 213,
+  "inputs": 42,
+  "inputsText": "numbers from the composition (atomic number, period, group, electronegativity, mass, radius statistics) and the crystal cell",
+  "splitRule": "split by reduced formula, never by row"
+ },
+ "options": {
+  "hidden": [
+   64,
+   32
+  ],
+  "epochs": 150,
+  "batch": 32,
+  "lr": 0.002,
+  "decay": 0.03,
+  "seed": 11,
+  "loss": "huber"
+ },
+ "members": 5,
+ "trainSecondsNode": 11.29,
+ "test": {
+  "network": 0.1211,
+  "networkR2": 0.6384,
+  "trees": 0.1173,
+  "treesR2": 0.6618,
+  "treesTuned": 0.1116,
+  "treesTunedConfig": "GradientBoostingRegressor(n_estimators=600, max_depth=6, learning_rate=0.03, subsample=0.8, random_state=42), the winner of 8 configs on 3-fold GroupKFold over training rows only (CV MAE 0.1216). Fixed 300/4/0.05 scored CV 0.1246.",
+  "mean": 0.2131
+ },
+ "eightSplits": {
+  "diff": -0.0018,
+  "ci": [
+   -0.0075,
+   0.0038
+  ],
+  "networkBetter": 5,
+  "of": 8,
+  "wording": "On this split the trees are slightly ahead; over eight splits the two are tied."
+ },
+ "interval": {
+  "q": 0.245,
+  "factor": 1.7578,
+  "coverage": 0.892,
+  "inside": 190,
+  "rows": 213,
+  "rule": "absolute-error quantile of 3-fold grouped out-of-fold errors on training rows (rank ceil((n+1)*0.9) of n), applied as prediction +/- q in log10 units around the final network",
+  "liveMeasure": true,
+  "coverageAbove30": 0.3889,
+  "rowsAbove30": 18,
+  "failsOn": "compounds with a dielectric constant above 30 (coverage 39% on 18 held-out rows)"
+ },
+ "highTail": {
+  "medianPredOverTrue": 0.5221,
+  "largestPrediction": 36.5716,
+  "largestTrue": 277.78
+ },
+ "bandGap": {
+  "networkSpearman": -0.6723,
+  "treesSpearman": -0.6389,
+  "calculatedSpearman": -0.5996
+ },
+ "verdict": "Our small neural network, written from scratch in JavaScript, estimates a compound's DFT-calculated dielectric constant from its formula, symmetry and cell volume with a typical error of about a factor of 1.3 (0.121 log10 on 213 held-out compounds, against 0.213 for always guessing the average). Standard gradient-boosted trees do as well or slightly better (0.112 to 0.117), and both badly underestimate the rare high-dielectric compounds.",
+ "caveats": [
+  "1. The targets are CALCULATED (density functional perturbation theory, Materials Project / Petousis et al.), not measured. Every error here is error against that calculation; how far the calculation itself sits from experiment is not included and was not assessed. Two inputs are DFT outputs too: the relaxed-cell volume (main model) and the band gap (second model). Dropping the three volume-derived features moves the tree CV MAE on training rows from 0.1246 to 0.1365, so a proposed compound needs a relaxed cell or a good volume estimate to get the reported accuracy.",
+  "2. The model fails exactly where screening cares most: the high-dielectric tail. On the 18 of 213 test rows with a true value above 30 the network's MAE is 0.38 log10, its median prediction is 0.52x the true value, and the 90% interval covers only 39% of them (89% overall). The largest test prediction is 36.6 against a true maximum of 278. With formula and cell-level inputs only (no structure, no phonons) the lattice contribution that makes a compound high-k is not captured; treat this as an estimator for typical compounds, not an outlier finder.",
+  "3. The network is not better than the trees, and the data are small. Single test split: trees 0.1173 vs network 0.1211 MAE (log10). Eight grouped splits: mean difference network minus trees -0.0018, paired 95% t interval [-0.0075, +0.0038], which includes zero (and the splits overlap, so that interval is if anything too narrow). With band gap added the trees improve to 0.1068 while the network stays at 0.1209. Only 1,056 rows / 964 formulas; MAE moves between 0.107 and 0.137 from split to split, more than any model difference.",
+  "The element table was typed from memory and checked only by internal consistency tests (molar masses, periodic trends), not against a reference file.",
+  "The second (band-gap) network reuses the main network's settings; it was not re-tuned, which may understate what a network could get from band gap.",
+  "In (c) the network settings were chosen by CV on the seed-42 training rows, which overlap the test rows of the eight other splits: a mild selection leak in the network's favour. Tree settings were fixed in advance.",
+  "The 90% interval assumes new compounds resemble this dataset (compounds selected by the original screening study); it is an average guarantee, not a per-compound one.",
+  "The band-gap sweep shows how the model responds when band gap alone is changed; it is model behaviour, not evidence of causation. Grid points above about 5.4 eV lie beyond 95% of training rows.",
+  "R2 of about 0.64 in log10 units means roughly a third of the variance of the calculated values is unexplained."
+ ],
+ "trainingRange": [
+  0.318063,
+  2.413836
+ ],
+ "source": {
+  "folder": "/tmp/claude-0/-home-user/c96b0b28-08aa-572a-ab28-a200b90c8d07/scratchpad/burn/sim/insulators",
+  "files": {
+   "result.json": {
+    "mtime": "2026-11-21T02:35:37.560Z",
+    "paths": [
+     "data.target",
+     "IMPORTANT",
+     "data.source",
+     "data.rows_used",
+     "data.groups_reduced_formulas",
+     "data.train_rows",
+     "data.test_rows",
+     "features_main",
+     "network_settings_chosen.hidden",
+     "network_settings_chosen.epochs",
+     "network_settings_chosen.batch",
+     "network_settings_chosen.lr",
+     "network_settings_chosen.decay",
+     "network_settings_chosen.seed",
+     "network_settings_chosen.loss",
+     "network_settings_chosen.members",
+     "final_network.training_seconds",
+     "b_test_split_once.network.mae_log10",
+     "b_test_split_once.network.r2_log10",
+     "b_test_split_once.trees_gradient_boosting.mae_log10",
+     "b_test_split_once.trees_gradient_boosting.r2_log10",
+     "b_test_split_once.naive_training_mean.mae_log10",
+     "c_eight_grouped_splits.mean_difference_network_minus_trees",
+     "c_eight_grouped_splits.paired_t_95_interval",
+     "c_eight_grouped_splits.network_better_on_splits",
+     "c_eight_grouped_splits.splits_completed",
+     "d_interval_90.half_width_log10",
+     "d_interval_90.multiplicative_factor",
+     "d_interval_90.test_coverage",
+     "d_interval_90.test_rows_inside",
+     "d_interval_90.test_rows",
+     "d_interval_90.method",
+     "d_interval_90.test_coverage_rows_true_value_above_30",
+     "d_interval_90.rows_above_30",
+     "b_test_split_once.high_tail_rows_true_value_above_30.network_median_predicted_over_true",
+     "d_interval_90.largest_test_prediction_dielectric_units",
+     "d_interval_90.largest_test_true_value",
+     "sanity_check_band_gap_trend.main_model_no_band_gap_input.network_prediction_vs_true_band_gap_spearman",
+     "sanity_check_band_gap_trend.main_model_no_band_gap_input.trees_prediction_vs_true_band_gap_spearman",
+     "sanity_check_band_gap_trend.reference_true_target_vs_band_gap_spearman_test",
+     "three_biggest_caveats",
+     "other_caveats"
+    ]
+   },
+   "skeptic_check.json": {
+    "mtime": "2026-11-21T02:55:26.742Z",
+    "paths": [
+     "my_trees_tuned",
+     "tuned_trees_config",
+     "safe_sentence"
+    ]
+   }
+  },
+  "trainingRange": "min and max of train.y in nn_data.json"
+ }
+}

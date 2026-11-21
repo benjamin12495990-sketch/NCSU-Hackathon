@@ -9,7 +9,9 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "parity": "node scripts/parity.mjs",
-    "sweep": "node scripts/sweep.mjs"
+    "sweep": "node scripts/sweep.mjs",
+    "family-parity": "node scripts/family_parity.mjs",
+    "family-files": "node scripts/build_family_files.mjs"
   },
   "dependencies": {
     "react": "^19.3.1",
