@@ -8,6 +8,7 @@ import Shortlist from './components/Shortlist.jsx'
 import Planned from './components/Planned.jsx'
 import NeuralNet from './components/NeuralNet.jsx'
 import Formula from './components/Formula.jsx'
+import DomainMenu from './components/DomainMenu.jsx'
 import { DOMAINS } from './lib/domains.js'
 
 // Three.js is big, so the 3D stage is downloaded only when a result is shown.
@@ -173,29 +174,15 @@ export default function App() {
     document.querySelector('.result')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }
   return (
+    <>
+    <DomainMenu domains={DOMAINS} activeId={domainId} onSelect={setDomainId} />
     <main>
-      <header>
-        <p className="eyebrow">Engineer the Tools of Scientific Discovery</p>
-        <h1>Formulation Designer</h1>
-        <p className="lede">
-          Proposes new formulations for a property you need, and ranks them. Concrete is live. Six
-          more families of materials are planned and marked as planned.
-        </p>
-        <nav className="domains" aria-label="Family of materials">
-          {DOMAINS.map((d) => (
-            <button type="button" key={d.id} className="chip" aria-pressed={domainId === d.id} onClick={() => setDomainId(d.id)}>
-              {d.label} <span className={d.live ? 'tag live' : 'tag'}>{d.live ? 'Live' : 'Planned'}</span>
-            </button>
-          ))}
-        </nav>
-      </header>
-
       {domainId !== 'concrete' ? (
         <Planned domain={DOMAINS.find((d) => d.id === domainId)} onBack={() => setDomainId('concrete')} />
       ) : (
       <>
       <section className="intro">
-        <h2>Low-carbon concrete mixes</h2>
+        <h1>Low-carbon concrete mixes</h1>
         <p className="lede">
           Say how strong the concrete must be. The app proposes new mixes predicted to reach that
           strength and ranks them by embodied CO<sub>2</sub>. For civil and materials engineering
@@ -223,10 +210,12 @@ export default function App() {
               {AGES.map((a) => <option key={a} value={a}>{a} days</option>)}
             </select>
           </div>
-          <button type="submit" disabled={!data}>{data ? 'Design mixes' : 'Loading model…'}</button>
-          <button type="button" disabled={!data || serverLoading} onClick={() => runServer()}>
-            {serverLoading ? 'Pinging server…' : 'Ping server for a new batch'}
-          </button>
+          <div className="actions">
+            <button type="submit" disabled={!data}>{data ? 'Design mixes' : 'Loading model…'}</button>
+            <button type="button" className="secondary" disabled={!data || serverLoading} onClick={() => runServer()}>
+              {serverLoading ? 'Pinging server…' : 'Ping server for a new batch'}
+            </button>
+          </div>
         </div>
         <div className="examples">
           <span>Try:</span>
@@ -529,5 +518,6 @@ export default function App() {
         </p>
       </footer>
     </main>
+    </>
   )
 }

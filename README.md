@@ -10,9 +10,9 @@ embodied CO2. Built from scratch at TRIANGULATE, an AI hackathon at NC State.
 
 ## The page
 
-The page is titled **Formulation Designer**. A row of pills at the top lists seven families of
-materials. **Concrete is live.** The other six (polymers, corrosive solutions, cleaning products,
-insulators, general materials, general chemistry) are marked "Planned": pressing one shows what it
+The page is titled **Formulation Designer**. The three-bar button at the top left opens a menu of
+seven simulations (families of materials). **Concrete is live.** The other six (polymers, corrosive
+solutions, cleaning products, insulators, general materials, general chemistry) are marked "Planned": choosing one shows what it
 would predict, vary and rank by, and says that nothing is generated for it yet. The page follows
 the visual rules in [`taste.md`](taste.md).
 

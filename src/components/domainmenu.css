@@ -1,0 +1,33 @@
+/* Top bar and the simulation menu. Flat: hairline borders, no shadows, no glow. */
+.topbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 12px; background: var(--card); border-bottom: 1px solid var(--line); }
+.burger { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; background: transparent; border: 1px solid transparent; border-radius: 4px; color: var(--ink); }
+.burger:hover { background: var(--bg); border-color: var(--line); }
+.bars { position: relative; display: block; width: 20px; height: 14px; }
+.bars i { position: absolute; left: 0; width: 100%; height: 2px; background: currentColor; border-radius: 1px; transition: top 0.18s ease, transform 0.18s ease, opacity 0.12s ease; }
+.bars i:nth-child(1) { top: 0; }
+.bars i:nth-child(2) { top: 6px; }
+.bars i:nth-child(3) { top: 12px; }
+.burger[aria-expanded='true'] .bars i:nth-child(1) { top: 6px; transform: rotate(45deg); }
+.burger[aria-expanded='true'] .bars i:nth-child(2) { opacity: 0; }
+.burger[aria-expanded='true'] .bars i:nth-child(3) { top: 6px; transform: rotate(-45deg); }
+.brand { display: flex; align-items: baseline; gap: 10px; min-width: 0; margin: 0; font-weight: 600; }
+.crumb { color: var(--muted); font-weight: 400; font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.crumb::before { content: '/'; margin-right: 10px; color: var(--line); }
+
+.scrim { position: fixed; inset: 52px 0 0; z-index: 10; background: rgba(28, 28, 25, 0.28); }
+.drawer { position: fixed; top: 52px; bottom: 0; left: 0; z-index: 20; width: min(320px, 86vw); overflow-y: auto; padding: 16px 0; background: var(--card); border-right: 1px solid var(--line); animation: drawer-in 0.16s ease-out; }
+@keyframes drawer-in { from { transform: translateX(-12px); opacity: 0; } }
+.drawer-title { margin: 0 20px 8px; color: var(--muted); font-size: 0.8rem; font-weight: 600; }
+.drawer ul { list-style: none; margin: 0; padding: 0; }
+.drawer li button { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; width: 100%; padding: 11px 20px; text-align: left; color: var(--ink); background: transparent; border: 0; border-left: 3px solid transparent; border-radius: 0; }
+.drawer li button:hover { background: var(--bg); }
+.drawer li button[aria-current='true'] { border-left-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+.drawer li button:focus-visible { outline-offset: -3px; }
+.status { color: var(--muted); font-size: 0.8rem; font-weight: 400; }
+.status.live { color: var(--ok-ink); }
+.drawer-note { margin: 16px 20px 0; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.8rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer { animation: none; }
+  .bars i { transition: none; }
+}

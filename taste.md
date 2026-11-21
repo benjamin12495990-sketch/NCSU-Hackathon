@@ -8,34 +8,37 @@ reason. TRY rules are working guesses; change them if the result looks wrong.
 
 ## The look in one line
 
-Light, calm and flat, like Stripe or Notion: white cards, hairline borders, one vivid accent.
-Not dark, not dense.
+Light, calm and flat, like a printed lab report: white cards on warm paper, hairline borders, one
+flat blue accent. Not dark, not dense.
+
+**Revised after feedback that the first version looked AI-generated.** The purple gradient button,
+both glows, the uppercase accent-coloured eyebrow, the serif hero and the row of pill chips with
+status badges are gone. Simulations are now picked from the three-bar menu at the top left.
 
 ## MUST
 
 - **Light theme only.** No dark mode.
-- **No drop shadows on surfaces.** Separate things with 1px borders (`--line`).
-- **Exactly two glows are allowed:** the soft coloured glow under the primary button, and the
-  ambient glow behind the 3D stage. Nothing else glows.
-- **One vivid accent**, used for the primary button, links, the selected mix and the highlighted
-  ingredient in 3D. Everything else is ink, grey or white.
+- **No drop shadows, glows or gradients.** Separate things with 1px borders (`--line`).
+- **One accent, a flat colour**, used for the primary button, links, the selected mix and the
+  highlighted ingredient in 3D. Everything else is ink, grey or white.
+- **Simulations (families of materials) are chosen from the three-bar menu in the top bar**, not
+  from a row of pills in the page.
 - **Numbers stay modest:** key figures are about 1.4x body size, weight 700. Emphasis comes from
   position and a small chip next to the number, never from huge numerals.
 - **Honest labels.** Anything illustrative says so next to it (the 3D model does).
 
 ## DEFAULT
 
-- **Accent colour:** `#6D4AFF` with `#B14AFF` for the button gradient. The appetite for a vivid
-  accent is measured; this exact purple is a working value and can be swapped.
-- **Type:** sans-serif everywhere in the product.
-- **Borders:** `#E3E5EE`. Page background `#FBFBFD`. Text `#14161F`. Muted text `#5D6475`.
+- **Accent colour:** `#1F3FA8` (hover `#183289`). A working value that can be swapped, but keep it
+  one flat colour. It is also the colour of cement in the 3D stage.
+- **Type:** the system sans-serif stack everywhere. No webfont, no serif.
+- **Borders:** `#DEDCD3`. Page background `#F6F5F1`. Text `#1C1C19`. Muted text `#5E5D56`.
 - **Spacing:** generous. Sections sit 32px apart; cards have 18 to 22px padding.
 
 ## TRY (context rules)
 
-- **Corners:** soft (12px, pills for chips) on things a person types into or presses; sharp (6px)
-  on data: result panel, tables, caveat box.
-- **Serif:** only the page title, as the one "marketing moment". Never in data or controls.
+- **Corners:** 4px everywhere, on controls and on data alike. No pills.
+- **Headings:** plain bold sans. No marketing hero, no uppercase tracked eyebrow labels.
 - **Motion:** expressive on things you touch or that react to you; still on things you read.
 
 ## Where the theatrics go
@@ -53,7 +56,8 @@ Everything respects `prefers-reduced-motion`.
 
 ## Do not
 
-- Add a dark hero, neon, glassmorphism or particle backgrounds.
+- Add a dark hero, neon, glassmorphism, gradients, glows or particle backgrounds.
+- Add pill chips or status badges to navigation. Put them in the menu as plain text.
 - Animate table rows or count numbers up.
 - Add a second accent colour.
 - Hide or shrink the "How this can be wrong" box. It is part of the design.

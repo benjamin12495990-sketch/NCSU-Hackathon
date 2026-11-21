@@ -5,7 +5,7 @@
 // page says so next to the model.
 
 const LOOK = {
-  cement: { color: '#5b47e0', radius: 0.27 },
+  cement: { color: '#1f3fa8', radius: 0.27 },
   slag: { color: '#12a387', radius: 0.27 },
   flyash: { color: '#e07a2f', radius: 0.27 },
   water: { color: '#3aa6e8', radius: 0.25 },

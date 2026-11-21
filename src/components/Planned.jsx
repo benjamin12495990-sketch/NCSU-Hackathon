@@ -4,7 +4,7 @@ export default function Planned({ domain, onBack }) {
   return (
     <section className="card planned">
       <span className="flag low">Planned, not built</span>
-      <h2>{domain.label}</h2>
+      <h1>{domain.label}</h1>
       <p className="note">
         Nothing is generated for this family yet. It has no lab-tested dataset, no trained model and no
         references. The plan is to reuse the method that already runs for concrete.

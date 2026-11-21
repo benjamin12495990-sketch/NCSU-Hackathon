@@ -55,7 +55,7 @@ export default function MixStage({ mix, factors, ingredients, highlight }) {
           metalness: 0.05,
           transparent: name === 'water',
           opacity: name === 'water' ? 0.75 : 1,
-          emissive: hot ? 0x6d4aff : 0x000000,
+          emissive: hot ? 0x2f56c8 : 0x000000,
           emissiveIntensity: hot ? 0.22 : 0,
         }),
       )
@@ -80,7 +80,7 @@ export default function MixStage({ mix, factors, ingredients, highlight }) {
 
     // Outline of the one-cubic-metre box, faded in once the particles settle.
     const boxGeometry = new THREE.EdgesGeometry(new THREE.BoxGeometry(model.half * 2 + 0.5, model.half * 2 + 0.5, model.half * 2 + 0.5))
-    const boxMaterial = new THREE.LineBasicMaterial({ color: 0x6d4aff, transparent: true, opacity: 0 })
+    const boxMaterial = new THREE.LineBasicMaterial({ color: 0x8a8880, transparent: true, opacity: 0 })
     scene.add(new THREE.LineSegments(boxGeometry, boxMaterial))
 
     const resize = () => {
