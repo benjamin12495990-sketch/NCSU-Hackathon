@@ -4,8 +4,11 @@ import { featurize } from '../lib/featurize.js'
 import { mixName } from '../lib/name.js'
 import './neuralnet.css'
 
-// One pass per redraw at first, so the early learning is visible, then faster.
-const passesThisFrame = (epoch) => (epoch < 24 ? 1 : 4)
+// One pass per step at first, with a short pause so the early learning is
+// visible, then four passes per step with no pause. A timer drives it, not
+// the screen's frame rate, so it takes about three seconds on any device.
+const passesThisStep = (epoch) => (epoch < 24 ? 1 : 4)
+const pauseAfter = (epoch) => (epoch < 24 ? 30 : 0)
 
 // The learning curve: error on the held-out mixes after each pass over the
 // training data. The dashed line is the tree model the designer uses.
@@ -54,22 +57,22 @@ export default function NeuralNet({ data, result }) {
     fetch(import.meta.env.BASE_URL + 'model/nn_data.json')
       .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))))
       .then(setNnData, (e) => setLoadError(e.message))
-    return () => cancelAnimationFrame(frame.current)
+    return () => clearTimeout(frame.current)
   }, [])
 
   const train = () => {
-    cancelAnimationFrame(frame.current)
+    clearTimeout(frame.current)
     const t = createTrainer(nnData)
     trainer.current = t
     setHistory([...t.history])
     setStatus('training')
     const tick = () => {
-      t.runEpochs(passesThisFrame(t.epoch))
+      t.runEpochs(passesThisStep(t.epoch))
       setHistory([...t.history])
       if (t.done) setStatus('done')
-      else frame.current = requestAnimationFrame(tick)
+      else frame.current = setTimeout(tick, pauseAfter(t.epoch))
     }
-    frame.current = requestAnimationFrame(tick)
+    frame.current = setTimeout(tick, 0)
   }
 
   if (!data) return null
