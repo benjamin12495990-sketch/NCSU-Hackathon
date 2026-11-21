@@ -9,7 +9,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { featurize } from '../src/lib/alloyFeatures.js'
-import { generate, spacing, testedSets, TOO_FAR, NOT_NEW, INTERPOLATION, TIER_INTERPOLATION, TIER_NEAR } from '../src/lib/alloyGen.js'
+import { generate, generateAsync, spacing, testedSets, TOO_FAR, NOT_NEW, INTERPOLATION, TIER_INTERPOLATION, TIER_NEAR, NEIGHBOURS, SUPPORT_NEEDED } from '../src/lib/alloyGen.js'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const SIM = process.env.MATERIALS_SIM_DIR ||
@@ -85,7 +85,8 @@ function checkRequest(label, opts) {
   const shown = generate(opts, data, predict, q)
   if (JSON.stringify(shown.candidates) !== JSON.stringify(res.candidates.slice(0, opts.limit))) fail(`${label}: limit changes the ranking`)
   const st = res.stats, ex = st.excluded
-  console.log(`\n${label}: target ${opts.targetHV ?? 'as high as possible'} HV, route ${opts.proc}, seed ${opts.seed}, ` +
+  console.log(`\n${label}: target ${opts.targetHV ?? 'as high as possible'} HV, route ${opts.proc}, ` +
+    `only sets tested by this route ${res.stats.rules.routeMustBeTested}, only supported ${res.stats.rules.onlySupported}, seed ${opts.seed}, ` +
     `elements ${Object.keys(opts.allowed).length === data.elements.length ? 'all 21' : Object.keys(opts.allowed).join(' ')}`)
   console.log(`  element sets: ${st.sets.tested} tested, ${st.sets.used} used; skipped: ${st.sets.pooledElement} contain an element pooled in x_other, ` +
     `${st.sets.singleComposition} have only one tested composition, ${st.sets.notAllowed} use an element not allowed, ` +
@@ -98,8 +99,8 @@ function checkRequest(label, opts) {
   if (opts.targetHV != null && !st.kept && !(st.bestCautious < opts.targetHV)) fail(`${label}: empty although best cautious reaches the target`)
   console.log(`  generated ${st.draws}; excluded: ${ex.duplicate} duplicates, ${ex.notNew} under 0.10 from a tested alloy (not new), ` +
     `${ex.tooFar} over 0.40 (too far), ${ex.subsetCopy} a tested alloy with an element left out, ${ex.clamped} prediction at the clamp, ` +
-    `${ex.belowTarget} cautious estimate below target; kept ${st.kept} (${st.tiers[TIER_INTERPOLATION]} interpolation, ${st.tiers[TIER_NEAR]} near-tested) from ${st.keptSets} sets; returned ${st.returned}`)
-  const total = ex.duplicate + ex.notNew + ex.tooFar + ex.subsetCopy + ex.clamped + ex.belowTarget + st.kept
+    `${ex.belowTarget} cautious estimate below target, ${ex.unsupported} fewer than ${SUPPORT_NEEDED} of ${NEIGHBOURS} nearest tested alloys reached the target (unsupported); kept ${st.kept} (${st.tiers[TIER_INTERPOLATION]} interpolation, ${st.tiers[TIER_NEAR]} near-tested) from ${st.keptSets} sets; returned ${st.returned}`)
+  const total = ex.duplicate + ex.notNew + ex.tooFar + ex.subsetCopy + ex.clamped + ex.belowTarget + ex.unsupported + st.kept
   if (total !== st.draws) fail(`${label}: counts do not add up (${total} vs ${st.draws})`)
   if (JSON.stringify(res) !== JSON.stringify(again)) fail(`${label}: not deterministic for the same seed`)
   const offRoute = res.candidates.filter((c) => !c.routeTestedInSet).length
@@ -136,6 +137,24 @@ function checkRequest(label, opts) {
     if (!(p > minHv + 1e-9 && p < maxHv - 1e-9)) fail(`${where}: prediction ${p} at the clamp`)
     if (Math.abs(c.cautious - (p - q)) > 1e-9) fail(`${where}: cautious is not prediction - q`)
     if (opts.targetHV != null && c.cautious < opts.targetHV) fail(`${where}: cautious ${c.cautious} below target`)
+    // Neighbour evidence: the 3 nearest tested rows by brute force, the count that reached the
+    // target, the support rule, and the gap to the nearest tested alloy.
+    const order = testedDense.map((t, j) => ({ d: dist(cd, t), j })).sort((a, b) => a.d - b.d || a.j - b.j).slice(0, NEIGHBOURS)
+    if (!Array.isArray(c.neighbours) || c.neighbours.length !== NEIGHBOURS) fail(`${where}: expected ${NEIGHBOURS} neighbours`)
+    else {
+      c.neighbours.forEach((nb, k) => {
+        if (Math.abs(nb.distance - order[k].d) > 1e-9) fail(`${where}: neighbour ${k + 1} distance ${nb.distance} but brute force gives ${order[k].d}`)
+        const row = data.rows[nb.index]
+        if (row.f !== nb.formula || row.proc !== nb.proc || row.hv !== nb.hv) fail(`${where}: neighbour ${k + 1} does not match its tested row`)
+        if (Math.abs(dist(cd, testedDense[nb.index]) - nb.distance) > 1e-9) fail(`${where}: neighbour ${k + 1} distance is not its own`)
+      })
+      if (Math.abs(c.neighbours[0].distance - c.distance) > 1e-9) fail(`${where}: first neighbour is not the nearest tested alloy`)
+      const reached = opts.targetHV == null ? null : c.neighbours.filter((nb) => nb.hv >= opts.targetHV).length
+      if (reached !== c.neighboursReached) fail(`${where}: neighboursReached ${c.neighboursReached} should be ${reached}`)
+      if (st.rules.onlySupported && opts.targetHV != null && !(c.neighboursReached >= SUPPORT_NEEDED)) fail(`${where}: unsupported candidate kept`)
+    }
+    if (Math.abs(c.gapHV - (c.predicted - c.nearest.hv)) > 1e-9) fail(`${where}: gap is not predicted minus nearest measured HV`)
+    if (st.rules.routeMustBeTested && !c.routeTestedInSet) fail(`${where}: set never tested by ${opts.proc} although the route rule is on`)
     if (i > 0) {
       const b = res.candidates[i - 1]
       if (b.cautious < c.cautious || (b.cautious === c.cautious && b.distance > c.distance)) fail(`${where}: ranked out of order`)
@@ -146,7 +165,8 @@ function checkRequest(label, opts) {
   console.log('  top five:')
   for (const c of res.candidates.slice(0, 5)) {
     console.log(`    ${c.composition.padEnd(44)} pred ${c.predicted.toFixed(0)} HV, cautious ${c.cautious.toFixed(0)} HV, ` +
-      `distance ${c.distance.toFixed(3)} (${c.tier}); nearest tested: ${c.nearest.formula} ${c.nearest.proc} ${c.nearest.hv} HV` +
+      `distance ${c.distance.toFixed(3)} (${c.tier}); nearest tested: ${c.nearest.formula} ${c.nearest.proc} ${c.nearest.hv} HV, gap ${c.gapHV >= 0 ? '+' : ''}${c.gapHV.toFixed(0)} HV; ` +
+      `neighbours ${c.neighbours.map((nb) => nb.hv).join('/')} HV` + (c.neighboursReached == null ? '' : `, ${c.neighboursReached} of ${NEIGHBOURS} reached the target`) +
       (c.routeTestedInSet ? '' : `; set never tested as ${c.proc} (only ${c.setRoutes.join('/')})`))
   }
   if (!res.candidates.length) console.log('    (none)')
@@ -154,7 +174,29 @@ function checkRequest(label, opts) {
 }
 
 const all = Object.fromEntries(data.elements.map((el) => [el, 1]))
+const defaults = generate({ targetHV: 400, allowed: all }, data, predict, q).stats.rules
+if (defaults.routeMustBeTested !== true) fail('routeMustBeTested should default to true')
+if (defaults.onlySupported !== false) fail('onlySupported should default to false in the library (the page turns it on with a target)')
 for (const target of [400, 600, 800]) checkRequest(`Request ${target}`, { targetHV: target, allowed: all, proc: 'CAST', limit: 20, seed: 1 })
+
+// The neighbour-support rule: the same request with onlySupported, and how many it removed.
+const plain400 = generate({ targetHV: 400, allowed: all, proc: 'CAST', limit: Infinity, seed: 1 }, data, predict, q)
+for (const target of [400, 600, 800]) {
+  const sup = checkRequest(`Request ${target}, only supported`, { targetHV: target, allowed: all, proc: 'CAST', limit: 20, seed: 1, onlySupported: true })
+  if (target === 400) {
+    const full = generate({ targetHV: 400, allowed: all, proc: 'CAST', limit: Infinity, seed: 1, onlySupported: true }, data, predict, q)
+    const removed = full.stats.excluded.unsupported
+    if (full.stats.kept !== plain400.stats.kept - removed) fail('onlySupported: kept + removed does not equal the plain request')
+    const plainSupported = plain400.candidates.filter((c) => c.neighboursReached >= SUPPORT_NEEDED).map((c) => c.composition)
+    if (JSON.stringify(plainSupported) !== JSON.stringify(full.candidates.map((c) => c.composition))) fail('onlySupported keeps a different set than filtering the plain request')
+    console.log(`  onlySupported at 400 HV removed ${removed} of ${plain400.stats.kept} candidates; ${full.stats.kept} kept` +
+      ` (supported candidates in the plain list: ${plainSupported.length})`)
+    void sup
+  }
+}
+const noTarget = generate({ targetHV: null, allowed: all, proc: 'CAST', limit: 5, seed: 1, onlySupported: true }, data, predict, q)
+if (noTarget.stats.excluded.unsupported !== 0 || noTarget.candidates.some((c) => c.neighboursReached !== null)) fail('onlySupported without a target should change nothing')
+else console.log('\nonlySupported without a target removes nothing and neighboursReached is null: true')
 
 // The user's maximum fractions: Al at most 0.10, Ti at most 0.15, everything else allowed.
 checkRequest('Capped request (Al <= 0.10, Ti <= 0.15)', { targetHV: 400, allowed: { ...all, Al: 0.1, Ti: 0.15 }, proc: 'CAST', limit: 20, seed: 1 })
@@ -162,6 +204,17 @@ checkRequest('Capped request (Al <= 0.10, Ti <= 0.15)', { targetHV: 400, allowed
 // The optional switch: only element sets that were tested by the chosen route.
 const sameRoute = checkRequest('Request 400, only sets tested as CAST', { targetHV: 400, allowed: all, proc: 'CAST', limit: 20, seed: 1, routeMustBeTested: true })
 if (sameRoute.candidates.some((c) => !c.routeTestedInSet)) fail('routeMustBeTested let an untested route through')
+checkRequest('Request 400, route rule switched off', { targetHV: 400, allowed: all, proc: 'CAST', limit: 20, seed: 1, routeMustBeTested: false })
+
+// The async version (the page's) gives exactly the same answer as the synchronous one.
+for (const opts of [{ targetHV: 400, onlySupported: true }, { targetHV: 800, onlySupported: true }, { targetHV: null, routeMustBeTested: false }]) {
+  const o = { allowed: all, proc: 'CAST', limit: 10, seed: 1, ...opts }
+  const a = await generateAsync(o, data, predict, q, { sliceMs: 5 })
+  const { timing, ...rest } = a.stats
+  const b = generate(o, data, predict, q)
+  if (JSON.stringify({ ...a, stats: rest }) !== JSON.stringify(b)) fail(`generateAsync differs from generate for ${JSON.stringify(opts)}`)
+  else console.log(`generateAsync matches generate for ${JSON.stringify(opts)}: ${timing.ms.toFixed(0)} ms, ${timing.yields} yields at a 5 ms slice`)
+}
 
 // The clamp rule fires: a predictor stuck at either training limit must leave nothing.
 for (const stuck of data.clamp_HV) {

@@ -14,6 +14,12 @@
 //    outside its data.
 //  - Cautious estimate = prediction - q. Kept if it reaches the target; ranked by cautious
 //    estimate, then by smaller distance. Deterministic for a given seed.
+//  - Neighbour evidence: every kept candidate carries its 3 nearest tested alloys (L1, any route,
+//    each tested row counts, so a composition measured twice can appear twice) with their measured
+//    HV, how many of them measured at least the target, and the gap "predicted minus the nearest
+//    tested alloy's measured HV". With onlySupported (and a target) a candidate is kept only if at
+//    least 2 of the 3 reached the target; the ones it removes are counted as excluded.unsupported.
+//  - routeMustBeTested (default true): only element sets that were tested by the chosen route.
 import { featurize } from './alloyFeatures.js'
 
 export const NOT_NEW = 0.1
@@ -57,6 +63,32 @@ function denseRows(data) {
     denseCache.set(data, { col, m, sums, w: els.length })
   }
   return denseCache.get(data)
+}
+
+export const NEIGHBOURS = 3
+export const SUPPORT_NEEDED = 2
+
+// The k nearest tested alloys (rows, any route), nearest first; ties keep the lower row index.
+export function nearestK(frac, data, k = NEIGHBOURS) {
+  const { col, m, sums, w } = denseRows(data)
+  const els = Object.keys(frac)
+  const idx = els.map((el) => col.get(el)), xs = els.map((el) => frac[el])
+  const best = [] // [{ distance, index }], sorted
+  for (let r = 0; r < sums.length; r++) {
+    let d = 0, cover = 0
+    for (let j = 0; j < idx.length; j++) {
+      const y = idx[j] === undefined ? 0 : m[r * w + idx[j]]
+      d += Math.abs(xs[j] - y); cover += y
+    }
+    d += sums[r] - cover
+    if (best.length < k || d < best[best.length - 1].distance) {
+      let at = best.length
+      while (at > 0 && best[at - 1].distance > d) at--
+      best.splice(at, 0, { distance: d, index: r })
+      if (best.length > k) best.pop()
+    }
+  }
+  return best
 }
 
 // Nearest tested alloy (train and test rows, any route) to a composition. The L1 distance is
@@ -117,18 +149,47 @@ export const compositionString = (frac) =>
 // options: targetHV (null = as high as possible), allowed { El: maxFraction }, proc, limit,
 //          seed, perSet (draws per element set), routeMustBeTested (only sets tested by proc)
 // data: alloys.json; predict(row of 37 inputs) -> HV; q: half-width of the 90% interval in HV.
+//          onlySupported (keep a candidate only if 2 of its 3 nearest tested alloys reached the target)
+// generate() runs in one go; generateAsync() gives the browser a turn between element sets.
 export function generate(options, data, predict, q) {
-  const { targetHV = null, allowed = {}, proc = 'CAST', limit = 20, seed = 1, perSet = 300, routeMustBeTested = false } = options
+  const run = generateSteps(options, data, predict, q)
+  let step = run.next()
+  while (!step.done) step = run.next()
+  return step.value
+}
+
+// Same result as generate(); yields to the browser (setTimeout 0) between element sets whenever
+// more than sliceMs has passed since the last yield, and reports the time taken and the yields.
+export async function generateAsync(options, data, predict, q, { sliceMs = 40 } = {}) {
+  const t0 = performance.now()
+  let last = t0, yields = 0
+  const run = generateSteps(options, data, predict, q)
+  let step = run.next()
+  while (!step.done) {
+    if (performance.now() - last > sliceMs) {
+      await new Promise((r) => setTimeout(r, 0))
+      yields++
+      last = performance.now()
+    }
+    step = run.next()
+  }
+  step.value.stats.timing = { ms: performance.now() - t0, yields }
+  return step.value
+}
+
+function* generateSteps(options, data, predict, q) {
+  const { targetHV = null, allowed = {}, proc = 'CAST', limit = 20, seed = 1, perSet = 300, routeMustBeTested = true, onlySupported = false } = options
   const rand = seeded(seed)
   const own = new Set(data.elements)
   const [clampLo, clampHi] = data.clamp_HV
   const sets = { tested: 0, pooledElement: 0, singleComposition: 0, notAllowed: 0, routeNotTested: 0, offGrid: 0, cappedOut: 0, used: 0 }
-  const excluded = { duplicate: 0, notNew: 0, tooFar: 0, subsetCopy: 0, clamped: 0, belowTarget: 0 }
+  const excluded = { duplicate: 0, notNew: 0, tooFar: 0, subsetCopy: 0, clamped: 0, belowTarget: 0, unsupported: 0 }
   const all = testedSets(data)
   sets.tested = all.length
   let draws = 0, bestCautious = -Infinity
   const kept = []
   for (const s of all) {
+    yield
     if (s.els.some((el) => !own.has(el))) { sets.pooledElement++; continue }
     if (new Set(s.rows.map((i) => data.rows[i].g)).size < 2) { sets.singleComposition++; continue }
     if (s.els.some((el) => !(allowed[el] > 0))) { sets.notAllowed++; continue }
@@ -180,6 +241,12 @@ export function generate(options, data, predict, q) {
       const cautious = predicted - q
       bestCautious = Math.max(bestCautious, cautious)
       if (targetHV != null && cautious < targetHV) { excluded.belowTarget++; continue }
+      const neighbours = nearestK(frac, data).map(({ distance, index }) => {
+        const t = data.rows[index]
+        return { formula: t.f, proc: t.proc, hv: t.hv, split: t.split, index, distance }
+      })
+      const reached = targetHV == null ? null : neighbours.filter((nb) => nb.hv >= targetHV).length
+      if (onlySupported && targetHV != null && reached < SUPPORT_NEEDED) { excluded.unsupported++; continue }
       const r = data.rows[near.index]
       kept.push({
         composition: compositionString(frac), frac, units: u, set: s.key, proc,
@@ -189,6 +256,10 @@ export function generate(options, data, predict, q) {
         predicted, cautious, distance: near.distance,
         tier: near.distance < INTERPOLATION ? TIER_INTERPOLATION : TIER_NEAR,
         nearest: { formula: r.f, proc: r.proc, hv: r.hv, split: r.split, index: near.index },
+        // Predicted minus the nearest tested alloy's measured HV: a large positive gap means the
+        // network rates this composition far above the closest thing anyone measured.
+        gapHV: predicted - r.hv,
+        neighbours, neighboursReached: reached,
       })
     }
   }
@@ -204,7 +275,7 @@ export function generate(options, data, predict, q) {
       // The highest cautious estimate any candidate that passed every other rule reached, and the
       // highest the clamp allows at all: a target above either cannot be met.
       bestCautious: Number.isFinite(bestCautious) ? bestCautious : null, ceilingCautious: clampHi - q, keptSets: new Set(kept.map((c) => c.set)).size,
-      rules: { notNew: NOT_NEW, interpolation: INTERPOLATION, tooFar: TOO_FAR, step: 1 / UNITS, clamp: data.clamp_HV, q, targetHV, proc, seed, perSet, routeMustBeTested },
+      rules: { notNew: NOT_NEW, interpolation: INTERPOLATION, tooFar: TOO_FAR, step: 1 / UNITS, clamp: data.clamp_HV, q, targetHV, proc, seed, perSet, routeMustBeTested, onlySupported, neighbours: NEIGHBOURS, supportNeeded: SUPPORT_NEEDED },
     },
   }
 }
