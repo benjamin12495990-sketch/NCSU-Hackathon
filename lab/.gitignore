@@ -1,0 +1,4 @@
+# Scratch folder made by check_isolation.mjs to test the archive guard.
+archive_isolation_check/
+# Weights of the smoke-test run (its lineage.jsonl is kept).
+archive_smoke/weights/
