@@ -9,7 +9,11 @@ import { buildParticles } from '../lib/particles.js'
 export default function MixStage({ mix, factors, ingredients, highlight }) {
   const mountRef = useRef(null)
   const [failed, setFailed] = useState(false)
-  const model = useMemo(() => buildParticles(mix, factors, ingredients), [mix, factors, ingredients])
+  // Keyed on the amounts, not the array, so pressing Design mixes again with
+  // the same result does not tear down and rebuild the WebGL scene.
+  const mixKey = mix.join('|')
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const model = useMemo(() => buildParticles(mix, factors, ingredients), [mixKey, factors, ingredients])
 
   useEffect(() => {
     const mount = mountRef.current

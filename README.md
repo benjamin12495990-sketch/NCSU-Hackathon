@@ -109,8 +109,9 @@ the page reads them from there.
   too optimistic. Our first version proposed a mix predicted at 43 MPa whose nearest tested mix,
   with more cement at the same water/binder ratio, measured 29 MPa. The cautious model and the
   neighbour check were added because of that. They reduce the problem; they do not remove it.
-- **With caution on, candidates often do not beat the best tested mix.** At 35 MPa and 28 days the
-  best cautious candidate is worse than the best tested mix. That is an honest result, not a bug:
+- **With caution on, candidates often do not beat the best tested mix.** At 28 days the best
+  cautious candidate is 5% lower in CO2 than the best tested mix at 25 MPa, but 20% higher at
+  35 MPa, and none is found at 55 MPa or above. The page opens on 25 MPa. That is an honest result, not a bug:
   the tested mix has a real measurement, and a candidate must clear a stricter bar.
 - **With caution off, candidates are experiments, not answers.** Their cautious estimates fall
   short of the target.

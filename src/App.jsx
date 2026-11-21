@@ -10,9 +10,9 @@ import Shortlist from './components/Shortlist.jsx'
 const MixStage = lazy(() => import('./components/MixStage.jsx'))
 
 const PRESETS = [
-  { label: 'General use', mpa: 20 },
+  { label: 'Light duty', mpa: 15 },
+  { label: 'General use', mpa: 25 },
   { label: 'Structural', mpa: 35 },
-  { label: 'High strength', mpa: 50 },
 ]
 const AGES = [3, 7, 14, 28, 56, 90]
 const REPO = 'https://github.com/benjamin12495990-sketch/NCSU-Hackathon'
@@ -52,7 +52,7 @@ function TestChart({ points }) {
 export default function App() {
   const [data, setData] = useState(null)
   const [loadError, setLoadError] = useState('')
-  const [target, setTarget] = useState('35')
+  const [target, setTarget] = useState('25')
   const [age, setAge] = useState(28)
   const [allowSlag, setAllowSlag] = useState(true)
   const [allowFlyAsh, setAllowFlyAsh] = useState(true)
@@ -72,9 +72,11 @@ export default function App() {
   const run = (targetText = target) => {
     setTarget(targetText)
     setView('row0')
-    const text = String(targetText).trim()
-    const mpa = Number(text)
-    if (text === '' || !Number.isFinite(mpa)) {
+    // Accept plain decimals only ("35", "35.5", "35,5", "35 MPa"); reject forms
+    // such as 0x23 or 3e1 that JavaScript would quietly turn into a number.
+    const text = String(targetText).trim().replace(/\s*mpa$/i, '').replace(',', '.')
+    const mpa = /^\d+(\.\d+)?$/.test(text) ? Number(text) : NaN
+    if (!Number.isFinite(mpa)) {
       setResult(null)
       return setError('Type the strength you need in MPa as a number, for example 35.')
     }
