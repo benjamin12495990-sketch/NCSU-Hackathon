@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { OBJECTIVES, humidityNeed, wearNeed } from '../lib/rank.js'
 
 const fmt = (v, digits = 0) => (v == null ? '–' : Number(v).toLocaleString(undefined, { maximumFractionDigits: digits }))
@@ -18,6 +19,8 @@ function Val({ m, field, digits, unit = '' }) {
 // the ranked shortlist of other engineering materials, and frontier materials.
 export default function Shortlist({ result, data }) {
   const { rows, excluded, considered } = result.shortlist
+  const [showAll, setShowAll] = useState(false) // the list opens on its ten best rows
+  const shown = showAll ? rows : rows.slice(0, 10)
   const objective = OBJECTIVES[result.objective]
   const { req, limits } = result
   const left = considered - rows.length
@@ -73,31 +76,33 @@ export default function Shortlist({ result, data }) {
         <p className="note">
           These are existing materials, not generated ones: generating a new material needs a model trained
           on real test data, which this project has for concrete only.{' '}
-          {rows.length} of {considered} reference materials pass, ranked by “{objective.label.toLowerCase()}”.
+          {rows.length} of {considered} reference materials pass, ranked by “{objective.label}”.
           {left > 0 && ` Left out: ${reasons.join(', ')}.`} Strength kinds differ between materials (yield,
           ultimate, compressive, flexural), so compare within a kind.
         </p>
         {rows.length > 0 && (
           <div className="tablewrap">
-            <table>
+            <table className="compact">
               <thead>
                 <tr>
-                  <th>#</th><th>Material</th><th className="num">Strength</th><th className="num">Density</th>
-                  <th className="num">Highest service temperature</th><th className="num">Humidity rating (AI judgment)</th>
-                  <th className="num">Wear rating (AI judgment)</th><th className="num">CO<sub>2</sub>e per kg</th>
+                  <th>#</th><th>Material</th><th className="num">Strength (MPa)</th><th className="num">Density (kg/m³)</th>
+                  <th className="num">Highest service temperature (°C)</th>
+                  <th className="num">Humidity rating, out of 5 (AI judgment)</th>
+                  <th className="num">Wear rating, out of 5 (AI judgment)</th>
+                  <th className="num">CO<sub>2</sub>e per kg</th>
                   <th className="num">{objective.unit}</th><th>Source</th>
                 </tr>
               </thead>
               <tbody>
-                {rows.map(({ m, index }, i) => (
+                {shown.map(({ m, index }, i) => (
                   <tr key={m.name}>
                     <td>{i + 1}</td>
-                    <td><strong>{m.name}</strong><span className="label">{m.family}</span></td>
-                    <td className="num"><Val m={m} field="strength_MPa" unit=" MPa" /><span className="label">{m.strength_kind}</span></td>
-                    <td className="num"><Val m={m} field="density_kg_m3" unit=" kg/m³" /></td>
-                    <td className="num"><Val m={m} field="max_service_temp_C" unit=" °C" /></td>
-                    <td className="num" title={m.humidity_reason}>{m.humidity_resistance_1to5} / 5</td>
-                    <td className="num" title={m.wear_reason}>{m.wear_resistance_1to5} / 5</td>
+                    <td className="wraps"><strong>{m.name}</strong><span className="label">{m.family}</span></td>
+                    <td className="num"><Val m={m} field="strength_MPa" /><span className="label">{m.strength_kind}</span></td>
+                    <td className="num"><Val m={m} field="density_kg_m3" /></td>
+                    <td className="num"><Val m={m} field="max_service_temp_C" /></td>
+                    <td className="num" title={m.humidity_reason}>{m.humidity_resistance_1to5}</td>
+                    <td className="num" title={m.wear_reason}>{m.wear_resistance_1to5}</td>
                     <td className="num"><Val m={m} field="embodied_CO2_kg_per_kg" digits={2} /></td>
                     <td className="num strong">{index == null ? 'no CO₂ figure' : fmt(index, index < 10 ? 2 : 0)}</td>
                     <td>{m.sources[0]?.url ? <a href={m.sources[0].url}>Paper</a> : '–'}</td>
@@ -106,6 +111,13 @@ export default function Shortlist({ result, data }) {
               </tbody>
             </table>
           </div>
+        )}
+        {rows.length > 10 && (
+          <p className="more">
+            <button type="button" className="chip" aria-expanded={showAll} onClick={() => setShowAll(!showAll)}>
+              {showAll ? 'Show the first 10 only' : `Show all ${rows.length} materials`}
+            </button>
+          </p>
         )}
         <p className="note small">{data.materialFile.note}</p>
       </section>
@@ -116,11 +128,18 @@ export default function Shortlist({ result, data }) {
         <div className="cards">
           {frontier.map((f) => (
             <article key={f.name} className="mini">
-              <h3>{f.name} <span className="flag plain">{f.readiness}</span></h3>
+              <h3>{f.name}</h3>
+              <span className="flag plain">{f.readiness}</span>
               <p>{f.best_at}</p>
-              <p><strong>{f.headline_number}</strong></p>
-              {f.note && <p className="fine">{f.note}</p>}
-              <p className="fine">Barrier: {f.main_barrier} <a href={f.url}>Source</a></p>
+              <p className="headline">{f.headline_number}</p>
+              <p className="fine">Barrier: {f.main_barrier}</p>
+              <p className="fine"><a href={f.url}>Source paper</a></p>
+              {f.note && (
+                <details>
+                  <summary>Evidence notes</summary>
+                  <p className="fine">{f.note}</p>
+                </details>
+              )}
             </article>
           ))}
         </div>

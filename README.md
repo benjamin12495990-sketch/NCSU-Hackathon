@@ -18,7 +18,8 @@ the visual rules in [`taste.md`](taste.md).
 
 ## What it does
 
-Enter a target strength in MPa and a curing age. In the browser, with no server, the app:
+Enter a target strength in MPa and a curing age. In the browser (or on the server, if you press
+"Ping server for a new batch"), the app:
 
 1. generates about 12,000 mixes by varying each of the 306 lab-tested mixes in the dataset
    (binder amount, share of slag and fly ash, water/binder ratio, superplasticizer dose), rescaling
@@ -109,6 +110,24 @@ Two kinds of numbers are not measured by us and are labelled on the page:
 Not used by the live page: the neural network in `pipeline/` (an alternative model that turned out
 less accurate) and the folders `domains/` and `docs/`, which hold plans for other domains. Only
 concrete is built.
+
+## The neural network you can train on the page
+
+The section "Train a neural network yourself" trains a network from random weights in the browser
+when you press the button. It is written from scratch in `src/lib/nn.js`: 10 inputs (the tree
+model's nine plus the logarithm of age), two hidden layers of 64 and 32 units with ReLU, 2,817
+weights, the Adam optimiser and squared-error loss. Nothing pre-trained is downloaded.
+
+- **What it learns from:** the same 786 training lab results as the trees (`public/model/nn_data.json`,
+  written by `train/export_nn_data.py`).
+- **How it is scored:** on the same 219 held-out lab results from 62 mixes as the trees, which it
+  never trains on. The page plots that error after every pass.
+- **Result:** it starts 15.9 MPa off and ends 3.9 MPa off (R² 0.86) after 300 passes, in about
+  three seconds. The trees are at 3.3 MPa on the same mixes, so the designer keeps using the trees
+  and the network is shown as a second opinion.
+- **Limits:** the starting weights use a fixed seed, so every press gives the same run. Its
+  settings were chosen after seven trial runs scored on the same held-out mixes, so 3.9 MPa is
+  slightly flattering. Other seeds we tried ended between 4.0 and 4.6 MPa.
 
 ## How the models were trained
 
@@ -220,6 +239,10 @@ train/test split and several wording changes.
 | `src/lib/nearest.js` | Distances to tested mixes and their lab results. |
 | `src/lib/design.js` | Generates, filters, ranks and checks the candidates. |
 | `src/lib/name.js` | Builds each mix's formula name from its recipe. |
+| `src/lib/nn.js` | The neural network: forward pass, backpropagation and Adam, written from scratch. |
+| `src/components/NeuralNet.jsx` | The training panel: button, learning curve and the two prediction tables. |
+| `public/model/nn_data.json` | The training and held-out rows the network uses, the same split as the trees. |
+| `train/export_nn_data.py` | Writes `nn_data.json` from the same loading, features and split as `train/train.py`. |
 | `src/lib/formula.js` | Estimates the paste's chemical formula per silicon atom from oxide analyses. |
 | `src/lib/domains.js` | The seven families of materials and which one is live. |
 | `src/components/Formula.jsx` | Shows the formula with subscripts. |
