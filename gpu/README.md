@@ -14,6 +14,7 @@ first time this code meets a GPU, so run the checks below in order.
 | `train_tabular.py` | Mirror of `src/lib/nnFamily.js` (hidden, epochs, batch, lr with linear decay to 10%, L2 decay, squared or Huber loss, inputClip, clampOutput, logTarget, standardisation on training rows only). Trains seed replicas and/or a grid of configurations at the same time. |
 | `structure/` | The first structure-aware workload: JARVIS-DFT download (`fetch_jarvis.py`), periodic neighbour graphs (`graph.py`), a CGCNN in plain PyTorch (`model.py`), and the bulk-modulus trainer (`train_structure.py`). |
 | `grids/` | Example configuration grids for `train_tabular.py --grid`. |
+| `laptop_suite.py` | Runs the whole first-day sequence below and gathers the JSONs to share, with a comparison against `reference_cpu/`. |
 | `tests/smoke.py` | CPU end-to-end test of every piece on tiny settings: `python -m gpu.tests.smoke`. `tests/test_guard.py` tests the sealed-data guard on its own. |
 | `reference_cpu/` | Compact CPU results from the build machine, to compare the laptop against. |
 
@@ -83,6 +84,13 @@ python -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda
 Write down the exact install command, the driver version and the torch version. `check_env` records them.
 
 ## 2. Check, profile, then train
+
+**One command for the first day:** `python -m gpu.laptop_suite --device cuda --label rtx5080` runs every step
+below in order: smoke test, environment checks, profiles, all six tabular families, a 32-seed bank, the
+JARVIS download and the 3,000-record structure run, on CUDA and, for comparison, on CPU. Each step's log
+goes to `gpu/runs/<UTC time>_suite_rtx5080/`. The compact JSONs and a `summary.json` that compares them with
+`reference_cpu/` go to its `share/` subfolder. Add `--full-structure` for the full JARVIS run. The steps one
+by one:
 
 Commands use `/`. PowerShell accepts that in these arguments. `--threads N` caps PyTorch's CPU threads. Every `--output` and run folder must be new;
 use a new name for each run. Keep the laptop plugged in. During CUDA runs, watch temperature and power
@@ -158,8 +166,7 @@ compare its numbers directly with `reference_cpu/`.
 - Baselines on the same split: the training mean, and ridge regression on element fractions (alpha chosen
   on val). The val set picks the best epoch. The test set is scored once at the end.
 - Graphs (8 A cutoff, 12 neighbours) are built once per subset and cached in `gpu/data_cache/jarvis/graphs/`.
-  3,000 took 2 s here, so all 31,897 should take well under a minute. Loading the 254 MB JSON takes about
-  6 s and 1.2 GB of RAM.
+  All 31,897 took 20.6 s here. Loading the 254 MB JSON takes about 6 s and 1.2 GB of RAM.
 - Checkpoints are written after every epoch (`<run>/ckpt/last.pt`). Resume with `--resume <run>` on the
   same command. On CPU a resumed run matches an uninterrupted one exactly. On CUDA, `index_add_` uses atomic
   adds, so the two runs agree only to within rounding.
@@ -200,9 +207,11 @@ with Python 3.13 and torch 2.15.0+cu132 running on CPU, in float32.
 | `train_tabular --family concrete --mode fixed` (TRAIN -> REWARD; MONITOR) | REWARD ensemble MAE 13.33 MPa, MONITOR 12.35 MPa; train mean 14.99 / 15.80. Exploratory; the lab README's plain nn.js network scored 12.47 on SELECT, with other inputs | 1.8 s |
 | `structure.train_structure --limit 3000 --epochs 15` (JARVIS bulk modulus, split 2,375 / 286 / 339) | test MAE in log10(GPa): mean 0.320, ridge on element fractions 0.175 (R2 0.590), CGCNN 0.135 (R2 0.686; best val epoch 7) | 74.1 s training, 481 structures/s; graphs 2.0 s; peak RSS 1.9 GB (includes the 254 MB JSON) |
 
+| `structure.train_structure --epochs 2` (all 31,897 records, split 25,432 / 3,174 / 3,291) | test MAE in log10(GPa): mean 0.324, ridge 0.171 (R2 0.520), CGCNN after 2 epochs 0.126 (R2 0.678) | 55 s per epoch, 459 structures/s; graphs 20.6 s; JSON load 6.5 s; peak RSS 1.9 GB |
+
 A test MAE of 0.135 in log10 means a typical error of a factor of 10^0.135, about 1.36, against the DFT
-value. On 3,000 records the CGCNN beats both baselines. The full set (25,000 training structures) is the
-laptop's job. On this CPU it would take about 53 s per epoch.
+value. On 3,000 records the CGCNN beats both baselines. On the full set, 2 epochs already beat both. The
+full 100-epoch run (about 1.5 hours on this CPU) is the laptop's job.
 
 ## Not done here
 

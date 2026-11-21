@@ -1,0 +1,152 @@
+{
+ "created": "2026-11-21T21:24:27+00:00",
+ "git": {
+  "commit": "41401278661596baea735c156328f99b480e17ce",
+  "branch": "gpu-kit",
+  "dirty": true
+ },
+ "device": "cpu",
+ "hardware": {
+  "python": "3.13.18",
+  "platform": "Linux-6.18.44-fc-v726-x86_64-with-glibc2.39",
+  "machine": "x86_64",
+  "processor": "x86_64",
+  "cpu_count": 4,
+  "torch": "2.15.0+cu132",
+  "torch_cuda_build": "13.2",
+  "cuda_available": false
+ },
+ "threads": 2,
+ "argv": [
+  "gpu/structure/train_structure.py",
+  "--epochs",
+  "2",
+  "--device",
+  "cpu",
+  "--threads",
+  "2",
+  "--tag",
+  "cpu_full_2ep"
+ ],
+ "config": {
+  "synthetic": 0,
+  "limit": 0,
+  "epochs": 2,
+  "batch": 64,
+  "lr": 0.002,
+  "weight_decay": 0.0,
+  "atom_features": 64,
+  "conv": 3,
+  "hidden": 128,
+  "cutoff": 8.0,
+  "max_neighbors": 12,
+  "seed": 11,
+  "amp": false
+ },
+ "source": {
+  "zip": "gpu/data_cache/jarvis/jdft_3d-9-24-2025.json.zip",
+  "zip_sha256": "f9e0a3309f0000d5de1ec9e49c93963109ea45e63f451103f8f6595d2eabf7f5",
+  "json_name": "jdft_3d-9-24-2025.json"
+ },
+ "counts": {
+  "records": 93902,
+  "missing_or_non_numeric": 61469,
+  "non_positive": 536,
+  "kept": 31897,
+  "used": 31897
+ },
+ "target": "log10(bulk_modulus_kv / GPa), JARVIS-DFT OptB88vdW computed Voigt bulk modulus",
+ "split": {
+  "sha256": "e61610a2c541b3d7e0aa2a42b01aaf8783b670e692403e44ccb9ef8b55a588f8",
+  "sizes": {
+   "train": 25432,
+   "val": 3174,
+   "test": 3291
+  },
+  "formulas": {
+   "train": 19456,
+   "val": 2457,
+   "test": 2461
+  }
+ },
+ "graphs": {
+  "crystals": 31897,
+  "edges": 2584656,
+  "build_seconds": 20.60193414000014,
+  "from_cache": false,
+  "cutoff": 8.0,
+  "max_neighbors": 12
+ },
+ "baselines": {
+  "mean": {
+   "val": {
+    "n": 3174,
+    "mae": 0.32005227724746976,
+    "rmse": 0.4066141254235547,
+    "r2": -2.3696726922928235e-06
+   },
+   "test": {
+    "n": 3291,
+    "mae": 0.32375356284083573,
+    "rmse": 0.42648535979950297,
+    "r2": -1.3686306603588605e-06
+   }
+  },
+  "ridge_element_fractions": {
+   "alpha_chosen_on_val": 0.1,
+   "val": {
+    "n": 3174,
+    "mae": 0.163058600125345,
+    "rmse": 0.25996043933510005,
+    "r2": 0.5912567154446329
+   },
+   "test": {
+    "n": 3291,
+    "mae": 0.1706710405190122,
+    "rmse": 0.2955416289317371,
+    "r2": 0.5197916971530527
+   }
+  }
+ },
+ "cgcnn": {
+  "best_epoch_by_val": 2,
+  "val": {
+   "n": 3174,
+   "mae": 0.11813917904751065,
+   "rmse": 0.21566959324231963,
+   "r2": 0.718671361478023
+  },
+  "test": {
+   "n": 3291,
+   "mae": 0.12558933323233026,
+   "rmse": 0.2418213635006486,
+   "r2": 0.6784994867393038
+  },
+  "parameters": 82113
+ },
+ "timing": {
+  "load_seconds": 6.53508832600005,
+  "train_seconds": 110.80754357900014,
+  "epochs": 2,
+  "mean_epoch_seconds": 55.40377178950007,
+  "train_structures_per_second": 459.0301197655966,
+  "wall_seconds": 145.417607461,
+  "peak_memory_mb": 1930.609375
+ },
+ "history": [
+  {
+   "epoch": 1,
+   "train_mse_std": 0.41876971236037247,
+   "val_mae": 0.12350929377987835,
+   "seconds": 54.18399231100011,
+   "structures_per_second": 469.3637163911406
+  },
+  {
+   "epoch": 2,
+   "train_mse_std": 0.3203319845596324,
+   "val_mae": 0.11813917904751065,
+   "seconds": 56.62355126800003,
+   "structures_per_second": 449.14173396913947
+  }
+ ]
+}
