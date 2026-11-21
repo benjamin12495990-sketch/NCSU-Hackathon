@@ -8,7 +8,7 @@ function Val({ m, field, digits, unit = '' }) {
   if (m[field] == null) return '–'
   const sourced = m.sourced.includes(field)
   return (
-    <span title={sourced ? 'Seen in a cited paper tonight' : 'Typical value, not individually checked'}>
+    <span title={sourced ? "Seen tonight in a search tool's summary of a cited paper" : 'Typical value, not individually checked'}>
       {fmt(m[field], digits)}{unit}{sourced && <span className="srcdot" aria-label="sourced"> ●</span>}
     </span>
   )
@@ -69,8 +69,10 @@ export default function Shortlist({ result, data }) {
       )}
 
       <section>
-        <h2>Other materials that meet these requirements</h2>
+        <h2>Existing materials for comparison (not generated)</h2>
         <p className="note">
+          These are existing materials, not generated ones: generating a new material needs a model trained
+          on real test data, which this project has for concrete only.{' '}
           {rows.length} of {considered} reference materials pass, ranked by “{objective.label.toLowerCase()}”.
           {left > 0 && ` Left out: ${reasons.join(', ')}.`} Strength kinds differ between materials (yield,
           ultimate, compressive, flexural), so compare within a kind.
@@ -81,8 +83,8 @@ export default function Shortlist({ result, data }) {
               <thead>
                 <tr>
                   <th>#</th><th>Material</th><th className="num">Strength</th><th className="num">Density</th>
-                  <th className="num">Highest service temperature</th><th className="num">Humidity rating</th>
-                  <th className="num">Wear rating</th><th className="num">CO<sub>2</sub>e per kg</th>
+                  <th className="num">Highest service temperature</th><th className="num">Humidity rating (AI judgment)</th>
+                  <th className="num">Wear rating (AI judgment)</th><th className="num">CO<sub>2</sub>e per kg</th>
                   <th className="num">{objective.unit}</th><th>Source</th>
                 </tr>
               </thead>
@@ -109,7 +111,7 @@ export default function Shortlist({ result, data }) {
       </section>
 
       <section>
-        <h2>At the research frontier</h2>
+        <h2>Research frontier: published by others, not generated here</h2>
         <p className="note">{data.frontierFile.note} Listed first: the ones most relevant to what you switched on.</p>
         <div className="cards">
           {frontier.map((f) => (

@@ -111,11 +111,11 @@ export default function App() {
         },
         {
           id: 'tested', label: 'Best mix a lab already tested', item: result.baseline, title: 'Best lab-tested mix',
-          sub: result.baseline ? `measured ${result.baseline.strength.toFixed(1)} MPa at ${result.baseline.age} days` : 'none in the dataset reaches this target',
+          sub: result.baseline ? `measured ${result.baseline.strength.toFixed(1)} MPa at ${result.baseline.age} days` : 'none in the dataset reaches this target within your limits',
         },
         {
           id: 'cement', label: 'Best tested mix using cement only', item: result.cementOnly, title: 'Best cement-only tested mix',
-          sub: result.cementOnly ? `measured ${result.cementOnly.strength.toFixed(1)} MPa at ${result.cementOnly.age} days` : 'none in the dataset reaches this target',
+          sub: result.cementOnly ? `measured ${result.cementOnly.strength.toFixed(1)} MPa at ${result.cementOnly.age} days` : 'none in the dataset reaches this target within your limits',
         },
       ]
     : []
@@ -139,7 +139,8 @@ export default function App() {
           Say how strong the concrete must be. The app proposes new mixes predicted to reach that
           strength and ranks them by embodied CO<sub>2</sub>. For civil and materials engineering
           researchers choosing which trial mixes to cast, when every lab test means waiting 28 days
-          for the concrete to cure.
+          for the concrete to cure. Only concrete mixes are generated; every other material on the page is
+          an existing one, shown for comparison.
         </p>
       </header>
 
@@ -245,6 +246,7 @@ export default function App() {
                 No new mix has a {bar} of {result.targetMPa} MPa at {result.ageDays} days
                 {result.stats.hiddenUnsupported > 0 && ` and enough nearby lab results to back it (${result.stats.hiddenUnsupported} were hidden for that reason)`}.
                 Lower the target, allow more curing time, or change the options above.
+                {result.targetMPa > result.asked && ' Your environment set this strength, so relaxing a requirement will help more than lowering the target.'}
               </p>
             )}
             {!result.cautious && best && (
@@ -258,12 +260,13 @@ export default function App() {
 
           {best && (
             <section>
-              <h2>New candidate mixes</h2>
+              <h2>Generated mixes, ranked</h2>
               <p className="note">
                 {result.stats.generated.toLocaleString()} mixes were generated in your browser by varying
-                the {data.known.entries.length} tested mixes in the dataset. {result.stats.removedKnown} matched a
-                tested mix and were removed. {result.stats.meetTarget.toLocaleString()} have a {bar} of at
-                least {result.targetMPa} MPa.
+                the {data.known.entries.length} tested mixes in the dataset. {result.stats.removedKnown.toLocaleString()} already
+                exist (within 5 kg of a tested mix on every ingredient) and were removed.
+                {result.stats.overWaterLimit > 0 && ` ${result.stats.overWaterLimit.toLocaleString()} broke the water / binder limit from your environment.`}{' '}
+                {result.stats.meetTarget.toLocaleString()} of the rest have a {bar} of at least {result.targetMPa} MPa.
                 {result.stats.hiddenUnsupported > 0 && ` ${result.stats.hiddenUnsupported} lower-CO₂ mixes are hidden because nearby lab results do not back them.`}{' '}
                 Lowest CO<sub>2</sub> first. Amounts are kg per m³ of concrete. Press 3D on a row to see that mix.
               </p>
@@ -280,6 +283,7 @@ export default function App() {
                       <th className="num">Cautious estimate</th>
                       <th className="num">CO<sub>2</sub>e per m³</th>
                       <th className="num">vs best tested</th>
+                      <th className="num">Differs from every tested mix by</th>
                       <th>3 nearest tested mixes measured</th>
                       <th>Evidence</th>
                       <th><span className="sr">Show in 3D</span></th>
@@ -295,10 +299,11 @@ export default function App() {
                         <td className="num">{c.low.toFixed(1)} MPa</td>
                         <td className="num strong">{kg(c.co2)} kg</td>
                         <td className="num">{c.vsBaseline == null ? '–' : pct(c.vsBaseline)}</td>
+                        <td className="num">{Math.round(c.gap)} kg or more</td>
                         <td>{c.neighbours.map((n) => n.strength.toFixed(0)).join(', ')} MPa</td>
                         <td>
                           <span className={c.supported ? 'flag ok' : 'flag low'}>
-                            {c.supported ? 'Lab-supported' : 'Not backed'}
+                            {c.supported ? 'Neighbours passed' : 'Not backed'}
                           </span>
                         </td>
                         <td>
@@ -313,12 +318,15 @@ export default function App() {
                 </table>
               </div>
               <p className="note small">
-                Lab-supported means at least two of the three nearest tested mixes are close to the candidate
-                and reached {result.targetMPa} MPa in the lab by {result.ageDays} days.
+                “Differs by” is the gap to the closest tested mix on the ingredient where they differ most; a
+                generated mix must differ by more than 5 kg to count as new. New means not in this dataset: it
+                may exist elsewhere in the literature.
+                “Neighbours passed” means at least two of the three nearest tested mixes are close to the candidate
+                and reached {result.targetMPa} MPa in the lab by {result.ageDays} days. The candidate itself is untested.
               </p>
             </section>
           )}
-          <Shortlist result={result} data={data} />
+          <Shortlist data={data} result={{ ...result, objective, shortlist: rankMaterials(data.materialFile.materials, result.req, result.asked, objective) }} />
         </>
       )}
 

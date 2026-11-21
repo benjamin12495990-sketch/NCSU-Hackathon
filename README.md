@@ -15,13 +15,14 @@ Enter a target strength in MPa and a curing age. In the browser, with no server,
 1. generates about 12,000 mixes by varying each of the 306 lab-tested mixes in the dataset
    (binder amount, share of slag and fly ash, water/binder ratio, superplasticizer dose), rescaling
    the aggregates so each mix keeps its parent's volume;
-2. removes any mix that is already in the dataset;
+2. removes any mix that already exists in the dataset: within 5 kg of a tested mix on every
+   ingredient, the same rule the training script uses to decide what counts as one mix;
 3. predicts each mix's strength with two models trained for this project: the expected strength,
    and a cautious lower estimate;
 4. keeps the mixes whose cautious estimate reaches the target (or the expected strength, if you turn
    caution off);
 5. ranks them by embodied CO2 per cubic metre;
-6. checks each against its three nearest lab-tested mixes and marks it "lab-supported" only when at
+6. checks each against its three nearest lab-tested mixes and marks it "neighbours passed" only when at
    least two of them are close to it and reached the target in the lab.
 
 It also shows the lowest-CO2 mix that a lab has already tested for that target, so you can see
@@ -35,8 +36,9 @@ Choosing a kind of work (building, pavement, marine, aerospace and so on) preset
 
 - **For the concrete design**, humidity and freezing map to ACI 318-19 exposure classes (W1, W2,
   C1, C2, F1 to F3). Each class caps the water/binder ratio and sets a minimum strength; the
-  designer applies the strictest of the ones switched on. Wear adds a 28 MPa minimum.
-- **For everything else**, the page ranks 32 reference materials from six families (concrete and
+  designer applies the strictest of the ones switched on. Wear from vehicles upward adds a 28 MPa
+  minimum. Service temperature and service life do not change the generated mixes.
+- **For comparison**, the page ranks 32 existing reference materials from six families (concrete and
   masonry, ferrous metals, light alloys, high-temperature alloys and ceramics, polymers, composites
   and timber). A material is left out if it fails a requirement that is switched on. The rest are
   ranked by CO2 per unit of strength, mass per unit of strength, or strength.
@@ -67,7 +69,7 @@ Two kinds of numbers are not measured by us and are labelled on the page:
   paywalled and we did not open it. Class C1 and the wear minimum are recalled values we could not
   confirm, and the page marks them.
 - **The materials table** was compiled by AI research agents. 56 of its 232 numbers were seen in a
-  cited paper and carry a dot on the page. The other 176 are typical handbook-level values recalled
+  search tool's summary of a cited paper (some after a unit conversion) and carry a dot on the page. The other 176 are typical handbook-level values recalled
   by the AI and not individually checked. The 1 to 5 humidity and wear ratings are AI judgments.
 - **Kinds of work and the service-life rule** (50 years or more asks for one more step of humidity
   and wear resistance) are our own starting points, not values from a standard.
@@ -106,7 +108,7 @@ the page reads them from there.
 - **The search rewards model error.** Ranking by lowest CO2 pulls toward mixes where the model is
   too optimistic. Our first version proposed a mix predicted at 43 MPa whose nearest tested mix,
   with more cement at the same water/binder ratio, measured 29 MPa. The cautious model and the
-  lab-support check were added because of that. They reduce the problem; they do not remove it.
+  neighbour check were added because of that. They reduce the problem; they do not remove it.
 - **With caution on, candidates often do not beat the best tested mix.** At 35 MPa and 28 days the
   best cautious candidate is worse than the best tested mix. That is an honest result, not a bug:
   the tested mix has a real measurement, and a candidate must clear a stricter bar.
@@ -135,8 +137,8 @@ the page reads them from there.
 
 ## How we used MCP servers
 
-All sourced numbers on the page were found and cross-checked tonight through MCP servers connected
-to the coding agent. Six agents ran in parallel: two searched, two independently re-checked every
+The CO2 factors, densities and accuracy figures were found and cross-checked tonight through MCP
+servers connected to the coding agent. Six agents ran in parallel: two searched, two independently re-checked every
 number with a different search, one gathered expert objections, and one looked for more servers.
 
 | MCP server | What it was used for |
@@ -170,7 +172,7 @@ train/test split and several wording changes.
 | `public/model/model_low.json` | The cautious model, in the same format. |
 | `public/model/known.json` | Every distinct tested mix with its measured strength at each age. |
 | `public/model/space.json` | The ranges the labs covered. Generated mixes must stay inside them. |
-| `public/model/metrics.json` | Test metrics, row counts, training date and the lab-support distance. |
+| `public/model/metrics.json` | Test metrics, row counts, training date and the neighbour distance. |
 | `public/model/parity.json` | 20 test rows with Python predictions from both models. |
 | `public/model/test_points.json` | Measured and predicted strength for the test set (the chart). |
 | `public/model/factors.json` | CO2 factors and densities with their sources. Written by hand from the literature search. |

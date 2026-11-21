@@ -1,5 +1,5 @@
 {
- "note": "Reference table compiled tonight by AI research agents using literature search tools. Values with a dot were seen in a cited paper tonight (as the search tool summarised it). All other values are typical handbook-level figures recalled by the AI and not individually checked. The 1 to 5 humidity and wear ratings are AI judgments. Use this to build a shortlist, then check a datasheet.",
+ "note": "Reference table of existing materials, compiled tonight by AI research agents using literature search tools. A dot means the value, or the measurement it was converted from, was seen tonight in a search tool's summary of a cited paper. All other values are typical handbook-level figures recalled by the AI and not individually checked. The 1 to 5 humidity and wear ratings are AI judgments. Use this to build a shortlist, then check a datasheet.",
  "materials": [
   {
    "name": "Normal-strength Portland cement concrete (~30 MPa)",

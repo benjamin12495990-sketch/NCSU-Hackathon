@@ -16,6 +16,10 @@ function seeded(seed) {
 }
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v))
 
+// Two recipes within this many kg on every ingredient count as the same mix.
+// train/train.py groups mixes with the same number before splitting the data.
+export const SAME_MIX_KG = 5
+
 // Makes one new mix from a parent mix: change the binder amount, the share of
 // slag and fly ash, the water/binder ratio and the superplasticizer dose, then
 // rescale both aggregates so the mix keeps the parent's volume (the "absolute
@@ -58,12 +62,13 @@ function variant(parent, rand, step, opts, data) {
 
 // Inverse design. Given a target strength (MPa) at an age (days):
 //   1. make thousands of new mixes by varying every tested mix,
-//   2. drop any that is already in the dataset,
+//   2. drop any that already exists in the dataset: within 5 kg of a tested
+//      mix on every ingredient, the same rule train.py uses for "one mix",
 //   3. keep those whose CAUTIOUS strength estimate reaches the target
 //      (or, if the user turns caution off, whose expected strength does),
 //   4. rank by embodied CO2,
 //   5. check each against its three nearest lab-tested mixes: it counts as
-//      "lab-supported" only if at least two of those three are close to it
+//      "neighbours passed" only if at least two of those three are close to it
 //      and actually reached the target in the lab.
 export function design(request, data, limit = 10) {
   const { spec, model, modelLow, known, metrics, factors } = data
@@ -76,13 +81,26 @@ export function design(request, data, limit = 10) {
   const seen = new Set()
   const feasible = []
 
+  // How far a mix is from the closest tested mix: the largest difference on
+  // any single ingredient, in kg. Small means it is the same mix re-weighed.
+  const gapToTested = (mix) => {
+    let best = Infinity
+    for (const e of known.entries) {
+      let worst = 0
+      for (let i = 0; i < mix.length && worst < best; i++) worst = Math.max(worst, Math.abs(mix[i] - e.mix[i]))
+      if (worst < best) best = worst
+    }
+    return best
+  }
+
   const consider = (mix) => {
     if (!mix) return
     const key = mixKey(mix)
     if (seen.has(key)) return
     seen.add(key)
     stats.generated++
-    if (known.keys.has(key)) return void stats.removedKnown++
+    const gap = gapToTested(mix)
+    if (gap <= SAME_MIX_KG) return void stats.removedKnown++
     if (!withinWater(mix)) return void stats.overWaterLimit++
     const x = featurize(mix, ageDays, spec)
     const strength = predict(model, x)
@@ -92,7 +110,7 @@ export function design(request, data, limit = 10) {
     const low = Math.min(predict(modelLow, x), strength)
     if (opts.cautious && low < targetMPa) return
     stats.meetTarget++
-    feasible.push({ mix, strength, low, co2: co2PerM3(mix, factors, spec.ingredients) })
+    feasible.push({ mix, strength, low, gap, co2: co2PerM3(mix, factors, spec.ingredients) })
   }
 
   const usable = (mix) => (opts.allowSlag || mix[1] === 0) && (opts.allowFlyAsh || mix[2] === 0)

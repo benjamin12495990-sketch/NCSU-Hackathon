@@ -78,10 +78,10 @@ export default function Requirements({ req, setReq, field, setField, objective, 
         text={WEAR[req.wear.level - 1]} />
       <Row name="Service life" on={req.life.on} onToggle={(on) => set('life', { on })}
         min={10} max={100} step={10} value={req.life.years} onValue={(years) => set('life', { years })}
-        text={`${req.life.years} years${req.life.years >= 50 ? ': asks for one more step of humidity and wear resistance' : ''}`} />
+        text={`${req.life.years} years${req.life.years < 50 ? ': no extra requirement under 50 years' : req.humidity.on || req.wear.on ? ': asks existing materials for one more step of humidity and wear resistance' : ': no effect until Humidity or Wear is on'}`} />
       <p className="note small">
         The kinds of work are starting points we chose. Freezing limits apply to the concrete design; the
-        service temperature applies to the materials shortlist. The service-life rule is our rule of thumb.
+        service temperature and service life only filter the existing materials, not the generated mixes. Wear from vehicles upward adds one fixed 28 MPa minimum to the concrete. The service-life rule is our rule of thumb.
       </p>
     </fieldset>
   )
