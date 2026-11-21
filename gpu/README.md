@@ -238,9 +238,8 @@ python -m gpu.structure.baseline_trees --threads 4 --output gpu/runs/structure/t
 python -m gpu.structure.predict_run --run gpu/runs/structure/<a finished run without predictions.npz> --device cuda
 python -m gpu.structure.train_structure --device cuda --epochs 100 --seed 12 --tag seed12      # new runs save predictions.npz
 python -m gpu.structure.train_structure --device cuda --epochs 100 --seed 13 --tag seed13
-python -m gpu.structure.compare_structure --runs gpu/runs/structure/<run1> gpu/runs/structure/<run2> gpu/runs/structure/<run3> ^
-    --trees gpu/runs/structure/trees_laptop_predictions.npz --output gpu/runs/structure/compare_laptop.json
+python -m gpu.structure.compare_structure --runs gpu/runs/structure/<run1> gpu/runs/structure/<run2> gpu/runs/structure/<run3> --trees gpu/runs/structure/trees_laptop_predictions.npz --output gpu/runs/structure/compare_laptop.json
 ```
-(`^` continues a line in PowerShell; use `\` on Linux.) A negative difference favours the network; the interval is
+(Each command is one line. On Windows use backslashes in paths.) A negative difference favours the network; the interval is
 the 95% bootstrap range. "Not distinguishable" means the intervals include zero. Do not claim the network is better than
 trees unless the interval lies below zero against the cell-feature tree baseline too.
