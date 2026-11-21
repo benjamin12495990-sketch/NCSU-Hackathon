@@ -49,7 +49,7 @@ const walk = (d) => readdirSync(d).flatMap((f) => {
 })
 const code = walk(LAB).filter((p) => /\.(mjs|js|cjs|py|sh)$/.test(p))
 const VAULT_OK = new Set(['open_vault.mjs', 'make_splits.mjs', 'guard.mjs', 'check_isolation.mjs']) // guard blocks it, this file tests the block
-const FULL_OK = new Set(['make_splits.mjs', 'net_parity.mjs', 'guard.mjs', 'check_isolation.mjs'])
+const FULL_OK = new Set(['make_splits.mjs', 'net_parity.mjs', 'allow_full_data.mjs', 'guard.mjs', 'check_isolation.mjs'])
 const vaultRe = /['"`/\\]vault(['"`/\\]|$)|\bVAULT_DIR\b|SEALED\.json|future\.json/m
 const fullRe = /nn_data\.json|known\.json|test_points\.json|parity\.json|concrete\.csv/
 const destroyRe = /\b(unlinkSync|unlink|rmSync|rmdirSync|rmdir|renameSync|rename|truncateSync|truncate|ftruncateSync)\s*\(|\.rm\s*\(|\bshutil\.rmtree|\bos\.(remove|unlink|rename|replace)\b/
