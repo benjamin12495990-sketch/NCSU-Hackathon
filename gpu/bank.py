@@ -49,13 +49,13 @@ class MlpBank:
         return h.squeeze(-1)
 
     def loss(self, pred, target, delta):
-        """Sum over members of the batch-mean Huber loss; delta [K] (SQUARED_DELTA for squared)."""
-        e = pred - target
-        a = e.abs()
+        """A surrogate whose gradient w.r.t. pred is clip(error, -delta, delta) / batch per member, exactly the
+        error that nnFamily.js back-propagates (delta = 1 for Huber, SQUARED_DELTA for squared). Members are
+        summed, so each one only sees its own gradient. Also returns the per-member sum of squared errors."""
+        e = (pred - target).detach()
         d = delta.view(-1, 1)
-        q = torch.minimum(a, d)
-        per = 0.5 * q * q + d * (a - q)
-        return per.mean(dim=1).sum(), (e.detach() ** 2).sum(dim=1)
+        g = torch.maximum(torch.minimum(e, d), -d)
+        return (pred * g).mean(dim=1).sum(), (e ** 2).sum(dim=1)
 
     @torch.no_grad()
     def step(self, lr, decay):
