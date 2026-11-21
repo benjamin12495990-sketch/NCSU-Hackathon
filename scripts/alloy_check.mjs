@@ -158,11 +158,25 @@ function checkRequest(label, opts) {
       })
       if (Math.abs(c.neighbours[0].distance - c.distance) > 1e-9) fail(`${where}: first neighbour is not the nearest tested alloy`)
       if (new Set(c.neighbours.map((nb) => nb.g)).size !== NEIGHBOURS) fail(`${where}: neighbours repeat a composition`)
-      const reached = opts.targetHV == null ? null : c.neighbours.filter((nb) => nb.hv >= opts.targetHV).length
+      // With the route rule on, only measurements made by the chosen route count as support.
+      const ev = (nb) => {
+        if (!st.rules.routeMustBeTested) return nb.hv
+        const by = data.rows.filter((t) => t.g === nb.g && t.proc === st.rules.proc).map((t) => t.hv)
+        return by.length ? by.reduce((a, b) => a + b, 0) / by.length : null
+      }
+      const reached = opts.targetHV == null ? null : c.neighbours.filter((nb) => ev(nb) != null && ev(nb) >= opts.targetHV).length
       if (reached !== c.neighboursReached) fail(`${where}: neighboursReached ${c.neighboursReached} should be ${reached}`)
       if (st.rules.onlySupported && opts.targetHV != null && !(c.neighboursReached >= SUPPORT_NEEDED)) fail(`${where}: unsupported candidate kept`)
     }
     if (Math.abs(c.gapHV - (c.predicted - c.nearest.hv)) > 1e-9) fail(`${where}: gap is not predicted minus nearest measured HV`)
+    {
+      // The nearest cell is the nearest distinct composition: the mean of its measurements by the chosen
+      // route when the route rule is on and it has any, otherwise the mean of all its measurements.
+      const g0 = c.neighbours[0].g, all = data.rows.filter((t) => t.g === g0), by = all.filter((t) => t.proc === st.rules.proc)
+      const use = st.rules.routeMustBeTested && by.length ? by : all
+      const mean = use.reduce((a, t) => a + t.hv, 0) / use.length
+      if (Math.abs(mean - c.nearest.hv) > 1e-9 || c.nearest.n !== use.length || c.nearest.formula !== c.neighbours[0].formula) fail(`${where}: nearest cell does not match its composition's measurements`)
+    }
     if (st.rules.routeMustBeTested && !c.routeTestedInSet) fail(`${where}: set never tested by ${opts.proc} although the route rule is on`)
     const far = opts.gapLimit != null && c.gapHV > opts.gapLimit
     if (c.farAbove !== far) fail(`${where}: farAbove ${c.farAbove} should be ${far}`)

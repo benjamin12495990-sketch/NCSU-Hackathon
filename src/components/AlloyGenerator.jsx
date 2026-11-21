@@ -227,7 +227,7 @@ export default function AlloyGenerator({ fam, net, band, status, whenTrained, fo
                       <th>Nearest tested alloy (route, measured) and gap</th>
                       <th className="num">Lower edge of the 90% range (valid for alloys like the tested ones; wider in reality for new element sets)</th>
                       <th className="num">Predicted HV</th>
-                      <th>Nearest {NEIGHBOURS} distinct tested compositions: how many reached the target</th>
+                      <th>Nearest {NEIGHBOURS} distinct tested compositions: how many reached the target{shown.settings.routeMustBeTested ? ` (counting only measurements made by ${shown.settings.proc})` : ''}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -243,7 +243,7 @@ export default function AlloyGenerator({ fam, net, band, status, whenTrained, fo
                         </td>
                         <td>{c.distance.toFixed(3)}<span className="label"> {c.tier}</span></td>
                         <td className="wraps">
-                          {c.nearest.formula}, {c.nearest.proc}, {hv(c.nearest.hv)}
+                          {c.nearest.formula}, {c.nearest.proc}, {hv(c.nearest.hv)}{c.nearest.n > 1 ? ` (mean of ${c.nearest.n})` : ''}
                           {c.nearest.proc !== c.proc && <span className="label"> (made by {c.nearest.proc}, not {c.proc})</span>}
                           <span className="label"> Gap: {signed(c.gapHV)}</span>
                         </td>

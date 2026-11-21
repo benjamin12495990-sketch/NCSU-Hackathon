@@ -89,7 +89,8 @@ function groups(data) {
 
 // The k nearest DISTINCT tested compositions (any route), nearest first; ties keep the lower row
 // index. Rows of one composition share a distance, so each composition enters once, by its first row.
-// Each neighbour: { formula, g, index (first row), distance, hv (mean of its measurements), n, hvs, routes }.
+// Each neighbour: { formula, g, index (first row), distance, hv (mean of its measurements), n, hvs, routes,
+// byRoute {route: mean HV of the measurements made by that route} }.
 export function nearestK(frac, data, k = NEIGHBOURS) {
   const { col, m, sums, w } = denseRows(data)
   const byG = groups(data)
@@ -114,8 +115,10 @@ export function nearestK(frac, data, k = NEIGHBOURS) {
   return best.map(({ distance, index, g }) => {
     const rows = byG.get(g).map((i) => data.rows[i])
     const hvs = rows.map((t) => t.hv)
-    return { formula: data.rows[index].f, g, index, distance, hv: hvs.reduce((a, b) => a + b, 0) / hvs.length, n: hvs.length, hvs,
-      routes: [...new Set(rows.map((t) => t.proc))].sort() }
+    const routes = [...new Set(rows.map((t) => t.proc))].sort()
+    const mean = (xs) => xs.reduce((a, b) => a + b, 0) / xs.length
+    const byRoute = Object.fromEntries(routes.map((p) => [p, mean(rows.filter((t) => t.proc === p).map((t) => t.hv))]))
+    return { formula: data.rows[index].f, g, index, distance, hv: mean(hvs), n: hvs.length, hvs, routes, byRoute }
   })
 }
 
@@ -278,9 +281,15 @@ function* generateSteps(options, data, predict, q) {
       bestCautious = Math.max(bestCautious, cautious)
       if (targetHV != null && cautious < targetHV) { excluded.belowTarget++; continue }
       const neighbours = nearestK(frac, data)
-      const reached = targetHV == null ? null : neighbours.filter((nb) => nb.hv >= targetHV).length
+      // With the route rule on, only measurements made by the chosen route count as support, and the
+      // gap is taken against the nearest composition's measurements by that route when it has any.
+      const evidence = (nb) => (routeMustBeTested ? nb.byRoute[proc] : nb.hv)
+      const reached = targetHV == null ? null : neighbours.filter((nb) => evidence(nb) != null && evidence(nb) >= targetHV).length
       if (onlySupported && targetHV != null && reached < SUPPORT_NEEDED) { excluded.unsupported++; continue }
-      const r = data.rows[near.index]
+      const r = data.rows[near.index], nb0 = neighbours[0]
+      const sameRoute = routeMustBeTested && nb0.byRoute[proc] != null
+      const ref = { formula: nb0.formula, proc: sameRoute ? proc : nb0.routes.join('/'), hv: sameRoute ? nb0.byRoute[proc] : nb0.hv,
+        n: sameRoute ? data.rows.filter((t) => t.g === nb0.g && t.proc === proc).length : nb0.n, split: r.split, index: nb0.index }
       kept.push({
         composition: compositionString(frac), frac, units: u, set: s.key, proc,
         // Routes under which this element set was tested; false means the network has never seen
@@ -288,11 +297,11 @@ function* generateSteps(options, data, predict, q) {
         setRoutes: [...s.routes].sort(), routeTestedInSet: s.routes.includes(proc),
         predicted, cautious, distance: near.distance,
         tier: tierOf(near.distance),
-        nearest: { formula: r.f, proc: r.proc, hv: r.hv, split: r.split, index: near.index },
+        nearest: ref,
         // Predicted minus the nearest tested alloy's measured HV: a large positive gap means the
         // network rates this composition far above the closest thing anyone measured.
-        gapHV: predicted - r.hv,
-        farAbove: gapLimit != null && predicted - r.hv > gapLimit,
+        gapHV: predicted - ref.hv,
+        farAbove: gapLimit != null && predicted - ref.hv > gapLimit,
         neighbours, neighboursReached: reached,
       })
     }

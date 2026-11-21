@@ -180,20 +180,24 @@ results-file interval if the live one has not been measured, and the page says w
   "predicted minus its measured HV", plus its 3 nearest DISTINCT tested compositions (repeat
   measurements of one composition are one neighbour, shown as their mean with their routes) and how
   many of them measured at least the target. With a target set, by default a candidate is kept only
-  if at least 2 of those 3 reached it. Support counts any route; the routes are shown, not weighed.
+  if at least 2 of those 3 reached it. With the route rule on (the default), only measurements made
+  by the chosen route count as support, and the gap is taken against the nearest composition's
+  measurements by that route when it has any (the cell says which route and how many).
 - When nothing is kept, the page says why (for a high target: the best lower edge any candidate
   reached) and shows no table.
 
 Measured with `npm run alloy-check` (one network, seed 11, file half-width 179.2 HV, seed 1, all
-elements, CAST): at 400 HV with both default rules, 38 element sets used, 11400 compositions drawn,
-8502 not new, 11 too far, 170 subset copies, 0 at the clamp, 1497 below the target, 5 removed by the
-neighbour rule, 366 kept, 65 of them ranked last for a gap above 78 HV. Switching the route rule off: 49 sets, 621 kept before the neighbour rule,
-262 of them from sets never made by CAST. At 600 and 800 HV nothing is kept: the best lower edge any
-candidate reaches is 594 HV. The top candidate at 400 HV, Al28.9 Co10.0 Cr18.0 Fe24.2 Mo8.9 Ni10.0,
-is predicted 773 HV while its nearest tested alloy measured 605 HV (gap +168 HV); its 3 nearest
-tested alloys measured 605, 801 and 708 HV. In headless Chromium (live half-width ±176 HV) the
-default request kept 367 and took about 180 ms, yielding to the browser between element sets.
-None of these compositions has been made or measured.
+elements, CAST) with the page's default settings (target 400 HV, route rule on, neighbour rule on,
+gap limit 78 HV): 38 element sets used, 11400 compositions drawn, 8502 not new, 11 too far, 170
+subset copies, 0 at the clamp, 1497 below the target, 147 removed by the neighbour rule (counting
+only measurements made by casting), 224 kept, and 45 of those ranked last for a gap above 78 HV. The
+top candidate, Al8.6 Co17.6 Cr17.2 Fe14.4 Ni23.0 Ti19.2, is predicted 752 HV; its nearest tested
+alloy, Al0.667 Co0.833 Cr0.833 Fe0.833 Ni0.833 Ti1, was cast and measured 857 HV (gap −105 HV), and 2
+of its 3 nearest tested compositions reached 400 HV by casting. Switching the route rule off: 49
+sets, 621 kept before the neighbour rule, 262 of them from sets never made by CAST. At 600 and 800 HV
+nothing is kept: the best lower edge any candidate reaches is 594 HV, while tested alloys in these
+sets measured up to 905 HV. The generator takes about 180 ms and yields to the browser between
+element sets. None of these compositions has been made or measured.
 
 ### Insulators (dielectric constant)
 
