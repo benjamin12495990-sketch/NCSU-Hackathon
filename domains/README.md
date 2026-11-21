@@ -4,10 +4,9 @@
 > constant) and `polymers` (glass transition) are live on the site; their folders hold the agent's
 > `prepare.py` and `nn_generic.js`, copied byte-identical, plus `result.json` and `skeptic_check.json`.
 > `chemistry` (solubility) has its AqSolDB source data, preparation/training code, and a model trained
-> and checked offline; it is not on the site. `cleaning` has a licensed surfactant-property source but
-> no trained model yet. `corrosives` has a public NIST source archive but no parsed table or model yet.
-> `electrolytes` has OBELiX data; its first grouped-CV formula baseline is being rebuilt here. It is
-> not in the product.** Sources were not checked again through MCPs (see docs/AGENTS.md), and the
+> and checked offline (reproduced exactly on 2026-11-21); it is not on the site. `cleaning` (SURFPRO),
+> `corrosives` (NIST CORR-DATA) and `electrolytes` (OBELiX) have source data, a cleaned table and a first
+> grouped-cross-validation baseline each; none of them is in the product.** Sources were not checked again through MCPs (see docs/AGENTS.md), and the
 > insulator element table was typed from memory by its agent and is uncited.
 
 Scope beyond concrete. Each subfolder is one domain that reuses the project's method
@@ -46,10 +45,10 @@ lives in `../research/references/<domain>.md`.
 | Alloys | Live hardness model on measured literature data; rough screening performance is similar to tuned tree baselines. | More alloys with source/processing context and a new whole-system holdout. |
 | Dielectrics | Live dielectric-constant model, trained on calculated DFT labels. | Broaden with separately labelled JARVIS data; validate against measured dielectric properties. |
 | Polymers | Live Tg model on experimental data; licensing/source audit remains open. | Resolve data rights and add processing-aware, polymer-family-held-out evidence. |
-| Chemistry | Offline AqSolDB solubility model; the fixed test split is historical, not new evidence. | Preserve as a low-cost benchmark; do not claim it beats tuned trees. |
-| Cleaning | SURFPRO raw data acquired. The labels measure surfactant properties, not cleaning efficacy. | Paper-held-out pCMC / surface-tension pipeline. |
-| Corrosion | NIST raw archive acquired. | Parse units and ratings, retain test conditions, hold out source studies. |
-| Solid electrolytes | OBELiX data and split acquired; the public holdout is not blind. | Formula-only grouped-CV baseline, then structure-aware models; then seek new measurements. |
+| Chemistry | Offline AqSolDB solubility model, reproduced exactly on CPU (network 0.761 against tuned trees 0.777 LogS MAE: a tie). The fixed test split is historical, not new evidence. | Preserve as a low-cost benchmark; do not claim it beats tuned trees. |
+| Cleaning | SURFPRO cleaned; paper-held-out grouped CV: pCMC 0.53 against 0.90 log units for the mean; surface tension at the CMC 4.75 against 5.55 mN/m (weak). Surfactant properties, not cleaning efficacy. | Surfactant-family and scaffold holdouts; formulation-level cleaning tests for any efficacy claim. |
+| Corrosion | NIST CORR-DATA parsed into a normalised table (24,721 rows; 7,718 numeric rates, 16,648 letter ratings). Exploratory source-held-out baseline: log10 mm/yr MAE 0.78 against 1.03 for the mean. Not safety advice. | Harmonise material names; model the letter ratings and bounds (77% of rows); audit extreme rates. |
+| Solid electrolytes | OBELiX formula-only baseline, 124 composition/paper groups: ExtraTrees 1.52 (1.59-1.71 over reshuffled folds) against 2.55 log10 S/cm for the mean, about a 33x typical error. Too imprecise to rank candidates; the public holdout is not blind and was not scored. | Structure-aware model on the audited CIFs (all 321 parse), compared on the same folds; then new measurements. |
 
 ## Work folders: everything needed to rebuild and re-check the trained families
 
