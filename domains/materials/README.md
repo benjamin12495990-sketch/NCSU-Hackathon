@@ -1,5 +1,7 @@
 # General materials
 
+> **Status: plan only.** No dataset, model or references yet.
+
 The umbrella domain: any measured material property as the surrogate target. Concrete (repo root)
 is the first fully worked example; polymers and insulators are specialised siblings.
 

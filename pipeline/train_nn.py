@@ -38,9 +38,11 @@ CONFIG = {
     # derived feature: numerator / sum(denominator)
     "ratios": [{"name": "water_binder_ratio", "num": "water", "den": ["cement", "slag", "flyash"]}],
     "target": "strength",
-    # identify an entity by these columns rounded to the nearest unit; the split
-    # keeps every row of a test entity out of training (no leakage across ages).
+    # rows whose group_by columns agree within group_tolerance on every column
+    # count as one entity (one mix); the split keeps every row of a test entity
+    # out of training. Same rule as mix_groups() in train/train.py.
     "group_by": ["cement", "slag", "flyash", "water", "superplasticizer", "coarse", "fine"],
+    "group_tolerance": 5.0,
     "hidden": [64, 32],
     "target_coverage": 0.90,   # share of lab results the cautious estimate should clear
     "epochs": 1500,
@@ -52,9 +54,36 @@ OUT = ROOT / "pipeline" / "out" / CONFIG["task"]
 
 
 # ---- Data -------------------------------------------------------------------
+def same_entity_groups(recipes, tol):
+    """One id per entity. The data repeats some mixes with amounts rounded
+    differently, so recipes within `tol` on every column are merged."""
+    uniq, inverse = np.unique(recipes, axis=0, return_inverse=True)
+    parent = list(range(len(uniq)))
+
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    close = np.abs(uniq[:, None, :] - uniq[None, :, :]).max(axis=2) <= tol
+    for i, j in zip(*np.nonzero(np.triu(close, 1))):
+        parent[find(int(i))] = find(int(j))
+    roots = np.array([find(i) for i in range(len(uniq))])
+    return roots[np.ravel(inverse)]
+
+
 def load(cfg):
     with open(cfg["csv"]) as f:
         rows = list(csv.DictReader(f))
+    # drop exact repeated rows, as train/train.py does (25 in the concrete data)
+    seen, unique = set(), []
+    for r in rows:
+        key = tuple(float(v) for v in r.values())
+        if key not in seen:
+            seen.add(key)
+            unique.append(r)
+    rows = unique
     cols = {c: np.array([float(r[c]) for r in rows]) for c in rows[0].keys()}
     feat_names = list(cfg["ingredients"]) + list(cfg["extra_features"])
     base = [cols[c] for c in feat_names]
@@ -64,8 +93,7 @@ def load(cfg):
         feat_names.append(ratio["name"])
     X = np.column_stack(base).astype(np.float64)
     y = cols[cfg["target"]].astype(np.float64)
-    keys = np.column_stack([np.round(cols[c]) for c in cfg["group_by"]])
-    _, group = np.unique(keys, axis=0, return_inverse=True)
+    group = same_entity_groups(np.column_stack([cols[c] for c in cfg["group_by"]]), cfg["group_tolerance"])
     return X, y, group.astype(int), feat_names
 
 
@@ -217,7 +245,10 @@ def main():
         [[round(float(a), 2), round(float(b), 2)] for a, b in zip(y[te], pred)], separators=(",", ":")))
 
     print(json.dumps(metrics, indent=1))
-    print("\nBaseline (GBR, public/model/metrics.json): MAE 4.46  RMSE 6.60  R2 0.839  coverage 0.838")
+    # the live app's model, read from its own metrics file so this line cannot go stale
+    base = json.loads((ROOT / "public" / "model" / "metrics.json").read_text())
+    print(f"\nBaseline (GBR, public/model/metrics.json): MAE {base['test_mae_MPa']}  RMSE {base['test_rmse_MPa']}"
+          f"  R2 {base['test_r2']}  coverage {base['lower_estimate_coverage']}")
     for f in sorted(OUT.iterdir()):
         print(f"{f.name:16s} {f.stat().st_size / 1e3:8.1f} kB")
 

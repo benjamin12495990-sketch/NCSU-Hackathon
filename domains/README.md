@@ -1,8 +1,11 @@
 # domains/
 
+> **Status: only concrete is built.** Every domain in this folder is a plan. None has a
+> dataset, a trained model or any references yet.
+
 Scope beyond concrete. Each subfolder is one domain that reuses the project's method
 (`../docs/SCOPE.md`): a surrogate model, a calibrated cautious bound, candidate generation by
-perturbing known-good examples, ranking by a cost objective, and "lab-supported" flagging.
+perturbing known-good examples, ranking by a cost objective, and a "neighbours passed" check.
 
 **Chemistry and materials only. No biology** — it is a complete subject of its own and is
 deliberately excluded.
@@ -21,5 +24,5 @@ deliberately excluded.
 coatings · adhesives · lubricants · electrolytes & battery chemistries · refrigerants · dyes &
 pigments · catalysts · propellants · sealants · composites · glasses & ceramics.
 
-Both model families (`train/train.py` trees, `pipeline/train_nn.py` neural net) plug into any
-domain. Literature grounding for every domain lives in `../research/references/<domain>.md`.
+Both model scripts (`train/train.py` trees, `pipeline/train_nn.py` neural net) were written for
+concrete and could be pointed at another tabular dataset. None of these domains has one yet. Literature grounding for every domain lives in `../research/references/<domain>.md`.

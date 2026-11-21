@@ -1,5 +1,8 @@
 # Scope: a general engine for proposing physical formulations
 
+> **Status: only concrete is built.** Every other domain in this repository is a plan. None has a
+> dataset, a trained model or any references yet.
+
 ## The grand challenge
 
 > Engineer the Tools of Scientific Discovery.
@@ -26,13 +29,15 @@ get tried. The engine:
    proposes candidates *likely* to clear the bar.
 3. **Generates and ranks candidates**: perturb known-good examples into new ones, drop duplicates,
    keep those the cautious model clears, rank by a cost objective.
-4. **Checks against real data**: flag "lab-supported" only when nearest measured neighbours agree.
+4. **Checks against real data**: flag "neighbours passed" only when nearest measured neighbours agree.
 5. **Grounds every assumption in the literature** via the research MCPs in `research/connectors.md`.
 
-Two model families already exist for step 1–2: gradient-boosted trees (`train/train.py`) and a
-neural network (`pipeline/train_nn.py`). Both plug into any domain below.
+Two model families exist for steps 1 and 2, both written for concrete: gradient-boosted trees
+(`train/train.py`, used by the live page) and a neural network (`pipeline/train_nn.py`, not used by
+the live page and less accurate). Either could be pointed at another tabular dataset. That has not
+been done for any domain below.
 
-## The domain map (be unreasonably ambitious)
+## The domain map (plans, apart from concrete)
 
 Each row reuses steps 1–5. What changes is the dataset, the featurisation, and the literature
 sources — **not the method**.

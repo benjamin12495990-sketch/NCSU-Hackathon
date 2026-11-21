@@ -11,7 +11,7 @@ Several agents work this repo in parallel. Read this before editing so we don't 
 | `public/model/` | exported models + factors the app loads | changing models or factors |
 | `scripts/` | parity / build checks | working on tooling |
 | `research/` | literature grounding, MCP usage, citations | adding or checking sources |
-| `domains/` | scope beyond concrete (materials, chem, bio) | expanding scope |
+| `domains/` | scope beyond concrete (materials and chemistry; no biology). Plans only | expanding scope |
 | `docs/` | project context, scope, these notes | documenting |
 
 To avoid merge pain: keep new work in `research/`, `domains/`, and `docs/` (added by the
@@ -31,5 +31,5 @@ scope-expansion effort) separate from the app directories above. Prefer a branch
 ## The method, in one line
 
 Train a cautious surrogate on lab data → generate candidates by perturbing known-good ones → keep
-what the cautious model clears → rank by a cost objective → flag "lab-supported" only when nearest
+what the cautious model clears → rank by a cost objective → flag "neighbours passed" only when nearest
 measured neighbours agree. See `docs/SCOPE.md` for the full version.

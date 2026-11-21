@@ -1,5 +1,7 @@
 # Corrosive solutions & material compatibility
 
+> **Status: plan only.** No dataset, model or references yet.
+
 Given a material, propose solution chemistries (or inhibitors) that keep corrosion below a limit —
 or, given a solution, rank which materials survive it.
 
@@ -28,7 +30,7 @@ Reuse either model family. Split so a material–solution system is never in bot
 Annualised material loss, hazard of the solution (GHS class), and cost. Factors cited in
 `../../research/references/corrosives.md`.
 
-## 6. Lab-supported check
+## 6. Neighbour check
 Flag only when nearest measured material–solution systems agree.
 
 ---

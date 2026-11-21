@@ -1,5 +1,7 @@
 # Carbon-based polymers
 
+> **Status: plan only.** No dataset, model or references yet.
+
 Propose new polymer formulations that hit a target property, ranked by cost and recyclability.
 
 ## 1. The expensive outcome
@@ -28,7 +30,7 @@ Synthesis cost, embodied CO2 of the monomers, and **recyclability** (prefer ther
 depolymerisable backbones). Every non-learned factor cited in
 `../../research/references/polymers.md`.
 
-## 6. Lab-supported check
+## 6. Neighbour check
 Flag a candidate only when its nearest measured polymers agree with the prediction.
 
 ---

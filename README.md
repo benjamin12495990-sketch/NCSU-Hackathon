@@ -75,6 +75,10 @@ Two kinds of numbers are not measured by us and are labelled on the page:
   and wear resistance) are our own starting points, not values from a standard.
 - **The 3D model** is an illustration; the page says so under it.
 
+Not used by the live page: the neural network in `pipeline/` (an alternative model that turned out
+less accurate) and the folders `domains/` and `docs/`, which hold plans for other domains. Only
+concrete is built.
+
 ## How the models were trained
 
 `train/train.py` reads the UCI Concrete Compressive Strength dataset: 1,030 lab results, of which
@@ -194,6 +198,9 @@ train/test split and several wording changes.
 | `src/components/Shortlist.jsx` | The limits table, the materials shortlist and the frontier cards. |
 | `src/components/MixStage.jsx` | The 3D view (Three.js). |
 | `src/App.jsx` | The page. |
+| `pipeline/train_nn.py` | An alternative neural-network model in NumPy. Not used by the live page. |
+| `docs/SCOPE.md`, `domains/` | Plans for applying the same method to other domains. Nothing there is built. |
+| `research/references/` | Citation notes per domain. Only `concrete.md` has entries. |
 | `scripts/parity.mjs` | Checks that JavaScript predictions match Python. |
 
 ## Run it

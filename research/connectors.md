@@ -12,6 +12,10 @@ the biomedical connectors (PubMed, Arca, EDEN) are intentionally **not** used.
 
 ## The set
 
+Used so far, for the live concrete page: **SciSpace**, **Consensus** and **FastTrack Literature
+Open** (see the root README). The table below is the set recommended for the new domains. Scite,
+Wiley Scholar Gateway and Firecrawl have not been used in this project yet.
+
 | Connector | Best for | Notes |
 | --- | --- | --- |
 | **OpenAlex** | 250M+ papers, citations, authors across every field | Free, no account. The default broad search — start here. |

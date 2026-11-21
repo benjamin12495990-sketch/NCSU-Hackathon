@@ -1,7 +1,9 @@
 # pipeline/ — alternative training pipeline (neural network)
 
 An alternative to the live app's model (`train/train.py`, a `GradientBoostingRegressor`). Same
-task, same data, same leak-free evaluation — a different model family, so the two can be compared.
+task, same data and the same rule for what counts as one mix, with a different model family. **The
+live page does not use it.** The two scripts draw their test mixes separately and this one sets
+aside a calibration set, so compare the numbers loosely.
 
 - **Expected strength:** a small ReLU MLP (`[9, 64, 32, 1]`), trained with mean-squared error in
   pure NumPy (hand-written forward/backward + Adam, learning-rate decay).
@@ -31,13 +33,19 @@ Outputs:
 
 | Model | Expected MAE | RMSE | R² | Cautious coverage (target 0.90) |
 | --- | --- | --- | --- | --- |
-| GBR — live app (`train/train.py`) | 4.46 | 6.60 | 0.839 | 0.838 |
-| **NN — this pipeline** | 5.68 | 7.81 | 0.823 | **0.927** |
+| GBR, live app (`train/train.py`) | 3.29 | 4.37 | 0.912 | 0.877 |
+| NN, this pipeline | 5.29 | 7.88 | 0.745 | 0.809 |
 
-Reading: the gradient-boosted trees are a little more accurate on this small tabular dataset (the
-usual outcome), while the neural net's conformal lower bound is better calibrated to its target. A
-useful second opinion, not a replacement — the same honesty rules apply (predictions labelled as
-predictions; the tool narrows the experiment list).
+Both rows drop the 25 repeated rows and treat recipes within 5 kg on every ingredient as one mix,
+so no test mix has a near-copy in training. The neural net was tested on 61 held-out mixes
+(194 lab results) and the trees on 62 (219).
+
+Reading: on this small tabular dataset the gradient-boosted trees are clearly more accurate, and
+the neural net's conformal lower bound also misses its 90% target (81% here). An earlier
+version of this table, made with the older split that kept the 25 repeated rows and let
+near-duplicate mixes into both training and test, showed the neural net better calibrated (0.927).
+With the stricter split it is not. The neural net is a second opinion that did not win, kept for
+comparison.
 
 ## Reusing it on another domain
 

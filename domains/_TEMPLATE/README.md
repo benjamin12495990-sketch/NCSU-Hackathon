@@ -25,7 +25,7 @@ physical.
 What candidates are ranked by (CO2, price, toxicity, synthesis difficulty) and where every
 non-learned number in it is sourced.
 
-## 6. Lab-supported check
+## 6. Neighbour check
 How a candidate is checked against its nearest measured neighbours before it is shown.
 
 ---

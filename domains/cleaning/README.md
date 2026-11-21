@@ -1,5 +1,7 @@
 # Cleaning products & surfactants
 
+> **Status: plan only.** No dataset, model or references yet.
+
 Propose detergent / cleaner formulations that clean well at the lowest cost and environmental load.
 
 ## 1. The expensive outcome
@@ -28,7 +30,7 @@ Cost per wash, **biodegradability** (physico-chemical proxies, cite them), and i
 treated as sourced reference data, **not** modelled biology. Factors cited in
 `../../research/references/cleaning.md`.
 
-## 6. Lab-supported check
+## 6. Neighbour check
 Flag only when nearest measured surfactant systems agree.
 
 ---

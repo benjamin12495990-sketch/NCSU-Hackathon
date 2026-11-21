@@ -1,5 +1,7 @@
 # Insulators (thermal & electrical / dielectrics)
 
+> **Status: plan only.** No dataset, model or references yet.
+
 Propose materials or composites that insulate best for the lowest cost and weight.
 
 ## 1. The expensive outcome
@@ -28,7 +30,7 @@ either model family. Split by material family.
 Cost, **weight / density**, and embodied CO2. Factors cited in
 `../../research/references/insulators.md`.
 
-## 6. Lab-supported check
+## 6. Neighbour check
 Flag only when nearest measured materials agree.
 
 ---

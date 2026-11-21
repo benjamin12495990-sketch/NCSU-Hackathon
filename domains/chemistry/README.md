@@ -1,5 +1,7 @@
 # General chemistry (molecules & mixtures)
 
+> **Status: plan only.** No dataset, model or references yet.
+
 Molecular and mixture properties as the surrogate target — the non-biological, physico-chemical
 end of chemistry.
 
