@@ -218,6 +218,13 @@ export default function App() {
             <button type="button" className="quiet" disabled={!data || serverLoading} onClick={() => runServer()}>
               {serverLoading ? 'Pinging server…' : 'Ping server for a new batch'}
             </button>
+            <button type="button" className="quiet" disabled={!data}
+              onClick={() => {
+                document.getElementById('train')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                window.dispatchEvent(new Event('train-network'))
+              }}>
+              Train the neural network
+            </button>
           </div>
         </div>
         <div className="examples">
@@ -243,6 +250,8 @@ export default function App() {
 
       {loadError && <p className="error" role="alert">The model files did not load: {loadError}</p>}
       {error && <p className="error" role="alert">{error}</p>}
+
+      <NeuralNet data={data} result={result} />
 
       {result && (
         <>
@@ -418,8 +427,6 @@ export default function App() {
           <Shortlist data={data} result={{ ...result, objective, shortlist: rankMaterials(data.materialFile.materials, result.req, result.asked, objective) }} />
         </>
       )}
-
-      <NeuralNet data={data} result={result} />
 
       <section className="caveat">
         <h2>How this can be wrong</h2>
