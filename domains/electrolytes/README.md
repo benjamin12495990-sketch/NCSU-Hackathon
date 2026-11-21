@@ -10,7 +10,7 @@ source's fixed train/test split and the 321-file randomized CIF archive are desc
 
 - Data used: the source-provided **training partition only** (`train_idx.csv`, 478 rows).
 - Target: log10 of ionic conductivity in S/cm.
-- Features: element fractions parsed from the `Composition` string (55 elements seen in the training rows).
+- Features: element fractions parsed from the `Composition` string (54 elements seen in the training rows).
   DOI, space group, lattice parameters and CIFs are **not** used.
 - Groups: rows that share a composition string or any DOI token are joined into one connected component:
   **124 groups** (the largest holds 106 rows; 78 are single rows). This matches the 124 groups recorded in the
