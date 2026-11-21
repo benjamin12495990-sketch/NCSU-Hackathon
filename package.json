@@ -12,7 +12,15 @@
     "sweep": "node scripts/sweep.mjs",
     "family-parity": "node scripts/family_parity.mjs",
     "family-files": "node scripts/build_family_files.mjs",
-    "alloy-check": "node scripts/alloy_check.mjs"
+    "alloy-check": "node scripts/alloy_check.mjs",
+    "lab:splits": "node lab/make_splits.mjs",
+    "lab:parity": "nice -n 10 node lab/net_parity.mjs",
+    "lab:baselines": "nice -n 10 node lab/baselines.mjs",
+    "lab:evolve": "nice -n 10 node lab/evolve.mjs",
+    "lab:check": "node lab/check_isolation.mjs",
+    "lab:preregister": "node lab/preregister.mjs",
+    "lab:rehearse": "nice -n 10 node lab/rehearse_scoring.mjs",
+    "lab:smoke": "node lab/smoke.mjs"
   },
   "dependencies": {
     "react": "^19.3.1",

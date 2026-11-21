@@ -406,6 +406,17 @@ pages that summarise ACI 318. Their raw output, with citations and quotes, is in
 Two reviewer agents also checked the code and the claims; their findings led to the stricter
 train/test split and several wording changes.
 
+## The lab: evolving networks against a sealed future (`lab/`)
+
+An experiment, separate from the site: small networks learn from the youngest lab results only
+(up to 7 days, 253 rows), are rewarded for predicting 14 to 28 days (481 rows) with a penalty for
+breaking physics (strength falling with age, or below zero), and have children in proportion to
+how good they are; none is ever deleted. The 271 results older than 28 days are sealed in
+`lab/vault/` with their SHA-256 and are scored exactly once, after the models have been named in
+`lab/preregistration.json`. A guard makes every lab script except the one-time opener unable to
+read the vault. `lab/net.mjs` reproduces `src/lib/nn.js` exactly (`npm run lab:parity`). Run
+`npm run lab:smoke` for the smoke test; everything is in `lab/README.md`. Nothing on the page uses it.
+
 ## Files
 
 | File | What it does |
