@@ -6,6 +6,7 @@ import { rankMaterials } from './lib/rank.js'
 import Requirements, { DEFAULT_REQ } from './components/Requirements.jsx'
 import Shortlist from './components/Shortlist.jsx'
 import Planned from './components/Planned.jsx'
+import NeuralNet from './components/NeuralNet.jsx'
 import Formula from './components/Formula.jsx'
 import { DOMAINS } from './lib/domains.js'
 
@@ -365,6 +366,8 @@ export default function App() {
           <Shortlist data={data} result={{ ...result, objective, shortlist: rankMaterials(data.materialFile.materials, result.req, result.asked, objective) }} />
         </>
       )}
+
+      <NeuralNet data={data} result={result} />
 
       <section className="caveat">
         <h2>How this can be wrong</h2>
