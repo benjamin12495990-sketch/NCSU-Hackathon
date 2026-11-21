@@ -14,3 +14,9 @@
   .fam .tablewrap th, .fam .tablewrap td { padding: 8px 4px; }
   .fam .tablewrap table { font-size: 0.85rem; }
 }
+/* Alloy generator: notes under a table cell sit on their own line; the element rows stay compact. */
+.fam-gen td .label { display: block; margin-top: 2px; }
+.fam-gen details { border-top: 1px solid var(--line); padding: 8px 0 0; }
+.fam-gen summary { cursor: pointer; font-weight: 600; font-size: 0.9rem; padding: 4px 0; }
+.fam-gen details .req { padding: 4px 0; }
+.fam-gen .req select { min-width: 0; max-width: 100%; }

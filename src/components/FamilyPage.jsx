@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { createFamilyTrainer, familyMetrics } from '../lib/nnFamily.js'
+import AlloyGenerator from './AlloyGenerator.jsx'
 import './neuralnet.css'
 import './family.css'
 
@@ -212,7 +213,9 @@ export default function FamilyPage({ family, onBack }) {
   const [preds, setPreds] = useState(null) // live test predictions
   const [sweepLive, setSweepLive] = useState(null)
   const [info, setInfo] = useState(null) // { weights, layers, seconds }
+  const [net, setNet] = useState(null) // the network trained on this page (the alloy generator uses it)
   const timer = useRef(0)
+  const afterTrain = useRef(null) // called once with (network, live band or null) when a train run finishes
 
   useEffect(() => {
     const ctl = new AbortController()
@@ -256,24 +259,40 @@ export default function FamilyPage({ family, onBack }) {
         errors.sort((a, b) => a - b)
         const q = errors[Math.min(errors.length - 1, Math.ceil(LEVEL * (errors.length + 1)) - 1)]
         const inside = nnData.test.X.filter((row, i) => Math.abs(main.predict(row) - nnData.test.y[i]) <= q).length
-        setBand({ q, coverage: inside / nnData.test.X.length, errors: errors.length })
-        setStatus('done')
+        const b = { q, coverage: inside / nnData.test.X.length, errors: errors.length }
+        setBand(b)
+        finish(main, b)
       })
     }
     next()
   }
 
+  const finish = (t, b) => {
+    setStatus('done')
+    const after = afterTrain.current
+    afterTrain.current = null
+    after?.(t, b)
+  }
+
   const train = () => {
     clearTimeout(timer.current)
     const t = createFamilyTrainer(nnData, { ...opts, trackTest: true })
-    setHistory([...t.history]); setBand(null); setPreds(null); setSweepLive(null); setFoldsDone(0)
+    setHistory([...t.history]); setBand(null); setPreds(null); setSweepLive(null); setFoldsDone(0); setNet(null)
     setStatus('training')
     runSliced(t, timer, () => setHistory([...t.history]), (seconds) => {
       setInfo({ weights: t.weights, layers: t.layers, seconds })
+      setNet(t)
       setPreds(nnData.test.X.map((x) => t.predict(x)))
       if (fam.sweep) setSweepLive(fam.sweep.rows.map((row) => t.predict(row)))
-      if (fam.interval.liveMeasure) { setStatus('measuring'); measure(t) } else setStatus('done')
+      if (fam.interval.liveMeasure) { setStatus('measuring'); measure(t) } else finish(t, null)
     })
+  }
+
+  // For the alloy generator: run cb(network, band) once the whole train flow (with the live
+  // interval) has finished, starting the flow if nothing is running.
+  const whenTrained = (cb) => {
+    afterTrain.current = cb
+    if (status !== 'training' && status !== 'measuring') train()
   }
 
   const last = history.filter((p) => p.mae != null).at(-1)
@@ -428,7 +447,7 @@ export default function FamilyPage({ family, onBack }) {
         ? <HeldoutRanking fam={fam} heldout={heldout} predictions={preds} />
         : <section className="card fam-section"><h2>Rank compounds the network never trained on</h2><p className="note">Train the network first; the ranking uses the network you train.</p></section>)}
 
-      {/* Generate untested alloys: wired in later from src/lib/alloyGen.js (separate branch). Renders nothing for now. */}
+      {family === 'materials' && <AlloyGenerator fam={fam} net={net} band={band} status={status} whenTrained={whenTrained} folds={FOLDS} />}
 
       <section className="caveat">
         <h2>How this can be wrong</h2>
