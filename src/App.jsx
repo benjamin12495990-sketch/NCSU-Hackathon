@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { loadModel } from './lib/loadModel.js'
 import { design } from './lib/design.js'
+
+// Three.js is big, so the 3D stage is downloaded only when a result is shown.
+const MixStage = lazy(() => import('./components/MixStage.jsx'))
 
 const PRESETS = [
   { label: 'General use', mpa: 20 },
@@ -53,6 +56,7 @@ export default function App() {
   const [onlySupported, setOnlySupported] = useState(true)
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
+  const [view, setView] = useState('row0') // which mix the 3D stage shows
 
   useEffect(() => {
     loadModel().then(setData, (e) => setLoadError(e.message))
@@ -60,6 +64,7 @@ export default function App() {
 
   const run = (targetText = target) => {
     setTarget(targetText)
+    setView('row0')
     const text = String(targetText).trim()
     const mpa = Number(text)
     if (text === '' || !Number.isFinite(mpa)) {
@@ -68,7 +73,7 @@ export default function App() {
     }
     if (mpa < 5 || mpa > 80) {
       setResult(null)
-      return setError('Choose a strength between 5 and 80 MPa. The lab data behind the model only covers that range.')
+      return setError('Choose a strength between 5 and 80 MPa. The lab results behind the model run from about 2 to 83 MPa.')
     }
     try {
       setResult({ ...design({ targetMPa: mpa, ageDays: age, allowSlag, allowFlyAsh, cautious, onlySupported }, data), cautious, onlySupported })
@@ -82,6 +87,35 @@ export default function App() {
   const m = data?.metrics
   const best = result?.top[0]
   const bar = result?.cautious ? 'cautious strength estimate' : 'expected strength'
+
+  // The three headline mixes. Each can be put on the 3D stage, and so can any table row.
+  const picks = result
+    ? [
+        {
+          id: 'row0', label: 'Best new candidate (not in the dataset)', item: best, title: 'New candidate #1',
+          sub: best ? `expected ${best.strength.toFixed(1)} MPa, cautious estimate ${best.low.toFixed(1)} MPa` : 'none found with these settings',
+        },
+        {
+          id: 'tested', label: 'Best mix a lab already tested', item: result.baseline, title: 'Best lab-tested mix',
+          sub: result.baseline ? `measured ${result.baseline.strength.toFixed(1)} MPa at ${result.baseline.age} days` : 'none in the dataset reaches this target',
+        },
+        {
+          id: 'cement', label: 'Best tested mix using cement only', item: result.cementOnly, title: 'Best cement-only tested mix',
+          sub: result.cementOnly ? `measured ${result.cementOnly.strength.toFixed(1)} MPa at ${result.cementOnly.age} days` : 'none in the dataset reaches this target',
+        },
+      ]
+    : []
+  const rowIndex = view.startsWith('row') ? Number(view.slice(3)) : -1
+  const stage =
+    (rowIndex > 0 && result?.top[rowIndex] && { label: 'New candidate (not in the dataset)', title: `New candidate #${rowIndex + 1}`, item: result.top[rowIndex] }) ||
+    picks.find((p) => p.id === view && p.item) ||
+    picks.find((p) => p.item) ||
+    null
+  const cementShare = stage ? (stage.item.mix[0] * data.factors.cement.kgCO2e_per_kg) / stage.item.co2 : 0
+  const show = (id) => {
+    setView(id)
+    document.querySelector('.result')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }
   return (
     <main>
       <header>
@@ -140,32 +174,48 @@ export default function App() {
 
       {result && (
         <>
-          <section className="card">
+          <section className={stage ? 'result' : 'result solo'}>
+            {stage && (
+              <div className="stagewrap">
+                <div className="stagehead">
+                  <span className="label">{stage.label}</span>
+                  <h2>{stage.title}: {kg(stage.item.co2)} kg CO<sub>2</sub>e per m³</h2>
+                  <span className="flag hot">Cement pulses: it is {Math.round(cementShare * 100)}% of this mix's CO<sub>2</sub></span>
+                </div>
+                <Suspense fallback={<div className="stage"><div className="canvas" /></div>}>
+                  <MixStage
+                    key={stage.item.mix.join('|')}
+                    mix={stage.item.mix}
+                    factors={data.factors}
+                    ingredients={data.spec.ingredients}
+                    highlight="cement"
+                  />
+                </Suspense>
+              </div>
+            )}
+            <div className="readout">
             <h2>{result.targetMPa} MPa at {result.ageDays} days</h2>
-            <div className="stats">
-              <div>
-                <span className="label">Best new candidate (untested)</span>
-                <span className="big">{best ? kg(best.co2) : '–'} <small>kg CO<sub>2</sub>e per m³</small></span>
-                <span className="label">
-                  {best ? `expected ${best.strength.toFixed(1)} MPa, cautious estimate ${best.low.toFixed(1)} MPa` : 'none found with these settings'}
-                </span>
-              </div>
-              <div>
-                <span className="label">Best mix a lab already tested</span>
-                <span className="big">{result.baseline ? kg(result.baseline.co2) : '–'} <small>kg CO<sub>2</sub>e per m³</small></span>
-                <span className="label">{result.baseline ? `measured ${result.baseline.strength.toFixed(1)} MPa at ${result.baseline.age} days` : 'none in the dataset reaches this target'}</span>
-              </div>
-              <div>
-                <span className="label">Best tested mix using cement only</span>
-                <span className="big">{result.cementOnly ? kg(result.cementOnly.co2) : '–'} <small>kg CO<sub>2</sub>e per m³</small></span>
-                <span className="label">{result.cementOnly ? `measured ${result.cementOnly.strength.toFixed(1)} MPa at ${result.cementOnly.age} days` : 'none in the dataset reaches this target'}</span>
-              </div>
+            <div className="picks">
+              {picks.map((p) => (
+                <button
+                  type="button"
+                  key={p.id}
+                  className="pick"
+                  disabled={!p.item}
+                  aria-pressed={!!stage && stage.item === p.item}
+                  onClick={() => show(p.id)}
+                >
+                  <span className="label">{p.label}</span>
+                  <span className="big">{p.item ? kg(p.item.co2) : '–'} <small>kg CO<sub>2</sub>e per m³</small></span>
+                  <span className="label">{p.sub}</span>
+                </button>
+              ))}
             </div>
             {best ? (
               <p className="note">
                 {result.baseline && `Against the best tested mix, the top candidate changes embodied CO₂ by ${pct(best.vsBaseline)}. `}
                 {result.cementOnly && `Against the best tested cement-only mix, it changes it by ${pct(best.co2 / result.cementOnly.co2 - 1)}. `}
-                The tested mixes have measured strengths. The candidate has only a prediction and has never been made.
+                The tested mixes have measured strengths. The candidate has only a prediction. It is not in this dataset, but it may exist elsewhere in the literature.
               </p>
             ) : (
               <p className="note">
@@ -180,18 +230,19 @@ export default function App() {
                 cautious estimates fall short. Read them as experiments worth running, not as mixes to use.
               </p>
             )}
+            </div>
           </section>
 
           {best && (
             <section>
               <h2>New candidate mixes</h2>
               <p className="note">
-                {result.stats.generated.toLocaleString()} new mixes were generated in your browser by varying
+                {result.stats.generated.toLocaleString()} mixes were generated in your browser by varying
                 the {data.known.entries.length} tested mixes in the dataset. {result.stats.removedKnown} matched a
                 tested mix and were removed. {result.stats.meetTarget.toLocaleString()} have a {bar} of at
                 least {result.targetMPa} MPa.
                 {result.stats.hiddenUnsupported > 0 && ` ${result.stats.hiddenUnsupported} lower-CO₂ mixes are hidden because nearby lab results do not back them.`}{' '}
-                Lowest CO<sub>2</sub> first. Amounts are kg per m³ of concrete.
+                Lowest CO<sub>2</sub> first. Amounts are kg per m³ of concrete. Press 3D on a row to see that mix.
               </p>
               <div className="tablewrap">
                 <table>
@@ -208,11 +259,12 @@ export default function App() {
                       <th className="num">vs best tested</th>
                       <th>3 nearest tested mixes measured</th>
                       <th>Evidence</th>
+                      <th><span className="sr">Show in 3D</span></th>
                     </tr>
                   </thead>
                   <tbody>
                     {result.top.map((c, i) => (
-                      <tr key={c.mix.join('|')}>
+                      <tr key={c.mix.join('|')} className={stage?.item === c ? 'on' : ''}>
                         <td>{i + 1}</td>
                         {c.mix.map((v, k) => <td key={k} className="num">{v}</td>)}
                         <td className="num">{c.waterBinder.toFixed(2)}</td>
@@ -225,6 +277,12 @@ export default function App() {
                           <span className={c.supported ? 'flag ok' : 'flag low'}>
                             {c.supported ? 'Lab-supported' : 'Not backed'}
                           </span>
+                        </td>
+                        <td>
+                          <button type="button" className="chip" aria-pressed={stage?.item === c}
+                            aria-label={`Show candidate ${i + 1} in 3D`} onClick={() => show(`row${i}`)}>
+                            3D
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -246,7 +304,7 @@ export default function App() {
           <div className="split">
             <ul>
               <li>
-                On {m.test_rows} lab results from {m.test_mixes} mixes the model never saw, the expected strength is
+                On {m.test_rows} lab results from {m.test_mixes} mixes held out of training, the expected strength is
                 off by <strong>{m.test_mae_MPa.toFixed(1)} MPa on average</strong> (R² {m.test_r2.toFixed(2)}).
                 A random split that lets the same mix appear in training and testing would have reported{' '}
                 {m.random_split_mae_MPa.toFixed(1)} MPa, so we do not use it.

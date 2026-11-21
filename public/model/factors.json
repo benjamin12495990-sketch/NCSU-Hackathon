@@ -1,5 +1,5 @@
 {
- "note": "Every number below was retrieved tonight through literature search tools (SciSpace and Consensus) and checked by a second, independent search. We did not open the PDFs by hand. The Flower & Sanjayan factors are for Australian concrete and include transport to the batching plant. Other published factors differ, some by a lot, so treat the CO2 totals as a consistent way to compare mixes, not as exact footprints.",
+ "note": "Each sourced number below was retrieved tonight through literature search tools (SciSpace and Consensus), and a second independent search was run for it. The Source columns say whether that second search confirmed the value. Water's CO2 factor is an assumption, not a sourced value. We did not open the PDFs by hand. The Flower & Sanjayan factors are for Australian concrete and include transport to the batching plant. Other published factors differ, some by a lot, so treat the CO2 totals as a consistent way to compare mixes, not as exact footprints.",
  "ingredients": {
   "cement": {
    "label": "Portland cement",
@@ -13,7 +13,7 @@
   "slag": {
    "label": "Blast furnace slag",
    "kgCO2e_per_kg": 0.143,
-   "co2_source": "Flower & Sanjayan (2007), as tabulated in Kubissa et al. (2019). Seen only in that secondary table.",
+   "co2_source": "Attributed to Flower & Sanjayan (2007) in a table in Kubissa et al. (2019). We saw it only in that secondary table; the link is to the original paper.",
    "co2_source_url": "https://doi.org/10.1007/s11367-007-0327-3",
    "density_kg_m3": 2880,
    "density_source": "Specific gravity 2.88, Sudharsan et al. (2022). Not confirmed by a second search.",
@@ -22,7 +22,7 @@
   "flyash": {
    "label": "Fly ash",
    "kgCO2e_per_kg": 0.027,
-   "co2_source": "Flower & Sanjayan (2007), as tabulated in Kubissa et al. (2019). Seen only in secondary tables.",
+   "co2_source": "Attributed to Flower & Sanjayan (2007) in a table in Kubissa et al. (2019). We saw it only in secondary tables; the link is to the original paper.",
    "co2_source_url": "https://doi.org/10.1007/s11367-007-0327-3",
    "density_kg_m3": 2200,
    "density_source": "Specific gravity 2.2, Sudharsan et al. (2022). Not confirmed by a second search.",

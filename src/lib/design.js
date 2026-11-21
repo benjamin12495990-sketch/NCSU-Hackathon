@@ -82,7 +82,9 @@ export function design(request, data, limit = 10) {
     const x = featurize(mix, ageDays, spec)
     const strength = predict(model, x)
     if (strength < targetMPa) return
-    const low = predict(modelLow, x)
+    // The two models are trained separately, so on a few mixes the cautious
+    // one comes out above the expected one. Never let it be the higher of the two.
+    const low = Math.min(predict(modelLow, x), strength)
     if (opts.cautious && low < targetMPa) return
     stats.meetTarget++
     feasible.push({ mix, strength, low, co2: co2PerM3(mix, factors, spec.ingredients) })

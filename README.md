@@ -12,7 +12,7 @@ embodied CO2. Built from scratch at TRIANGULATE, an AI hackathon at NC State.
 
 Enter a target strength in MPa and a curing age. In the browser, with no server, the app:
 
-1. generates about 14,000 new mixes by varying each of the 355 lab-tested mixes in the dataset
+1. generates about 12,000 mixes by varying each of the 306 lab-tested mixes in the dataset
    (binder amount, share of slag and fly ash, water/binder ratio, superplasticizer dose), rescaling
    the aggregates so each mix keeps its parent's volume;
 2. removes any mix that is already in the dataset;
@@ -26,6 +26,16 @@ Enter a target strength in MPa and a curing age. In the browser, with no server,
 
 It also shows the lowest-CO2 mix that a lab has already tested for that target, so you can see
 whether a new candidate is worth a trial at all.
+
+## The 3D view
+
+The chosen mix is drawn as one cubic metre of particles (Three.js, `src/components/MixStage.jsx`).
+The number of particles of each colour follows that ingredient's share of the mix's volume (mass
+divided by density, from `factors.json`). Particle sizes and positions are **not** to scale, and
+the page says so under the model. Cement pulses because it is most of the CO2. The three headline
+mixes and every table row can be put on the stage.
+
+The visual rules for the page are in [`taste.md`](taste.md).
 
 ## What is live
 
@@ -46,19 +56,20 @@ Two kinds of numbers are not measured by us and are labelled on the page:
 - **Features (9):** kg per m3 of cement, blast furnace slag, fly ash, water, superplasticizer,
   coarse aggregate and fine aggregate; age in days; and water divided by total binder.
 - **Expected-strength model:** scikit-learn `GradientBoostingRegressor`, 300 trees, depth 4,
-  learning rate 0.05.
+  learning rate 0.05, subsample 0.8.
 - **Cautious model:** the same settings with quantile loss at the 10th percentile, so about 9 lab
   results in 10 should beat it.
 - **Split:** 80/20 **by mix**. The dataset holds the same mix at several ages, and the same mix
-  twice with different rounding, so mixes are identified by amounts rounded to 1 kg and every
-  result of a test mix is held out.
+  twice with different rounding (185.7 kg in one row, 186 in another). Recipes that agree within
+  5 kg on every ingredient count as one mix, and every result of a test mix is held out. The
+  script checks that no test recipe has a training recipe that close.
 
-| Test metric (71 held-out mixes, 179 lab results) | Value |
+| Test metric (62 held-out mixes, 219 lab results) | Value |
 | --- | --- |
-| Mean absolute error | 4.46 MPa |
-| Root mean squared error | 6.60 MPa |
-| R² | 0.839 |
-| Share of test results at or above the cautious estimate | 83.8% (the aim was 90%) |
+| Mean absolute error | 3.29 MPa |
+| Root mean squared error | 4.37 MPa |
+| R² | 0.912 |
+| Share of test results at or above the cautious estimate | 87.7% (the aim was 90%) |
 | Mean absolute error with a plain random split, for comparison only | 2.94 MPa |
 
 The random-split number is the one most papers report on this dataset. It looks better because the
@@ -71,11 +82,13 @@ the page reads them from there.
   too optimistic. Our first version proposed a mix predicted at 43 MPa whose nearest tested mix,
   with more cement at the same water/binder ratio, measured 29 MPa. The cautious model and the
   lab-support check were added because of that. They reduce the problem; they do not remove it.
-- **With caution on, candidates rarely beat the best tested mix.** That is an honest result, not a
-  bug: the best tested mix has a real measurement, and a candidate must clear a stricter bar.
+- **With caution on, candidates often do not beat the best tested mix.** At 35 MPa and 28 days the
+  best cautious candidate is worse than the best tested mix. That is an honest result, not a bug:
+  the tested mix has a real measurement, and a candidate must clear a stricter bar.
 - **With caution off, candidates are experiments, not answers.** Their cautious estimates fall
   short of the target.
-- **The cautious estimate is less cautious than intended** (83.8% coverage, not 90%).
+- **The cautious estimate is less cautious than intended** (87.7% coverage, not 90%). Where the
+  two models cross, the app uses the lower of the two.
 - **Strength only.** Nothing here models workability, setting time, durability, shrinkage or cost.
 - **One dataset.** Published work reports large accuracy drops when a model trained on this dataset
   is tested on mixes from other sources.
@@ -173,3 +186,6 @@ Kubissa, W., Jaskulski, R. et al. (2019). *Architecture Civil Engineering Enviro
 secondary table for the slag and fly ash factors.
 
 Densities: Sudharsan, C. P., Gosh, S. & Sood, H. (2022). https://doi.org/10.22214/ijraset.2022.41047
+
+Chandrakar, K. & Singh, V. V. (2017), for the cement density.
+https://scispace.com/papers/an-experimental-study-on-high-performance-concrete-using-24q3e

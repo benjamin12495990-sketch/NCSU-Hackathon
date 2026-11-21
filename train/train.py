@@ -45,6 +45,26 @@ def load():
     return df.drop_duplicates().reset_index(drop=True)  # 25 rows are exact repeats
 
 
+def mix_groups(df, tol=5.0):
+    """One id per mix. The file repeats some mixes with amounts rounded
+    differently (185.7 kg in one row, 186 in another), so recipes that agree
+    within `tol` kg on every ingredient are treated as the same mix."""
+    recipes = df[INGREDIENTS].drop_duplicates().to_numpy(dtype=np.float64)
+    parent = list(range(len(recipes)))
+
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    close = np.abs(recipes[:, None, :] - recipes[None, :, :]).max(axis=2) <= tol
+    for i, j in zip(*np.nonzero(np.triu(close, 1))):
+        parent[find(int(i))] = find(int(j))
+    root = {tuple(r): find(i) for i, r in enumerate(recipes)}
+    return np.array([root[tuple(r)] for r in df[INGREDIENTS].to_numpy(dtype=np.float64)])
+
+
 def featurize(df):
     """Seven ingredients, age, and water divided by total binder."""
     binder = df["cement"] + df["slag"] + df["flyash"]
@@ -67,18 +87,6 @@ def export_trees(model):
             "learning_rate": float(model.learning_rate), "trees": trees}
 
 
-def export_predict(exported, row):
-    """Python copy of the browser's tree walk, used for the parity file."""
-    row32 = row.astype(np.float32)  # scikit-learn compares features as float32
-    total = exported["init"]
-    for t in exported["trees"]:
-        n = 0
-        while t["f"][n] != -2:
-            n = t["l"][n] if row32[t["f"][n]] <= t["t"][n] else t["r"][n]
-        total += exported["learning_rate"] * t["v"][n]
-    return total
-
-
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     df = load()
@@ -87,10 +95,7 @@ def main():
 
     # The same mix appears at several ages. Splitting by MIX keeps every age of
     # a test mix out of training, so the test error is for mixes never seen.
-    # The file also holds the same mix twice with amounts rounded differently,
-    # so mixes are identified by their amounts rounded to the nearest kg.
-    rounded = df[INGREDIENTS].round(0)
-    mix_id = rounded.groupby(INGREDIENTS, sort=False).ngroup().to_numpy()
+    mix_id = mix_groups(df)
     tr, te = next(GroupShuffleSplit(n_splits=1, test_size=0.2, random_state=SEED).split(X, y, mix_id))
     model = GradientBoostingRegressor(**PARAMS).fit(X[tr], y[tr])
     pred = model.predict(X[te])
@@ -148,12 +153,13 @@ def main():
 
     rng = np.random.default_rng(SEED)
     parity = [{"mix": [float(v) for v in df.iloc[i][INGREDIENTS]], "age": int(df["age"][i]),
-               "features": [float(v) for v in X[i]], "prediction": export_predict(exported, X[i]),
-               "prediction_low": export_predict(exported_low, X[i])}
+               "features": [float(v) for v in X[i]],
+               # Straight from scikit-learn, so the parity check compares the
+               # browser with the real models and not with a Python copy.
+               "prediction": float(model.predict(X[i:i + 1])[0]),
+               "prediction_low": float(low_model.predict(X[i:i + 1])[0])}
               for i in rng.choice(te, size=20, replace=False)]
     (OUT / "parity.json").write_text(json.dumps(parity))
-    drift = max(max(abs(p["prediction"] - model.predict(np.array([p["features"]]))[0]),
-                    abs(p["prediction_low"] - low_model.predict(np.array([p["features"]]))[0])) for p in parity)
 
     (OUT / "test_points.json").write_text(json.dumps(
         [[round(float(m), 2), round(float(p), 2)] for m, p in zip(y[te], pred)], separators=(",", ":")))
@@ -169,16 +175,21 @@ def main():
         "train_mixes": int(len(np.unique(mix_id[tr]))), "test_mixes": int(len(np.unique(mix_id[te]))),
         "known_mixes": len(known),
         "low_confidence_distance": threshold,
-        "model": "GradientBoostingRegressor(300 trees, max_depth 4, learning_rate 0.05)",
+        "model": "GradientBoostingRegressor(300 trees, max_depth 4, learning_rate 0.05, subsample 0.8)",
         "lower_model": "the same settings with quantile loss, alpha 0.1 (10th percentile)",
-        "split": "80/20 split by mix: every age of a test mix is held out of training",
+        "split": "80/20 split by mix (recipes within 5 kg on every ingredient count as one mix): every result of a test mix is held out of training",
         "trained_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "dataset": "UCI Concrete Compressive Strength (Yeh, 1998)",
     }
     (OUT / "metrics.json").write_text(json.dumps(metrics, indent=1))
+    # Leak check: no test mix may have a training mix within 5 kg on every ingredient.
+    tr_mix = df.iloc[tr][INGREDIENTS].drop_duplicates().to_numpy(dtype=np.float64)
+    te_mix = df.iloc[te][INGREDIENTS].drop_duplicates().to_numpy(dtype=np.float64)
+    gap = np.abs(te_mix[:, None, :] - tr_mix[None, :, :]).max(axis=2).min(axis=1)
+    assert gap.min() > 5.0, "a test mix has a near-copy in training"
+    print(f"closest training recipe to any test recipe: {gap.min():.1f} kg on its worst ingredient")
     print(json.dumps(metrics, indent=1))
     print(json.dumps(space["limits"], indent=1))
-    print(f"export vs scikit-learn, largest difference on parity rows: {drift:.2e} MPa")
     for f in sorted(OUT.iterdir()):
         print(f"{f.name:18s} {f.stat().st_size / 1e3:8.1f} kB")
 

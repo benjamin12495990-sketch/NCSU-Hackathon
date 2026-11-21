@@ -1,4 +1,4 @@
-// "Known" mixes are the 428 distinct mixes in the dataset. Distances compare
+// "Known" mixes are the distinct lab-tested mixes in known.json. Distances compare
 // the seven ingredient amounts, each divided by its range in the dataset, so
 // no single ingredient dominates.
 export function prepareKnown(knownRaw, space, ingredients) {

@@ -14,7 +14,7 @@
   ],
   "water": [
    121.75,
-   247.0
+   246.95
   ],
   "superplasticizer": [
    0.0,
@@ -35,12 +35,12 @@
    640.0
   ],
   "water_binder_ratio": [
-   0.26859820782175736,
-   0.7916323461457672
+   0.2670504611009509,
+   0.7800114981006302
   ],
-  "slag_fraction_max": 0.6121106932524094,
-  "flyash_fraction_max": 0.5512522909724326,
-  "scm_fraction_max": 0.7002550831792975,
-  "superplasticizer_per_binder_max": 0.05136950933026012
+  "slag_fraction_max": 0.6119489630364938,
+  "flyash_fraction_max": 0.5514766516459659,
+  "scm_fraction_max": 0.6999904397705544,
+  "superplasticizer_per_binder_max": 0.0529192233423202
  }
 }
