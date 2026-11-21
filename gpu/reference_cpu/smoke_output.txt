@@ -1,25 +1,25 @@
-smoke test, torch 2.15.0+cu132, outputs in <tmp>/gpu-smoke-0t4zf3vq
-[PASS] sealed-data guard refuses vault and full concrete files (0.8 s) 11 paths refused; concrete loader read only ['lab/data/monitor.json', 'lab/data/reward.json', 'lab/data/train.json']
+smoke test, torch 2.15.0+cu132, outputs in <tmp>/gpu-smoke-y8gn59yf
+[PASS] sealed-data guard refuses vault and full concrete files (0.7 s) 11 paths refused; concrete loader read only ['lab/data/monitor.json', 'lab/data/reward.json', 'lab/data/train.json']
 [PASS] guard unit tests (gpu/tests/test_guard.py) (0.0 s) 5 tests
 [PASS] every family loader (0.1 s) concrete 253x9, alloys 426x37, insulators 843x42, polymers 514x56, chemistry 7982x17, electrolytes 478x54
-[PASS] check_env (CPU) and refusal to overwrite (0.0 s) torch 2.15.0+cu132, 0.124 TFLOP/s fp32 at n=256
-[PASS] batched MLP profiler (0.1 s) K=1: 60063 model-rows/s, K=4: 178980 model-rows/s
+[PASS] check_env (CPU) and refusal to overwrite (0.0 s) torch 2.15.0+cu132, 0.146 TFLOP/s fp32 at n=256
+[PASS] batched MLP profiler (0.1 s) K=1: 55366 model-rows/s, K=4: 172056 model-rows/s
 [PASS] bank members are independent (bank of 3 == 3 single fits, float64) (0.0 s) max difference 0.0e+00
-[PASS] tabular: alloys grouped CV (family folds) and fixed split, 2 seeds x 2 configs (0.5 s) CV ensemble MAE 107.3 HV vs naive 173.8 (8 epochs)
-[PASS] tabular: concrete through the guarded loader (TRAIN -> REWARD, MONITOR) (0.1 s) REWARD MAE 9.64 MPa, MONITOR 8.38 (5 epochs)
-[PASS] tabular: checkpoint resume is exact, and a changed config is refused (1.0 s) interrupted-and-resumed run matches the uninterrupted run bit for bit
-[PASS] structure: CGCNN on a small subset (9.8 s) JARVIS dft_3d subset (300): val MAE 0.163 vs mean 0.228, 404 structures/s
+[PASS] tabular: alloys grouped CV (family folds) and fixed split, 2 seeds x 2 configs (0.4 s) CV ensemble MAE 107.3 HV vs naive 173.8 (8 epochs)
+[PASS] tabular: concrete through the guarded loader (TRAIN -> REWARD, MONITOR) (0.0 s) REWARD MAE 9.64 MPa, MONITOR 8.38 (5 epochs)
+[PASS] tabular: checkpoint resume is exact, and a changed config is refused (1.2 s) interrupted-and-resumed run matches the uninterrupted run bit for bit
+[PASS] structure: CGCNN on a small subset (8.6 s) JARVIS dft_3d subset (300): val MAE 0.163 vs mean 0.228, 460 structures/s
 
 summary
   PASS sealed-data guard refuses vault and full concrete files: 11 paths refused; concrete loader read only ['lab/data/monitor.json', 'lab/data/reward.json', 'lab/data/train.json']
   PASS guard unit tests (gpu/tests/test_guard.py): 5 tests
   PASS every family loader: concrete 253x9, alloys 426x37, insulators 843x42, polymers 514x56, chemistry 7982x17, electrolytes 478x54
-  PASS check_env (CPU) and refusal to overwrite: torch 2.15.0+cu132, 0.124 TFLOP/s fp32 at n=256
-  PASS batched MLP profiler: K=1: 60063 model-rows/s, K=4: 178980 model-rows/s
+  PASS check_env (CPU) and refusal to overwrite: torch 2.15.0+cu132, 0.146 TFLOP/s fp32 at n=256
+  PASS batched MLP profiler: K=1: 55366 model-rows/s, K=4: 172056 model-rows/s
   PASS bank members are independent (bank of 3 == 3 single fits, float64): max difference 0.0e+00
   PASS tabular: alloys grouped CV (family folds) and fixed split, 2 seeds x 2 configs: CV ensemble MAE 107.3 HV vs naive 173.8 (8 epochs)
   PASS tabular: concrete through the guarded loader (TRAIN -> REWARD, MONITOR): REWARD MAE 9.64 MPa, MONITOR 8.38 (5 epochs)
   PASS tabular: checkpoint resume is exact, and a changed config is refused: interrupted-and-resumed run matches the uninterrupted run bit for bit
-  PASS structure: CGCNN on a small subset: JARVIS dft_3d subset (300): val MAE 0.163 vs mean 0.228, 404 structures/s
+  PASS structure: CGCNN on a small subset: JARVIS dft_3d subset (300): val MAE 0.163 vs mean 0.228, 460 structures/s
 
-10/10 passed or skipped; outputs in <tmp>/gpu-smoke-0t4zf3vq
+10/10 passed or skipped; outputs in <tmp>/gpu-smoke-y8gn59yf
