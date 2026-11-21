@@ -240,7 +240,7 @@ def print_comparison(result):
     """The family's JavaScript reference numbers beside this run's first configuration."""
     ref = result['reference']
     print(f"\nreference: {ref.get('file', '')}  ({ref.get('parity_note') or ref.get('note', '')})")
-    fmt = lambda v: f'{v:.4g}' if isinstance(v, (int, float)) else '-'  # noqa: E731
+    fmt = lambda v: f'{v:.4g}' if isinstance(v, (int, float)) else (v if isinstance(v, str) else '-')  # noqa: E731
     for mode, mres in result['modes'].items():
         sets = mres['configs'][0]['sets']
         for name, e in sets.items():

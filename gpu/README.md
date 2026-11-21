@@ -14,7 +14,7 @@ first time this code meets a GPU, so run the checks below in order.
 | `train_tabular.py` | Mirror of `src/lib/nnFamily.js` (hidden, epochs, batch, lr with linear decay to 10%, L2 decay, squared or Huber loss, inputClip, clampOutput, logTarget, standardisation on training rows only). Trains seed replicas and/or a grid of configurations at the same time. |
 | `structure/` | The first structure-aware workload: JARVIS-DFT download (`fetch_jarvis.py`), periodic neighbour graphs (`graph.py`), a CGCNN in plain PyTorch (`model.py`), and the bulk-modulus trainer (`train_structure.py`). |
 | `grids/` | Example configuration grids for `train_tabular.py --grid`. |
-| `tests/smoke.py` | CPU end-to-end test of every piece on tiny settings: `python -m gpu.tests.smoke`. |
+| `tests/smoke.py` | CPU end-to-end test of every piece on tiny settings: `python -m gpu.tests.smoke`. `tests/test_guard.py` tests the sealed-data guard on its own. |
 | `reference_cpu/` | Compact CPU results from the build machine, to compare the laptop against. |
 
 Local outputs go to `gpu/runs/` and downloads to `gpu/data_cache/`. Both are gitignored. Each run writes
@@ -86,7 +86,7 @@ use a new name for each run. Keep the laptop plugged in. During CUDA runs, watch
 in a second terminal with `nvidia-smi -l 2`.
 
 ```bash
-python -m gpu.tests.smoke                                        # CPU, about 15 s; must end "9/9 passed"
+python -m gpu.tests.smoke                                        # CPU, about 15 s; must end "10/10 passed"
 python -m gpu.check_env --device cuda --output gpu/runs/env/rtx5080_cuda.json
 python -m gpu.check_env --device cpu  --output gpu/runs/env/rtx5080_cpu.json
 
@@ -191,6 +191,10 @@ with Python 3.13 and torch 2.15.0+cu132 running on CPU, in float32.
 | `train_tabular --family alloys --mode cv` (agent's 3 grouped folds, 5 seeds) | ensemble MAE 77.71 HV, RMSE 107.6, R2 0.742; members 79.2 +- 2.9; train mean 173.8. JavaScript reference: ensemble 75.34 / 105.1 / 0.753 | 5.0 s |
 | same with `--members 32` (one bank of 32 seeds) | ensemble MAE 76.78 HV, R2 0.747 | 10.2 s (6.4x the networks in 2.0x the time) |
 | `train_tabular --family electrolytes --mode cv` (5 grouped folds, 5 seeds) | ensemble MAE 2.114 log10(S/cm), RMSE 2.995, R2 0.225; train mean 2.575; per-fold MAE 1.26 to 2.61. No JavaScript reference exists | 16.5 s |
+| `train_tabular --family insulators --mode cv` (agent's 3 folds, 5 seeds) | ensemble MAE 0.1168 log10, R2 0.604; train mean 0.207. JavaScript: single network 0.1176, ensemble 0.1175 | 7.2 s |
+| `train_tabular --family polymers --mode cv` (GroupKFold 3, 5 seeds) | ensemble MAE 15.18 K, R2 0.926; train mean 65.7. JavaScript single network 15.1 (its folds recompute the Fox features, which these do not) | 11.4 s |
+| `train_tabular --family chemistry --mode cv` (prepare.py folds, 5 seeds) | ensemble MAE 0.765 LogS, R2 0.778; members 0.793; train mean 1.884. JavaScript single seed 0.8025 | 13.7 s |
+| `train_tabular --family concrete --mode fixed` (TRAIN -> REWARD; MONITOR) | REWARD ensemble MAE 13.33 MPa, MONITOR 12.35 MPa; train mean 14.99 / 15.80. Exploratory; the lab README's plain nn.js network scored 12.47 on SELECT, with other inputs | 1.8 s |
 | `structure.train_structure --limit 3000 --epochs 15` (JARVIS bulk modulus, split 2,375 / 286 / 339) | test MAE in log10(GPa): mean 0.320, ridge on element fractions 0.175 (R2 0.590), CGCNN 0.135 (R2 0.686; best val epoch 7) | 74.1 s training, 481 structures/s; graphs 2.0 s; peak RSS 1.9 GB (includes the 254 MB JSON) |
 
 A test MAE of 0.135 in log10 means a typical error of a factor of 10^0.135, about 1.36, against the DFT

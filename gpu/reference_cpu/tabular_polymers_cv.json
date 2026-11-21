@@ -1,0 +1,173 @@
+{
+ "created": "2026-11-21T21:20:44+00:00",
+ "git": {
+  "commit": "a1826692448c56f318246bcff6c1c2d441b10e01",
+  "branch": "gpu-kit",
+  "dirty": false
+ },
+ "device": "cpu",
+ "dtype": "float32",
+ "hardware": {
+  "python": "3.13.18",
+  "platform": "Linux-6.18.44-fc-v726-x86_64-with-glibc2.39",
+  "machine": "x86_64",
+  "processor": "x86_64",
+  "cpu_count": 4,
+  "torch": "2.15.0+cu132",
+  "torch_cuda_build": "13.2",
+  "cuda_available": false
+ },
+ "threads": 2,
+ "argv": [
+  "gpu/train_tabular.py",
+  "--family",
+  "polymers",
+  "--mode",
+  "cv",
+  "--device",
+  "cpu",
+  "--threads",
+  "2",
+  "--compare-reference",
+  "--tag",
+  "cpu_ref"
+ ],
+ "data": {
+  "family": "polymers",
+  "target": "glass-transition temperature Tg, K",
+  "features": 56,
+  "train_rows": 514,
+  "train_groups": 308,
+  "test_rows": 152,
+  "cv_folds": 3,
+  "folds_source": "GroupKFold(3) on copolymer-system groups",
+  "extra_sets": {},
+  "data_sha256": "3ec9a50c66eed623b93d63e93feaf77ea1c4cee36e65484f4c8c2e87ba8cfdaf",
+  "sources": {
+   "public/model/polymers/nn_data.json": "fc1b36319f735653e02b5811790cf6e0adc9a18de850aa5b5aa124377a5e83b3"
+  },
+  "notes": [
+   "nn_data.json features fox_tg_from_train/homoTg_* were computed from the main split's training rows, so CV on these fixed features is slightly optimistic compared with the agent's per-fold recomputation"
+  ]
+ },
+ "configs": [
+  {
+   "hidden": [
+    128,
+    64
+   ],
+   "epochs": 200,
+   "batch": 32,
+   "lr": 0.004,
+   "decay": 0.01,
+   "loss": "huber",
+   "inputClip": 0,
+   "clampOutput": false,
+   "logTarget": false,
+   "log1pAuto": false
+  }
+ ],
+ "seeds": [
+  11,
+  112,
+  213,
+  314,
+  415
+ ],
+ "parity_note": "PyTorch mirror of nnFamily.js; exact bit parity with the JavaScript trainer is not expected",
+ "modes": {
+  "cv": {
+   "train_seconds": 11.359960486000773,
+   "naive_train_mean": {
+    "val": {
+     "n": 514,
+     "mae": 65.65725856768499,
+     "rmse": 89.43014893873794,
+     "r2": -0.0009585998056313993
+    }
+   },
+   "configs": [
+    {
+     "config": {
+      "hidden": [
+       128,
+       64
+      ],
+      "epochs": 200,
+      "batch": 32,
+      "lr": 0.004,
+      "decay": 0.01,
+      "loss": "huber",
+      "inputClip": 0,
+      "clampOutput": false,
+      "logTarget": false,
+      "log1pAuto": false
+     },
+     "sets": {
+      "val": {
+       "members": [
+        {
+         "n": 514,
+         "mae": 15.649129229377428,
+         "rmse": 25.24641154862183,
+         "r2": 0.9202285434172973
+        },
+        {
+         "n": 514,
+         "mae": 15.40194694007169,
+         "rmse": 24.788296328598676,
+         "r2": 0.923097303942737
+        },
+        {
+         "n": 514,
+         "mae": 15.329935814890524,
+         "rmse": 24.4372292174515,
+         "r2": 0.9252601654633129
+        },
+        {
+         "n": 514,
+         "mae": 15.299271059780436,
+         "rmse": 24.413051838579594,
+         "r2": 0.9254079824994447
+        },
+        {
+         "n": 514,
+         "mae": 15.166593499058187,
+         "rmse": 23.8810112166625,
+         "r2": 0.9286237655688224
+        }
+       ],
+       "member_mae_mean": 15.369375308635654,
+       "member_mae_sd": 0.1593196215252459,
+       "seed_mean_ensemble": {
+        "n": 514,
+        "mae": 15.17603517315466,
+        "rmse": 24.3220870898939,
+        "r2": 0.9259628171036711
+       },
+       "per_fold_mae_ensemble": [
+        15.97835341107816,
+        15.497933610772668,
+        14.04712657809313
+       ]
+      }
+     }
+    }
+   ]
+  }
+ },
+ "wall_seconds": 11.472603099000025,
+ "peak_memory_mb": 873.3984375,
+ "reference": {
+  "file": "domains/polymers/work/result.json",
+  "parity_note": "JavaScript reference (float64, its own RNG); bit parity is not expected",
+  "cv_single_network_mae": 15.1,
+  "fixed_test_network_ensemble": {
+   "mae": 15.33,
+   "rmse": 26.67,
+   "r2": 0.926,
+   "n": 152
+  },
+  "mode_run": "cv"
+ }
+}

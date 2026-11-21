@@ -1,0 +1,173 @@
+{
+ "created": "2026-11-21T21:20:34+00:00",
+ "git": {
+  "commit": "a1826692448c56f318246bcff6c1c2d441b10e01",
+  "branch": "gpu-kit",
+  "dirty": false
+ },
+ "device": "cpu",
+ "dtype": "float32",
+ "hardware": {
+  "python": "3.13.18",
+  "platform": "Linux-6.18.44-fc-v726-x86_64-with-glibc2.39",
+  "machine": "x86_64",
+  "processor": "x86_64",
+  "cpu_count": 4,
+  "torch": "2.15.0+cu132",
+  "torch_cuda_build": "13.2",
+  "cuda_available": false
+ },
+ "threads": 2,
+ "argv": [
+  "gpu/train_tabular.py",
+  "--family",
+  "insulators",
+  "--mode",
+  "cv",
+  "--device",
+  "cpu",
+  "--threads",
+  "2",
+  "--compare-reference",
+  "--tag",
+  "cpu_ref"
+ ],
+ "data": {
+  "family": "insulators",
+  "target": "log10(poly_total), DFT-calculated dielectric constant",
+  "features": 42,
+  "train_rows": 843,
+  "train_groups": 771,
+  "test_rows": 213,
+  "cv_folds": 3,
+  "folds_source": "domains/insulators/work/cv_folds.json (3 grouped folds used by the family agent)",
+  "extra_sets": {},
+  "data_sha256": "14978e28a9ac0b80067f13fd3276a52d0f9a7aa184bc61597351eb3f6a4b64b0",
+  "sources": {
+   "public/model/insulators/nn_data.json": "02f17ef09b2ddaf80dd551904152f02d4b1436d86a139dffd24452868ccac534",
+   "domains/insulators/work/cv_folds.json": "22323ae51731c3edd28293eb40d7f99318da5fa712d1d5eaf9e9e4f5280368ea"
+  },
+  "notes": [
+   "targets are DFT-calculated, not measured"
+  ]
+ },
+ "configs": [
+  {
+   "hidden": [
+    64,
+    32
+   ],
+   "epochs": 150,
+   "batch": 32,
+   "lr": 0.002,
+   "decay": 0.03,
+   "loss": "huber",
+   "inputClip": 0,
+   "clampOutput": false,
+   "logTarget": false,
+   "log1pAuto": false
+  }
+ ],
+ "seeds": [
+  11,
+  112,
+  213,
+  314,
+  415
+ ],
+ "parity_note": "PyTorch mirror of nnFamily.js; exact bit parity with the JavaScript trainer is not expected",
+ "modes": {
+  "cv": {
+   "train_seconds": 7.217073079000102,
+   "naive_train_mean": {
+    "val": {
+     "n": 843,
+     "mae": 0.20699996066834686,
+     "rmse": 0.2815453183650555,
+     "r2": -0.005814527162168126
+    }
+   },
+   "configs": [
+    {
+     "config": {
+      "hidden": [
+       64,
+       32
+      ],
+      "epochs": 150,
+      "batch": 32,
+      "lr": 0.002,
+      "decay": 0.03,
+      "loss": "huber",
+      "inputClip": 0,
+      "clampOutput": false,
+      "logTarget": false,
+      "log1pAuto": false
+     },
+     "sets": {
+      "val": {
+       "members": [
+        {
+         "n": 843,
+         "mae": 0.11657029990471886,
+         "rmse": 0.17683848218945852,
+         "r2": 0.6031970967762951
+        },
+        {
+         "n": 843,
+         "mae": 0.1168159242196825,
+         "rmse": 0.1762809979698988,
+         "r2": 0.605694999598365
+        },
+        {
+         "n": 843,
+         "mae": 0.11851168903341476,
+         "rmse": 0.1786139860385136,
+         "r2": 0.5951890899245418
+        },
+        {
+         "n": 843,
+         "mae": 0.11768688459038504,
+         "rmse": 0.1776800111647381,
+         "r2": 0.5994115444584973
+        },
+        {
+         "n": 843,
+         "mae": 0.11755271475202307,
+         "rmse": 0.17714647162870473,
+         "r2": 0.6018137154423828
+        }
+       ],
+       "member_mae_mean": 0.11742750250004486,
+       "member_mae_sd": 0.0006880758531470143,
+       "seed_mean_ensemble": {
+        "n": 843,
+        "mae": 0.11678035457724009,
+        "rmse": 0.17671000275524754,
+        "r2": 0.6037734701098694
+       },
+       "per_fold_mae_ensemble": [
+        0.11310564766717147,
+        0.10761019353597329,
+        0.12962522252857547
+       ]
+      }
+     }
+    }
+   ]
+  }
+ },
+ "wall_seconds": 7.282308430000057,
+ "peak_memory_mb": 769.48046875,
+ "reference": {
+  "file": "domains/insulators/work/result.json",
+  "parity_note": "JavaScript reference (float64, its own RNG); bit parity is not expected",
+  "cv_single_network_mae": 0.11764895790414903,
+  "cv_note": "ensemble-of-5 CV MAE 0.1175 vs single 0.1176",
+  "fixed_test_network_ensemble": {
+   "mae_log10": 0.1211,
+   "r2_log10": 0.6384
+  },
+  "mode_run": "cv"
+ }
+}

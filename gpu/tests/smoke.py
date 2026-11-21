@@ -87,6 +87,14 @@ def main():
         assert set(ds.sources) == {'lab/data/train.json', 'lab/data/reward.json', 'lab/data/monitor.json'}, ds.sources
         return f'{refused} paths refused; concrete loader read only {sorted(ds.sources)}'
 
+    @check('guard unit tests (gpu/tests/test_guard.py)')
+    def _():
+        from gpu.tests import test_guard
+        names = [n for n in dir(test_guard) if n.startswith('test_')]
+        for n in names:
+            getattr(test_guard, n)()
+        return f'{len(names)} tests'
+
     @check('every family loader')
     def _():
         from gpu.data import LOADERS
