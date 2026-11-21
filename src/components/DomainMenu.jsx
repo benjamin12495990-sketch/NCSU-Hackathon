@@ -71,7 +71,7 @@ export default function DomainMenu({ domains, activeId, onSelect, children }) {
               ))}
             </ul>
             <p className="drawer-note">
-              Engineer the Tools of Scientific Discovery. Only concrete is built; the others are plans.
+              Engineer the Tools of Scientific Discovery. Built: {domains.filter((d) => d.live).map((d) => d.label).join(', ')}. The others are plans.
             </p>
           </nav>
         </>

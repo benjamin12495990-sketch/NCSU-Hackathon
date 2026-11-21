@@ -9,7 +9,8 @@
   "kind": "pow10",
   "digits": 1
  },
- "task": "y = log10(poly_total); poly_total is the DFT-calculated polycrystalline total dielectric constant",
+ "task": "Dielectric constant of inorganic compounds, estimated from their formula, symmetry and cell volume",
+ "targetNote": "y = log10(poly_total); poly_total is the DFT-calculated polycrystalline total dielectric constant",
  "important": "All target values are CALCULATED with density functional theory (DFPT, Materials Project; Petousis et al.), NOT measured in a lab. Every error below is error against that calculation, not against experiment. The model is a fast stand-in for a slow calculation.",
  "data": {
   "source": "Hugging Face foundry-ml/dielectric_constant_v1-1 (CC BY 4.0), Petousis et al., DOI 10.18126/racd-go9m",

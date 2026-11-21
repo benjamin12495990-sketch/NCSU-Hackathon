@@ -74,7 +74,7 @@ family('materials', ({ r, s, dir }) => {
     interval: { q: r('d_interval90.halfwidth_HV'), coverage: r('d_interval90.test_coverage'), inside: r('d_interval90.test_inside'), rows: r('d_interval90.test_rows'), rule: r('d_interval90.rule'), liveMeasure: true, failsOn: 'alloy systems the model never saw (whole-system error about 102 HV instead of 78), where the true coverage is unknown and probably lower' },
     wholeSystems: { network: r('extra_cv_whole_alloy_systems_held_out_training_rows_only.network_ensemble.mae'), trees: r('extra_cv_whole_alloy_systems_held_out_training_rows_only.trees.mae'), familiarTestRows: r('extra_cv_whole_alloy_systems_held_out_training_rows_only.test_rows_whose_element_set_is_also_in_train') },
     repeatNoise: r('data.repeat_measurement_noise.mean_abs_dev_from_cell_mean_HV'),
-    sweep: { title: r('sanity_al_sweep.alloy'), x: r('sanity_al_sweep.al_x'), xLabel: 'Al amount x in Al_x CoCrFeNi', network: r('sanity_al_sweep.network_hv'), trees: r('sanity_al_sweep.trees_hv'), rows: sweep.sweep.map((p) => p.features), measured: r('sanity_al_sweep.measured_in_dataset').filter((m) => m.proc === 'CAST').map((m) => ({ x: m.al_x, y: m.hv, side: m.side })), note: 'Al-Co-Cr-Fe-Ni alloys are in the training rows, so part of this curve is recall, not prediction.' },
+    sweep: { title: r('sanity_al_sweep.alloy'), x: r('sanity_al_sweep.al_x'), xLabel: 'Al amount x in Al_x CoCrFeNi', network: r('sanity_al_sweep.network_hv'), trees: r('sanity_al_sweep.trees_hv'), rows: sweep.sweep.map((p) => p.features), measured: r('sanity_al_sweep.measured_in_dataset').filter((m) => m.proc === 'CAST' && m.al_x <= 2).map((m) => ({ x: m.al_x, y: m.hv, side: m.side })), note: 'Al-Co-Cr-Fe-Ni alloys are in the training rows, so part of this curve is recall, not prediction.' },
     verdict: s('safe_sentence'),
     caveats: [...r('caveats'), `Error on held-out alloys from familiar systems: 78 HV. On alloy systems the model never saw: about ${Math.round(r('extra_cv_whole_alloy_systems_held_out_training_rows_only.network_ensemble.mae'))} HV (trees ${Math.round(r('extra_cv_whole_alloy_systems_held_out_training_rows_only.trees.mae'))}).`, 'Predictions are capped at the training range; a capped value means the model is outside its data.'],
   }
@@ -98,7 +98,8 @@ family('insulators', ({ r, s, nnData, dir }) => {
     kind: 'CALCULATED',
     kindText: 'CALCULATED by computer simulation (DFT), not measured in a lab',
     target: 'Dielectric constant (polycrystalline total)', unit: '', display: { kind: 'pow10', digits: 1 },
-    task: r('data.target'),
+    task: 'Dielectric constant of inorganic compounds, estimated from their formula, symmetry and cell volume',
+    targetNote: r('data.target'),
     important: r('IMPORTANT'),
     data: { source: r('data.source'), citation: 'Petousis et al., DOI 10.18126/racd-go9m', licence: 'CC BY 4.0', rows: r('data.rows_used'), groups: r('data.groups_reduced_formulas'), groupWord: 'distinct compounds (reduced formulas)', train: r('data.train_rows'), test: r('data.test_rows'), inputs: r('features_main').length, inputsText: 'numbers from the composition (atomic number, period, group, electronegativity, mass, radius statistics) and the crystal cell', splitRule: 'split by reduced formula, never by row' },
     options: { hidden: r('network_settings_chosen.hidden'), epochs: r('network_settings_chosen.epochs'), batch: r('network_settings_chosen.batch'), lr: r('network_settings_chosen.lr'), decay: r('network_settings_chosen.decay'), seed: r('network_settings_chosen.seed'), loss: r('network_settings_chosen.loss') },

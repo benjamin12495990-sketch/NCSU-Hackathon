@@ -1,0 +1,11 @@
+/* Family pages (alloys, insulators, polymers). Only existing colour variables are used, so both themes work. */
+.fam { display: grid; gap: 20px; min-width: 0; }
+.fam > * { min-width: 0; }
+.fam-head h1 { margin: 10px 0 6px; }
+.fam-section h2 { margin-top: 0; }
+.fam-section h3 { margin: 18px 0 8px; font-size: 1rem; }
+.fam .nncurve { max-width: 520px; }
+.fam .split figure { flex: 0 1 360px; }
+.fam .nncurve .fam-dot { fill: var(--muted); }
+.fam [id^='train-'] { scroll-margin-top: 68px; }
+.fam footer, .fam .note { overflow-wrap: anywhere; }

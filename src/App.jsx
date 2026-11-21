@@ -14,6 +14,9 @@ import { DOMAINS } from './lib/domains.js'
 
 // Three.js is big, so the 3D stage is downloaded only when a result is shown.
 const MixStage = lazy(() => import('./components/MixStage.jsx'))
+// The trained families share one page, downloaded (with its data) only when it is opened.
+const FamilyPage = lazy(() => import('./components/FamilyPage.jsx'))
+const PAGES = { materials: FamilyPage, insulators: FamilyPage, polymers: FamilyPage }
 
 const PRESETS = [
   { label: 'Light duty', mpa: 15 },
@@ -174,6 +177,8 @@ export default function App() {
     setView(id)
     document.querySelector('.result')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }
+  const domain = DOMAINS.find((d) => d.id === domainId)
+  const FamilyView = domain?.live ? PAGES[domainId] : null // a trained family's page, else Planned
   return (
     <>
     <DomainMenu domains={DOMAINS} activeId={domainId} onSelect={setDomainId}>
@@ -181,7 +186,11 @@ export default function App() {
     </DomainMenu>
     <main>
       {domainId !== 'concrete' ? (
-        <Planned domain={DOMAINS.find((d) => d.id === domainId)} onBack={() => setDomainId('concrete')} />
+        FamilyView ? (
+          <Suspense fallback={<section className="card"><p className="note">Loading…</p></section>}>
+            <FamilyView key={domainId} family={domainId} onBack={() => setDomainId('concrete')} />
+          </Suspense>
+        ) : <Planned domain={domain} onBack={() => setDomainId('concrete')} />
       ) : (
       <>
       <section className="intro">
@@ -531,9 +540,6 @@ export default function App() {
           </div>
         </section>
       )}
-      </>
-      )}
-
       <footer>
         {m && (
           <p>
@@ -549,6 +555,8 @@ export default function App() {
           <a href={REPO}>Source code on GitHub</a>
         </p>
       </footer>
+      </>
+      )}
     </main>
     </>
   )
