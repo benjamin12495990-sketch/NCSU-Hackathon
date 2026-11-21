@@ -1,6 +1,6 @@
 /* Neural-network training panel. Follows taste.md: flat, hairline borders,
    sharp corners on data, a pill for the one thing you press, no extra accent. */
-.nn { border: 1px solid var(--line); border-radius: 4px; background: var(--card); padding: 20px; }
+.nn { scroll-margin-top: 16px; border: 1px solid var(--line); border-radius: 4px; background: var(--card); padding: 20px; }
 .nnrow { display: flex; flex-wrap: wrap; gap: 16px 28px; align-items: center; margin: 12px 0 4px; }
 .nnbtn { padding: 10px 20px; font-size: 0.95rem; font-weight: 600; }
 .nnstats { display: flex; flex-wrap: wrap; gap: 10px 28px; }

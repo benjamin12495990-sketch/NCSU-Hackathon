@@ -83,6 +83,13 @@ export default function NeuralNet({ data, result }) {
     frame.current = setTimeout(tick, 0)
   }
 
+  // The "Train the neural network" button beside "Design mixes" asks for a run.
+  useEffect(() => {
+    if (!nnData) return undefined
+    window.addEventListener('train-network', train)
+    return () => window.removeEventListener('train-network', train)
+  }) // re-bound every render so it always starts a run with the current data
+
   if (!data) return null
   const m = data.metrics
   const t = trainer.current
@@ -101,7 +108,7 @@ export default function NeuralNet({ data, result }) {
     : []
 
   return (
-    <section className="nn">
+    <section className="nn" id="train">
       <h2>Train a neural network yourself</h2>
       <p className="note">
         Press the button and a neural network starts from random numbers and learns to predict strength
