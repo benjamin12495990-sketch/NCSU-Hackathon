@@ -58,11 +58,20 @@ for (const p of code) {
   if (!VAULT_OK.has(name)) ok(!vaultRe.test(text), `${name}: does not mention the vault`)
   if (!FULL_OK.has(name)) ok(!fullRe.test(text), `${name}: does not mention the full dataset files`)
   if (name !== 'check_isolation.mjs') ok(!destroyRe.test(text), `${name}: no unlink, rm, rename or truncate`)
-  if (name !== 'guard.mjs' && name !== 'io.mjs' && name !== 'make_splits.mjs' && name !== 'check_isolation.mjs') {
+  if (name === 'open_vault.mjs') {
+    // The opener writes before it may load guarded modules, so it uses writeFileSync directly: always with flag 'wx'.
+    const calls = [...text.matchAll(/writeFileSync\([^\n]*/g)].map((m) => m[0])
+    ok(calls.length > 0 && calls.every((c) => /flag: 'wx'/.test(c)), `${name}: every writeFileSync uses flag 'wx' (${calls.length} call)`)
+    const imports = [...text.matchAll(/^import .* from '([^']+)'/gm)].map((m) => m[1])
+    ok(imports.every((m) => m.startsWith('node:') || m === './codehash.mjs'), `${name}: static imports are node builtins and codehash.mjs only`)
+  } else if (name === 'codehash.mjs') {
+    const imports = [...text.matchAll(/^import .* from '([^']+)'/gm)].map((m) => m[1])
+    ok(imports.length > 0 && imports.every((m) => m.startsWith('node:')) && !/writeFile|appendFile|createWriteStream/.test(text), `${name}: imports node builtins only and writes nothing`)
+  } else if (name !== 'guard.mjs' && name !== 'io.mjs' && name !== 'make_splits.mjs' && name !== 'check_isolation.mjs') {
     // Everything else must write through io.mjs (writeNew / writeSame) or append; no raw overwrite.
     ok(!/\bwriteFile(Sync)?\s*\(|createWriteStream\s*\(|open\(.*['"]w/.test(text), `${name}: writes only through io.mjs or appendFileSync`)
   }
-  if (name !== 'guard.mjs' && name !== 'check_isolation.mjs' && name !== 'make_splits.mjs' && name !== 'open_vault.mjs' && /\.mjs$/.test(name)) {
+  if (name !== 'guard.mjs' && name !== 'check_isolation.mjs' && name !== 'make_splits.mjs' && name !== 'open_vault.mjs' && name !== 'codehash.mjs' && /\.mjs$/.test(name)) {
     const firstImport = text.match(/^import .*$/m)
     ok(firstImport && /['"](\.\.?\/)+guard\.mjs['"]/.test(firstImport[0]) || (name === 'net_parity.mjs' && /^import '\.\/allow_full_data\.mjs'\nimport '\.\/guard\.mjs'/m.test(text)) || name === 'allow_full_data.mjs', `${name}: imports guard.mjs first`)
   }

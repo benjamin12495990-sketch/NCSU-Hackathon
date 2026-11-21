@@ -21,3 +21,9 @@ export function writeSame(p, data) {
   writeFileSync(p, data, { flag: 'wx' })
   return true
 }
+// Replaces target only if its current bytes are already preserved, byte for byte, in archivedCopy (used once, to
+// supersede preregistration.json after the first version was kept as preregistration_v1.json).
+export function replaceArchived(target, archivedCopy, data) {
+  if (!existsSync(archivedCopy) || !readFileSync(archivedCopy).equals(readFileSync(target))) throw new Error(`${target} is not preserved in ${archivedCopy}; refusing to replace it`)
+  writeFileSync(target, data)
+}
