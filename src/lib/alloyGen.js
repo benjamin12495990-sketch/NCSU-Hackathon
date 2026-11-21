@@ -99,9 +99,10 @@ export function testedSets(data) {
   const sets = new Map()
   data.rows.forEach((r, i) => {
     const key = setKey(r.frac)
-    if (!sets.has(key)) sets.set(key, { key, els: key.split('-'), rows: [], lo: {}, hi: {} })
+    if (!sets.has(key)) sets.set(key, { key, els: key.split('-'), rows: [], lo: {}, hi: {}, routes: [] })
     const s = sets.get(key)
     s.rows.push(i)
+    if (!s.routes.includes(r.proc)) s.routes.push(r.proc)
     for (const el of s.els) {
       s.lo[el] = Math.min(s.lo[el] ?? Infinity, r.frac[el])
       s.hi[el] = Math.max(s.hi[el] ?? -Infinity, r.frac[el])
@@ -114,14 +115,14 @@ export const compositionString = (frac) =>
   Object.keys(frac).sort().map((el) => `${el}${(frac[el] * 100).toFixed(1)}`).join(' ')
 
 // options: targetHV (null = as high as possible), allowed { El: maxFraction }, proc, limit,
-//          seed, perSet (draws per element set)
+//          seed, perSet (draws per element set), routeMustBeTested (only sets tested by proc)
 // data: alloys.json; predict(row of 37 inputs) -> HV; q: half-width of the 90% interval in HV.
 export function generate(options, data, predict, q) {
-  const { targetHV = null, allowed = {}, proc = 'CAST', limit = 20, seed = 1, perSet = 300 } = options
+  const { targetHV = null, allowed = {}, proc = 'CAST', limit = 20, seed = 1, perSet = 300, routeMustBeTested = false } = options
   const rand = seeded(seed)
   const own = new Set(data.elements)
   const [clampLo, clampHi] = data.clamp_HV
-  const sets = { tested: 0, pooledElement: 0, singleComposition: 0, notAllowed: 0, offGrid: 0, cappedOut: 0, used: 0 }
+  const sets = { tested: 0, pooledElement: 0, singleComposition: 0, notAllowed: 0, routeNotTested: 0, offGrid: 0, cappedOut: 0, used: 0 }
   const excluded = { duplicate: 0, notNew: 0, tooFar: 0, subsetCopy: 0, clamped: 0, belowTarget: 0 }
   const all = testedSets(data)
   sets.tested = all.length
@@ -131,6 +132,7 @@ export function generate(options, data, predict, q) {
     if (s.els.some((el) => !own.has(el))) { sets.pooledElement++; continue }
     if (new Set(s.rows.map((i) => data.rows[i].g)).size < 2) { sets.singleComposition++; continue }
     if (s.els.some((el) => !(allowed[el] > 0))) { sets.notAllowed++; continue }
+    if (routeMustBeTested && !s.routes.includes(proc)) { sets.routeNotTested++; continue }
     const lo = s.els.map((el) => Math.ceil(s.lo[el] * UNITS - 1e-6))
     const hiData = s.els.map((el) => Math.floor(s.hi[el] * UNITS + 1e-6))
     const hi = s.els.map((el, i) => Math.min(hiData[i], Math.floor(Math.min(1, allowed[el]) * UNITS + 1e-6)))
@@ -181,6 +183,9 @@ export function generate(options, data, predict, q) {
       const r = data.rows[near.index]
       kept.push({
         composition: compositionString(frac), frac, units: u, set: s.key, proc,
+        // Routes under which this element set was tested; false means the network has never seen
+        // this set made by the chosen route, which the page should say next to the row.
+        setRoutes: [...s.routes].sort(), routeTestedInSet: s.routes.includes(proc),
         predicted, cautious, distance: near.distance,
         tier: near.distance < INTERPOLATION ? TIER_INTERPOLATION : TIER_NEAR,
         nearest: { formula: r.f, proc: r.proc, hv: r.hv, split: r.split, index: near.index },
@@ -195,10 +200,11 @@ export function generate(options, data, predict, q) {
     stats: {
       sets, draws, unique: draws - excluded.duplicate, excluded, kept: kept.length,
       returned: Math.min(limit, kept.length), tiers,
+      keptRouteNotTested: kept.filter((c) => !c.routeTestedInSet).length,
       // The highest cautious estimate any candidate that passed every other rule reached, and the
       // highest the clamp allows at all: a target above either cannot be met.
       bestCautious: Number.isFinite(bestCautious) ? bestCautious : null, ceilingCautious: clampHi - q, keptSets: new Set(kept.map((c) => c.set)).size,
-      rules: { notNew: NOT_NEW, interpolation: INTERPOLATION, tooFar: TOO_FAR, step: 1 / UNITS, clamp: data.clamp_HV, q, targetHV, proc, seed, perSet },
+      rules: { notNew: NOT_NEW, interpolation: INTERPOLATION, tooFar: TOO_FAR, step: 1 / UNITS, clamp: data.clamp_HV, q, targetHV, proc, seed, perSet, routeMustBeTested },
     },
   }
 }

@@ -80,13 +80,16 @@ const sets = new Map(testedSets(data).map((s) => [s.key, s]))
 const minHv = Math.min(...nn.train.y), maxHv = Math.max(...nn.train.y)
 
 function checkRequest(label, opts) {
-  const res = generate(opts, data, predict, q)
-  const again = generate(opts, data, predict, q)
+  const res = generate({ ...opts, limit: Infinity }, data, predict, q) // assert on every kept candidate
+  const again = generate({ ...opts, limit: Infinity }, data, predict, q)
+  const shown = generate(opts, data, predict, q)
+  if (JSON.stringify(shown.candidates) !== JSON.stringify(res.candidates.slice(0, opts.limit))) fail(`${label}: limit changes the ranking`)
   const st = res.stats, ex = st.excluded
   console.log(`\n${label}: target ${opts.targetHV ?? 'as high as possible'} HV, route ${opts.proc}, seed ${opts.seed}, ` +
     `elements ${Object.keys(opts.allowed).length === data.elements.length ? 'all 21' : Object.keys(opts.allowed).join(' ')}`)
   console.log(`  element sets: ${st.sets.tested} tested, ${st.sets.used} used; skipped: ${st.sets.pooledElement} contain an element pooled in x_other, ` +
     `${st.sets.singleComposition} have only one tested composition, ${st.sets.notAllowed} use an element not allowed, ` +
+    `${st.sets.routeNotTested} never tested as ${opts.proc} (switch on), ` +
     `${st.sets.offGrid} cannot be varied on the 0.001 grid without widening, ${st.sets.cappedOut} ruled out by the maximum fractions`)
   const setTotal = Object.entries(st.sets).reduce((a, [k, v]) => a + (k === 'tested' ? 0 : v), 0)
   if (setTotal !== st.sets.tested) fail(`${label}: set counts do not add up`)
@@ -99,6 +102,9 @@ function checkRequest(label, opts) {
   const total = ex.duplicate + ex.notNew + ex.tooFar + ex.subsetCopy + ex.clamped + ex.belowTarget + st.kept
   if (total !== st.draws) fail(`${label}: counts do not add up (${total} vs ${st.draws})`)
   if (JSON.stringify(res) !== JSON.stringify(again)) fail(`${label}: not deterministic for the same seed`)
+  const offRoute = res.candidates.filter((c) => !c.routeTestedInSet).length
+  if (offRoute !== st.keptRouteNotTested) fail(`${label}: keptRouteNotTested count is wrong`)
+  console.log(`  kept candidates whose element set was never tested as ${opts.proc}: ${offRoute} of ${res.candidates.length}`)
   let checked = 0
   res.candidates.forEach((c, i) => {
     const where = `${label} #${i + 1} ${c.composition}`
@@ -118,7 +124,10 @@ function checkRequest(label, opts) {
     let best = Infinity, at = -1
     testedDense.forEach((t, j) => { const d = dist(cd, t); if (d < best) { best = d; at = j } })
     if (Math.abs(best - c.distance) > 1e-9) fail(`${where}: distance ${c.distance} but brute force gives ${best}`)
-    if (data.rows[at].f !== c.nearest.formula) fail(`${where}: nearest tested alloy differs (${data.rows[at].f})`)
+    // The named nearest alloy must be at the brute-force minimum (ties within 1e-9 may name either).
+    const named = data.rows[c.nearest.index]
+    if (named.f !== c.nearest.formula || Math.abs(dist(cd, testedDense[c.nearest.index]) - best) > 1e-9)
+      fail(`${where}: nearest tested alloy is not at the minimum distance (brute force: ${data.rows[at].f})`)
     if (best < NOT_NEW || best > TOO_FAR) fail(`${where}: distance ${best} outside 0.10-0.40`)
     const tier = best < INTERPOLATION ? TIER_INTERPOLATION : TIER_NEAR
     if (tier !== c.tier) fail(`${where}: tier ${c.tier} should be ${tier}`)
@@ -133,11 +142,12 @@ function checkRequest(label, opts) {
     }
     checked++
   })
-  console.log(`  asserted every rule on ${checked} returned candidates; deterministic for seed ${opts.seed}: ${JSON.stringify(res) === JSON.stringify(again)}`)
+  console.log(`  asserted every rule on all ${checked} kept candidates (the page shows the first ${opts.limit}); deterministic for seed ${opts.seed}: ${JSON.stringify(res) === JSON.stringify(again)}`)
   console.log('  top five:')
   for (const c of res.candidates.slice(0, 5)) {
     console.log(`    ${c.composition.padEnd(44)} pred ${c.predicted.toFixed(0)} HV, cautious ${c.cautious.toFixed(0)} HV, ` +
-      `distance ${c.distance.toFixed(3)} (${c.tier}); nearest tested: ${c.nearest.formula} ${c.nearest.proc} ${c.nearest.hv} HV`)
+      `distance ${c.distance.toFixed(3)} (${c.tier}); nearest tested: ${c.nearest.formula} ${c.nearest.proc} ${c.nearest.hv} HV` +
+      (c.routeTestedInSet ? '' : `; set never tested as ${c.proc} (only ${c.setRoutes.join('/')})`))
   }
   if (!res.candidates.length) console.log('    (none)')
   return res
@@ -145,6 +155,20 @@ function checkRequest(label, opts) {
 
 const all = Object.fromEntries(data.elements.map((el) => [el, 1]))
 for (const target of [400, 600, 800]) checkRequest(`Request ${target}`, { targetHV: target, allowed: all, proc: 'CAST', limit: 20, seed: 1 })
+
+// The user's maximum fractions: Al at most 0.10, Ti at most 0.15, everything else allowed.
+checkRequest('Capped request (Al <= 0.10, Ti <= 0.15)', { targetHV: 400, allowed: { ...all, Al: 0.1, Ti: 0.15 }, proc: 'CAST', limit: 20, seed: 1 })
+
+// The optional switch: only element sets that were tested by the chosen route.
+const sameRoute = checkRequest('Request 400, only sets tested as CAST', { targetHV: 400, allowed: all, proc: 'CAST', limit: 20, seed: 1, routeMustBeTested: true })
+if (sameRoute.candidates.some((c) => !c.routeTestedInSet)) fail('routeMustBeTested let an untested route through')
+
+// The clamp rule fires: a predictor stuck at either training limit must leave nothing.
+for (const stuck of data.clamp_HV) {
+  const r = generate({ targetHV: null, allowed: all, proc: 'CAST', seed: 1 }, data, () => stuck, q)
+  if (r.stats.kept !== 0 || r.stats.excluded.clamped === 0) fail(`clamp rule: prediction ${stuck} was not dropped`)
+  else console.log(`\nClamp rule: a predictor stuck at ${stuck} HV leaves 0 candidates (${r.stats.excluded.clamped} dropped at the clamp)`)
+}
 
 // Adversarial: only the best-studied five elements. A candidate must not be a tested alloy rescaled,
 // nor a tested alloy with some elements left out and the rest rescaled.
