@@ -89,7 +89,7 @@ export default function AlloyGenerator({ fam, net, band, status, whenTrained, fo
 
   const ready = net != null && status === 'done'
   const intervalFor = (b) => (b
-    ? { q: b.q, qSource: `measured live in this browser (${folds} extra networks on parts of the training rows)` }
+    ? { q: b.q, qSource: `estimated live in this browser (${folds} extra networks on parts of the training rows)` }
     : { q: fam.interval.q, qSource: 'from the results file (the live measure has not run)' })
   const { q, qSource } = intervalFor(band)
 
@@ -237,11 +237,12 @@ export default function AlloyGenerator({ fam, net, band, status, whenTrained, fo
                         <td className="wraps">
                           <strong>{c.composition}</strong>
                           <span className="label">Untested composition: predicted only, never made or measured.
+                            {' '}Predicted {Math.round(c.predicted)} HV, lower edge {Math.round(c.cautious)} HV.
                             {' '}Distance {c.distance.toFixed(3)} to the nearest tested alloy ({c.nearest.proc}, {hv(c.nearest.hv)}); gap {signed(c.gapHV)}.</span>
                           {c.farAbove && <span className="label"> The network rates this far above its measured neighbours (more than {familiar} HV above the nearest), so it is ranked last.</span>}
                           {!c.routeTestedInSet && <span className="label"> This element set was never made by {c.proc} (tested only as {c.setRoutes.join(', ')}).</span>}
                         </td>
-                        <td>{c.distance.toFixed(3)}<span className="label"> {c.tier}</span></td>
+                        <td className="tiercell">{c.distance.toFixed(3)}<span className="label"> {c.tier}</span></td>
                         <td className="wraps">
                           {c.nearest.formula}, {c.nearest.proc}, {hv(c.nearest.hv)}{c.nearest.n > 1 ? ` (mean of ${c.nearest.n})` : ''}
                           {c.nearest.proc !== c.proc && <span className="label"> (made by {c.nearest.proc}, not {c.proc})</span>}

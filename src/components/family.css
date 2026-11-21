@@ -20,3 +20,6 @@
 .fam-gen summary { cursor: pointer; font-weight: 600; font-size: 0.9rem; padding: 4px 0; }
 .fam-gen details .req { padding: 4px 0; }
 .fam-gen .req select { min-width: 0; max-width: 100%; }
+
+/* Alloy generator: the distance-and-tier cell wraps its words instead of clipping them on a phone. */
+table td.tiercell { white-space: normal; min-width: 96px; max-width: 140px; }
