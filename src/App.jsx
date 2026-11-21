@@ -338,23 +338,25 @@ export default function App() {
                 Lowest CO<sub>2</sub> first. Amounts are kg per m³ of concrete. Press 3D on a row to see that mix.
               </p>
               <div className="tablewrap">
-                <table>
+                <table className="ranked">
                   <thead>
                     <tr>
-                      <th>#</th>
-                      <th>Formula name and paste formula</th>
+                      <th rowSpan={2}>#</th>
+                      <th rowSpan={2}>Formula name and paste formula</th>
+                      <th colSpan={7} className="group">Recipe, kg per m³</th>
+                      <th rowSpan={2} className="num">Water / binder</th>
+                      <th rowSpan={2} className="num">Expected strength (MPa)</th>
+                      <th rowSpan={2} className="num">Cautious estimate (MPa)</th>
+                      <th rowSpan={2} className="num">CO<sub>2</sub>e (kg per m³)</th>
+                      <th rowSpan={2} className="num">vs best tested</th>
+                      <th rowSpan={2} className="num">Differs by (kg)</th>
+                      <th rowSpan={2}>Neighbour check, with the 3 nearest lab results</th>
+                      <th rowSpan={2}><span className="sr">Show in 3D</span></th>
+                    </tr>
+                    <tr>
                       <th className="num">Cement</th><th className="num">Slag</th><th className="num">Fly ash</th>
-                      <th className="num">Water</th><th className="num">Super&shy;plasticizer</th>
+                      <th className="num">Water</th><th className="num">Super&shy;plast.</th>
                       <th className="num">Coarse agg.</th><th className="num">Fine agg.</th>
-                      <th className="num">Water / binder</th>
-                      <th className="num">Expected strength</th>
-                      <th className="num">Cautious estimate</th>
-                      <th className="num">CO<sub>2</sub>e per m³</th>
-                      <th className="num">vs best tested</th>
-                      <th className="num">Differs from every tested mix by</th>
-                      <th>3 nearest tested mixes measured</th>
-                      <th>Evidence</th>
-                      <th><span className="sr">Show in 3D</span></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -364,16 +366,16 @@ export default function App() {
                         <td><strong>{c.name}</strong><Formula mix={c.mix} oxides={data.oxides} /></td>
                         {c.mix.map((v, k) => <td key={k} className="num">{v}</td>)}
                         <td className="num">{c.waterBinder.toFixed(2)}</td>
-                        <td className="num">{c.strength.toFixed(1)} MPa</td>
-                        <td className="num">{c.low.toFixed(1)} MPa</td>
-                        <td className="num strong">{kg(c.co2)} kg</td>
+                        <td className="num">{c.strength.toFixed(1)}</td>
+                        <td className="num">{c.low.toFixed(1)}</td>
+                        <td className="num strong">{kg(c.co2)}</td>
                         <td className="num">{c.vsBaseline == null ? '–' : pct(c.vsBaseline)}</td>
-                        <td className="num">{Math.round(c.gap)} kg or more</td>
-                        <td>{c.neighbours.map((n) => n.strength.toFixed(0)).join(', ')} MPa</td>
+                        <td className="num">≥ {Math.round(c.gap)}</td>
                         <td>
                           <span className={c.supported ? 'flag ok' : 'flag low'}>
                             {c.supported ? 'Neighbours passed' : 'Not backed'}
                           </span>
+                          <span className="label">{c.neighbours.map((n) => n.strength.toFixed(0)).join(', ')} MPa measured</span>
                         </td>
                         <td>
                           <button type="button" className="chip" aria-pressed={stage?.item === c}
@@ -386,19 +388,39 @@ export default function App() {
                   </tbody>
                 </table>
               </div>
-              <p className="note small">
-                Concrete is a mixture, not one compound, so the chemical formula under each name is the bulk
-                composition of its paste (cement, slag, fly ash and water) per silicon atom, estimated from
-                published oxide analyses; aggregates and admixture are left out (sources at the bottom).{' '}
-                Formula names are made by the app from the recipe: C, S and F are the shares of cement, slag
-                and fly ash in the binder by mass (percent), and W is water ÷ binder × 100. They are labels for
-                this page, not standard designations.{' '}
-                “Differs by” is the gap to the closest tested mix on the ingredient where they differ most; a
-                generated mix must differ by more than 5 kg to count as new. New means not in this dataset: it
-                may exist elsewhere in the literature.
-                “Neighbours passed” means at least two of the three nearest tested mixes are close to the candidate
-                and reached {result.targetMPa} MPa in the lab by {result.ageDays} days. The candidate itself is untested.
-              </p>
+              <dl className="readme">
+                <div>
+                  <dt>Formula name</dt>
+                  <dd>
+                    Made by the app from the recipe: C, S and F are the shares of cement, slag and fly ash in
+                    the binder by mass (percent), and W is water ÷ binder × 100. A label for this page, not a
+                    standard designation.
+                  </dd>
+                </div>
+                <div>
+                  <dt>Chemical formula</dt>
+                  <dd>
+                    Concrete is a mixture, not one compound, so this is the bulk composition of its paste
+                    (cement, slag, fly ash and water) per silicon atom, estimated from published oxide
+                    analyses. Aggregates and admixture are left out (sources at the bottom).
+                  </dd>
+                </div>
+                <div>
+                  <dt>Differs by</dt>
+                  <dd>
+                    The gap to the closest tested mix on the ingredient where they differ most. A generated mix
+                    must differ by more than 5 kg to count as new. New means not in this dataset: it may exist
+                    elsewhere in the literature.
+                  </dd>
+                </div>
+                <div>
+                  <dt>Neighbours passed</dt>
+                  <dd>
+                    At least two of the three nearest tested mixes are close to the candidate and reached{' '}
+                    {result.targetMPa} MPa in the lab by {result.ageDays} days. The candidate itself is untested.
+                  </dd>
+                </div>
+              </dl>
             </section>
           )}
           <Shortlist data={data} result={{ ...result, objective, shortlist: rankMaterials(data.materialFile.materials, result.req, result.asked, objective) }} />

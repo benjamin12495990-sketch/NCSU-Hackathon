@@ -10,7 +10,7 @@
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); }
-main { max-width: 1180px; margin: 0 auto; padding: 40px 20px 56px; }
+main { max-width: 1280px; margin: 0 auto; padding: 40px 20px 56px; }
 .eyebrow { margin: 0; color: var(--accent); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
 /* Serif only for the page title; everything in the product is sans. */
 h1 { margin: 6px 0 10px; font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif; font-weight: 600; font-size: clamp(1.9rem, 4.6vw, 2.9rem); line-height: 1.1; letter-spacing: -0.01em; }
@@ -145,3 +145,53 @@ td .label { font-size: 0.75rem; }
 @media (max-width: 720px) { .plan div { border-right: 0; border-bottom: 1px solid var(--line); } .plan div:last-child { border-bottom: 0; } }
 .chem { display: block; font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .chem sub { font-size: 0.72em; }
+
+/* ---- Polish pass (taste.md): tidy tables, cards and the phone layout. ---- */
+h2 { letter-spacing: -0.005em; }
+section > h2 { font-size: 1.15rem; margin-bottom: 10px; }
+.note { max-width: 95ch; }
+/* Ranked table: units live in the headers, the recipe sits under one group header. */
+table.ranked, table.compact { font-size: 0.88rem; }
+table.ranked th, table.ranked td { padding: 8px 6px; }
+table.compact th, table.compact td { padding: 8px 7px; }
+table.ranked td:first-child, table.ranked th:first-child { padding-left: 12px; }
+table.ranked thead th { vertical-align: bottom; line-height: 1.25; }
+table.ranked th.group { text-align: center; border-bottom: 1px solid var(--line); color: var(--ink); letter-spacing: 0.02em; }
+table.ranked thead tr:first-child th { border-bottom: 1px solid var(--line); }
+table.ranked td:nth-child(2) { padding-right: 14px; }
+table.ranked td strong, table.compact td strong { display: block; font-weight: 600; }
+table.ranked .chem { font-size: 0.78rem; margin-top: 2px; }
+table.ranked .flag { font-size: 0.76rem; white-space: nowrap; }
+table.ranked .chip { padding: 3px 10px; }
+table.ranked td.num, table.compact td.num { font-variant-numeric: tabular-nums; }
+table.compact td.wraps { white-space: normal; min-width: 210px; max-width: 320px; }
+table.compact th { white-space: normal; max-width: 120px; }
+.more { margin: 10px 0 0; }
+/* How to read the table: four short definitions instead of one dense paragraph. */
+.readme { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 0; margin: 12px 0 0; border: 1px solid var(--line); border-radius: 6px; background: var(--card); }
+.readme div { padding: 12px 14px; border-right: 1px solid var(--line); }
+.readme div:last-child { border-right: 0; }
+.readme dt { font-size: 0.8rem; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+.readme dd { margin: 0; font-size: 0.82rem; color: var(--muted); line-height: 1.45; }
+/* Frontier cards: same order in every card, long notes folded away, nothing overflows. */
+.cards { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; align-items: start; }
+.mini { overflow-wrap: anywhere; }
+.mini h3 { display: block; margin: 0 0 8px; font-size: 0.98rem; line-height: 1.3; }
+.mini .flag { margin-bottom: 8px; }
+.mini .headline { font-weight: 600; color: var(--ink); }
+.mini details { margin-top: 6px; border-top: 1px solid var(--line); padding-top: 8px; }
+.mini summary { cursor: pointer; font-size: 0.8rem; font-weight: 600; color: var(--muted); border-radius: 12px; }
+.mini summary:hover { color: var(--accent); }
+.mini details p { margin: 6px 0 0; }
+.mini .fine { font-size: 0.8rem; line-height: 1.45; }
+/* Options under the environment panel: one calm row. */
+.options { margin-top: 14px; padding: 12px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+.options label { font-size: 0.9rem; }
+@media (max-width: 720px) {
+  .readme div { border-right: 0; border-bottom: 1px solid var(--line); }
+  .readme div:last-child { border-bottom: 0; }
+  /* Family pills scroll sideways in one row instead of stacking seven deep. */
+  .domains { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 6px; margin-right: -20px; padding-right: 20px; scrollbar-width: thin; }
+  .domains .chip { flex: 0 0 auto; white-space: nowrap; }
+  .options { flex-direction: column; gap: 8px; }
+}
