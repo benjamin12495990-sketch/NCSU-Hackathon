@@ -20,6 +20,8 @@ first time this code meets a GPU, so run the checks below in order.
 | `grids/` | Example configuration grids for `train_tabular.py --grid`. |
 | `laptop_suite.py` | Runs the whole first-day sequence below and gathers the JSONs to share, with a comparison against `reference_cpu/`. |
 | `run_pipeline.py`, `run_overnight.ps1` | **The unattended pipeline (section 5).** One command trains every model family, runs strong CPU baselines beside it, survives crashes and reboots, and writes `REPORT.md` + `share.zip`. Start here if you do not want to run the steps by hand. |
+| `structure/features.py`, `structure/element_table.json` | Hand-built features for the strongest tree baseline: element-property statistics plus neighbour-geometry statistics (checked against rocksalt NaCl in `tests/test_features.py`). The element table was generated once from the `mendeleev` library (`make_element_table.py`) and is committed. |
+| `pipeline/evolve.py` | Generations of crystal networks (section 6). |
 | `pipeline/` | Its parts: `orchestrator.py` (job runner, resume, thermal guard), `plan.py` (what runs), `analyze.py` (cross-fitted comparisons), `report.py`. `baselines_tabular.py` (next to this file) is the tuned tree/linear baseline for each table-based family. |
 | `tests/smoke.py` | CPU end-to-end test of every piece on tiny settings: `python -m gpu.tests.smoke`. `tests/test_guard.py` tests the sealed-data guard on its own. |
 | `reference_cpu/` | Compact CPU results from the build machine, to compare the laptop against. |
@@ -281,5 +283,39 @@ python -m gpu.run_pipeline --profile standard --dry-run     # just list the jobs
 
 **How the comparisons are made** (so the report is not fooled by its own sweep): for each cross-validation fold, the network setting (and each baseline) is picked using only the *other* folds' errors, then scored on the fold it did not see ("cross-fitted"). The difference between network and tuned trees is a paired bootstrap over whole groups (mixes, alloy systems, papers; 2,000 resamples). Concrete has no grouped folds, so it is selected on REWARD and scored on MONITOR and labelled exploratory.
 
-**What it cannot tell you**: every label is a historical measurement or a DFT calculation, so a win here is not a new material; the crystal split is by exact formula (not by chemical system); time estimates in the plan are guesses made on a different machine (the report records the real ones); the pipeline has been exercised end to end on CPU (rehearsal profile, with injected failures and interrupts) but not yet on the RTX GPU or on Windows.
+**What it cannot tell you**: every label is a historical measurement or a DFT calculation, so a win here is not a new material; the crystal split is by exact formula (not by chemical system); time estimates in the plan are the minutes measured on one RTX 5070 Laptop GPU (the first full run: 26 jobs in 2.8 h; the report records the real ones for your machine); the pipeline has been exercised end to end on CPU (rehearsal profile, with injected failures and interrupts) but not yet on the RTX GPU or on Windows.
 The pipeline reads data only through `gpu/data.py`, which refuses the sealed concrete folder; it never writes to `lab/`, `src/` or `public/`, and it checks at the end that `lab/vault/` is byte-for-byte unchanged in size and modification time.
+
+
+## 6. Second cycle: held-out chemical systems, stronger trees, generations
+
+What the first overnight run could not say: the crystal split was by exact formula, the trees saw only composition plus two cell numbers, and the
+headline compared an *average* of networks with one tree model. This cycle adds the missing tests and then spends the spare GPU time searching.
+
+```
+git pull
+.\gpu\run_overnight.ps1 -Rehearsal            # (if you have not already) a few minutes; creates a throw-away rehearsal folder
+.\gpu\run_overnight.ps1 -Cycle2 -Rehearsal    # ~10 minutes: the whole second cycle in miniature on the GPU
+.\gpu\run_overnight.ps1 -Cycle2               # the real thing: ADDS jobs to your newest real run folder, default budget 12 h
+```
+It prints a forecast first (from how long the same jobs took in your earlier run) and then the folder it is extending. Nothing already in that folder is changed
+(the old plan is saved next to it as `plan.before_extend_<time>.json`, an earlier `REPORT.md` is renamed, not overwritten). A rehearsal can never extend a real folder or the reverse:
+their job names are the same, so the program refuses.
+
+**What it adds**
+1. **Held-out chemical systems.** Crystal networks (bulk, shear, formation energy, band gap; 3, 3, 2, 2 seeds) trained and scored with whole element combinations (Fe-O, Li-Fe-P-O, ...) kept out of training.
+   The matching tree baselines run on the same split.
+2. **Stronger trees.** A third feature set (`rich`: element-property statistics + neighbour-geometry statistics), on both splits. The opponent in every verdict is the tree feature set with the lowest *validation* error, chosen without the test rows.
+3. **Generations.** Per property: generation 0 = the default settings plus 5 random ones; then 3 more generations of 4 children (copies of the best two so far with two settings nudged). Each individual is a normal run
+   (40 epochs, held-out-systems split); **the reward is validation MAE on held-out systems**, never test. The winner is retrained for 100 epochs on **fresh seeds** and scored on the test systems against the default settings trained the
+   same way earlier, and against the strongest trees. If the defaults are still the best, nothing is retrained and the report says so.
+4. **Two GPU jobs at once** if the computer reports at least 28 GB of memory (one card was only ~20% busy with one job); otherwise one. Override with `--gpu-slots`.
+
+Knobs: `--generations 4 --population 6 --children 4 --search-epochs 40 --final-epochs 100 --budget-hours 12 --gpu-slots 2`. The search is deterministic (same results, same children), so `-Resume` after any interruption continues the same population.
+If the time budget would be exceeded the program skips the remaining generations and goes straight to the finalists, so the cycle always ends with the fair test.
+
+**Every individual is kept.** Each is a run folder under `jobs\evo_<property>_g<generation>_c<n>\` (config, split, predictions, weights); `lineage.json` lists every individual with its parent, settings and validation error.
+
+**How to read the result.** The search curve ("best validation MAE by generation") is optimistic by construction: it is the best of ~18 candidates on the same rows. Only the finalist line counts: evolved vs default, on fresh seeds and
+unseen test systems, paired bootstrap over whole chemical systems. My expectation before running it [likely, not proven]: a few percent on validation, little or nothing on the finalist test; if the finalists beat the defaults clearly, that is a real finding.
+Even this split keeps every element and most sub-systems in training, so it is not a "new element" test.

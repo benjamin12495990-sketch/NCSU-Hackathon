@@ -150,6 +150,15 @@ def test_cpu_jobs_run_beside_the_gpu_queue():
             assert time.time() - t1 >= 2.9  # serial when cpu_workers = 0
 
 
+def test_two_gpu_slots_run_two_gpu_jobs_at_once():
+    sleepy = 'import time; time.sleep(1.5); ' + WRITE
+    with tempfile.TemporaryDirectory() as t:
+        t0 = time.time()
+        o, rc = run([job('g1', sleepy, queue='gpu'), job('g2', sleepy, queue='gpu'), job('g3', sleepy, queue='gpu')], t, gpu_slots=2)
+        dt = time.time() - t0
+        assert rc == 0 and 2.9 <= dt < 4.4, dt   # three 1.5 s jobs on two slots: two rounds (~3 s), not one (1.5 s) and not three (4.5 s)
+
+
 def test_truncated_output_is_not_accepted():
     code = "(d / 'out.json').write_text('{\"half\": ')"
     with tempfile.TemporaryDirectory() as t:

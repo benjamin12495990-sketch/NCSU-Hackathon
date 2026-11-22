@@ -15,7 +15,7 @@ from types import SimpleNamespace
 import numpy as np
 
 from gpu.common import pick_device, sha256_bytes
-from gpu.structure.train_structure import DEFAULT_ZIP, graphs_for, load_records, metrics, run_model, save_predictions, split_of
+from gpu.structure.train_structure import DEFAULT_ZIP, graphs_for, load_records, metrics, parts_of, run_model, save_predictions
 
 
 def main(argv=None):
@@ -34,11 +34,12 @@ def main(argv=None):
     old = json.loads((run / 'run_config.json').read_text())
     cfg = dict(old['config'])
     cfg.setdefault('target', 'bulk_modulus_kv')  # runs made before --target existed
+    cfg.setdefault('split', 'formula')           # runs made before --split existed
     args = SimpleNamespace(**cfg, data=a.data)
     recs, source, counts = load_records(args)
     if not cfg.get('synthetic') and source['zip_sha256'] != old['source']['zip_sha256']:
         sys.exit('the data file differs from the one this run used (SHA-256 mismatch)')
-    parts = np.array([split_of(r['formula']) for r in recs])
+    parts = parts_of(recs, cfg['split'])
     idx = {p: np.where(parts == p)[0] for p in ('train', 'val', 'test')}
     y = np.array([r['y'] for r in recs])
     ytr = y[idx['train']]
@@ -56,7 +57,7 @@ def main(argv=None):
           f'val MAE now {got["val"]["mae"]:.5f}, in result.json {want["val"]["mae"]:.5f}')
     if abs(got['test']['mae'] - want['test']['mae']) > 2e-3:
         sys.exit('refusing to write predictions: they do not reproduce the run\'s recorded test MAE')
-    save_predictions(run / 'predictions.npz', recs, idx, y, preds)
+    save_predictions(run / 'predictions.npz', recs, idx, y, preds, cfg['split'])
     print(f'wrote {run / "predictions.npz"}')
 
 

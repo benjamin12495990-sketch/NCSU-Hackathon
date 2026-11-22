@@ -23,14 +23,39 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 from gpu.common import REPO, RUNS, git_info, hardware, new_run_dir, now_iso, write_json_new
 from gpu.pipeline.orchestrator import Orchestrator, Telemetry, atomic_write
-from gpu.pipeline.plan import build_plan, describe
+
+
+def write_json_atomic(path, obj):
+    import json as _json
+    atomic_write(path, _json.dumps(obj, indent=1))
+
+from gpu.pipeline.plan import STRUCT_ORDER_EARLY, STRUCT_ORDER_LATE, build_plan, describe, limit_for
 
 VAULT = REPO / 'lab' / 'vault'
 JARVIS_ZIP = REPO / 'gpu' / 'data_cache' / 'jarvis' / 'jdft_3d-9-24-2025.json.zip'
+
+
+def plan_is_smoke(plan):
+    return any(str(x).endswith('smoke') for x in [plan.get('profile'), *plan.get('profile_history', [])])
+
+
+def find_pipeline(root, smoke):
+    """The newest pipeline folder under root that has run and is (or is not) a rehearsal. Used by --extend latest / latest-smoke so a
+    rehearsal can never be mistaken for the real run: their job ids are the same."""
+    import json
+    for d in sorted(Path(root).glob('*/'), reverse=True):
+        try:
+            plan = json.loads((d / 'plan.json').read_text())
+        except (OSError, ValueError):
+            continue
+        if (d / 'state.json').exists() and plan_is_smoke(plan) == smoke and not plan.get('cycle'):
+            return d
+    return None
 
 
 def total_ram_gb():
@@ -114,7 +139,8 @@ def ensure_jarvis(plan, warn):
 
 def run(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--profile', default='standard', choices=['smoke', 'standard'])
+    ap.add_argument('--profile', default='standard', choices=['smoke', 'standard', 'holdout', 'holdout-smoke', 'cycle2', 'cycle2-smoke'],
+                    help='cycle2 = the holdout jobs plus generations of crystal networks; needs --extend <an earlier pipeline folder>')
     ap.add_argument('--device', default='cuda')
     ap.add_argument('--tag', default='')
     ap.add_argument('--budget-hours', type=float, default=None, help='stop starting new jobs after this many hours (default 10 for standard)')
@@ -128,20 +154,68 @@ def run(argv=None):
     ap.add_argument('--hot-c', type=float, default=92.0, help='stop a GPU job to cool down when the card stays at or above this temperature')
     ap.add_argument('--dry-run', action='store_true', help='print the plan and exit')
     ap.add_argument('--resume', help='an existing pipeline folder to continue')
+    ap.add_argument('--extend', help='an existing pipeline folder to ADD the jobs of --profile holdout / cycle2 to (nothing already there is changed)')
+    ap.add_argument('--gpu-slots', type=int, default=None, help='GPU jobs running at once (default 2 for cycle2, else 1). The card was ~20%% busy with one job.')
+    ap.add_argument('--generations', type=int, default=None)
+    ap.add_argument('--population', type=int, default=None, help='individuals in generation 0 (the defaults plus random ones)')
+    ap.add_argument('--children', type=int, default=None, help='children per generation')
+    ap.add_argument('--search-epochs', type=int, default=None)
+    ap.add_argument('--final-epochs', type=int, default=None)
     ap.add_argument('--retry-failed', action='store_true')
     ap.add_argument('--runs-root', default=str(RUNS / 'pipeline'))
     a = ap.parse_args(argv)
     import json
 
-    plan_args = dict(profile=a.profile, device=a.device, families=a.families.split(',') if a.families else None,
+    cycle = a.profile.startswith('cycle2')
+    smoke_run = a.profile.endswith('smoke') or a.profile == 'smoke'
+    ram = total_ram_gb()
+    if a.gpu_slots is not None:
+        gpu_slots = a.gpu_slots
+    elif cycle and ram is not None and ram >= 28:
+        gpu_slots = 2
+    else:
+        gpu_slots = 1
+        if cycle:
+            print(f'using 1 GPU job at a time: this computer reports {"an unknown amount of" if ram is None else f"{ram:.0f} GB of"} memory, and two full-size crystal jobs each hold several GB '
+                  'of graphs. Pass --gpu-slots 2 to run two at once if you have the memory to spare.')
+    plan_profile = {'cycle2': 'holdout', 'cycle2-smoke': 'holdout-smoke'}.get(a.profile, a.profile)
+    plan_args = dict(profile=plan_profile, device=a.device, families=a.families.split(',') if a.families else None,
                      targets=a.targets.split(',') if a.targets else None, tabular=not a.no_tabular, structure=not a.no_structure,
                      ram_gb=total_ram_gb(), cpu_threads=a.cpu_threads)
-    budget = a.budget_hours if a.budget_hours is not None else (None if a.profile == 'smoke' else 10.0)
+    budget = a.budget_hours if a.budget_hours is not None else (None if smoke_run else (12.0 if cycle else 10.0))
+    if a.extend in ('latest', 'latest-smoke'):
+        found = find_pipeline(a.runs_root, smoke=(a.extend == 'latest-smoke'))
+        if found is None:
+            print('no ' + ('rehearsal' if a.extend == 'latest-smoke' else 'real (non-rehearsal)') + ' pipeline folder found under ' + str(a.runs_root)
+                  + ('; run the rehearsal first: .\\gpu\\run_overnight.ps1 -Rehearsal' if a.extend == 'latest-smoke' else '.'))
+            return 4
+        a.extend = str(found)
+    if cycle and not (a.extend or a.resume):
+        print('--profile cycle2 adds to an earlier pipeline folder (it compares against that folder\'s formula-split results): '
+              'use --extend <folder>, for example the folder in gpu\\runs\\pipeline\\LAST_PIPELINE.txt.')
+        return 4
 
     if a.resume:
         pipe = Path(a.resume)
         plan = json.loads((pipe / 'plan.json').read_text())
+        if plan.get('cycle'):  # a cycle remembers its own settings; the budget clock restarts with each session
+            if a.gpu_slots is None:
+                gpu_slots = plan['cycle'].get('gpu_slots', gpu_slots)
+            if a.budget_hours is None:
+                budget = plan['cycle'].get('budget_hours', budget)
         info, stop, warn = preflight(a, plan)
+    elif a.extend:
+        pipe = Path(a.extend)
+        plan = json.loads((pipe / 'plan.json').read_text())
+        if plan_is_smoke(plan) != smoke_run:
+            print(f'refusing: {pipe} is {"a rehearsal" if plan_is_smoke(plan) else "a real run"} but --profile {a.profile} is {"a rehearsal" if smoke_run else "real"}. '
+                  'Their job names are the same, so mixing them would pass rehearsal results off as real ones.')
+            return 4
+        new = build_plan(**plan_args, existing=plan['jobs'])
+        if a.dry_run:
+            print(describe(new))
+            return 0
+        info, stop, warn = preflight(a, {**plan, 'jobs': plan['jobs'] + new['jobs']})
     else:
         plan = build_plan(**plan_args)
         if a.dry_run:
@@ -153,7 +227,35 @@ def run(argv=None):
     if stop:
         print('\nNOT STARTED:\n  ' + '\n  '.join(stop))
         return 4
-    if not a.resume:
+    if a.extend and not a.resume:
+        if not (pipe / 'state.json').exists():
+            print(f'{pipe} has no state.json: it is not a pipeline folder that has run.')
+            return 4
+        shutil.copy2(pipe / 'plan.json', pipe / f'plan.before_extend_{time.strftime("%Y%m%dT%H%M%S")}.json')  # the old plan is kept
+        have = {j['id'] for j in plan['jobs']}
+        plan['jobs'] += [j for j in new['jobs'] if j['id'] not in have]
+        plan['notes'] = list(plan.get('notes', [])) + new['notes']
+        plan['profile_history'] = list(plan.get('profile_history', [plan['profile']])) + [a.profile]
+        if cycle:
+            targets = a.targets.split(',') if a.targets else ['bulk_modulus_kv'] if smoke_run else STRUCT_ORDER_EARLY + STRUCT_ORDER_LATE
+            small_ram = (total_ram_gb() or 99) < 24
+            threads = max(1, min(4, ((os.cpu_count() or 8) - a.cpu_threads) // gpu_slots))
+            plan['cycle'] = {'targets': targets, 'generations': a.generations or (2 if smoke_run else 4), 'population': a.population or (3 if smoke_run else 6),
+                             'children': a.children or (2 if smoke_run else 4), 'search_epochs': a.search_epochs or (2 if smoke_run else 40),
+                             'final_epochs': a.final_epochs or (3 if smoke_run else 100), 'device': a.device, 'budget_hours': budget, 'smoke': smoke_run, 'gpu_slots': gpu_slots, 'threads': threads,
+                             'limits': {t: limit_for(plan['jobs'], t, smoke_run, small_ram) for t in targets}}
+        write_json_atomic(pipe / 'plan.json', plan)
+        print(describe(new))
+        if cycle:
+            from gpu.pipeline.evolve import forecast_hours
+            c = plan['cycle']
+            fh, per, sp = forecast_hours(pipe, plan, c)
+            per_text = ', '.join(f'{t.split("_")[0]} {v:.1f} h' for t, v in per.items())
+            print(f'\nrough forecast for the whole cycle on the GPU queue: about {fh:.1f} h ({per_text} of GPU time, {c["gpu_slots"]} job(s) at a time, '
+                  f'assuming {sp}x speed-up from sharing). Based on how long the same jobs took earlier in this folder; the report records the real times.')
+            print(f'\nplus generations of crystal networks on held-out chemical systems: {len(c["targets"])} properties x {c["generations"]} generations '
+                  f'(population {c["population"]}, {c["children"]} children each, {c["search_epochs"]} epochs per search run), then finalists at {c["final_epochs"]} epochs on fresh seeds.')
+    elif not a.resume:
         ensure_jarvis(plan, warn)
         pipe = new_run_dir(Path(a.runs_root), a.tag)
         write_json_new(pipe / 'plan.json', {**plan, 'machine': info, 'warnings': warn, 'budget_hours': budget})
@@ -166,9 +268,20 @@ def run(argv=None):
     before = vault_snapshot()
     tel = Telemetry(pipe / 'telemetry.csv')
     tel.start()
-    orch = Orchestrator(pipe, plan['jobs'], budget_hours=budget, cpu_workers=a.cpu_workers, telemetry=tel, hot_c=a.hot_c,
-                        max_attempts=a.max_attempts, retry_failed=a.retry_failed, log=lambda m: print(m, flush=True))
-    rc = orch.run()
+    t_session = time.time()
+
+    def make_orch(plan_, hours_left):
+        return Orchestrator(pipe, plan_['jobs'], budget_hours=hours_left, cpu_workers=a.cpu_workers, gpu_slots=gpu_slots, telemetry=tel, hot_c=a.hot_c,
+                            max_attempts=a.max_attempts, retry_failed=a.retry_failed, log=lambda m: print(m, flush=True))
+
+    if plan.get('cycle'):
+        from gpu.pipeline.evolve import run_cycle
+        c = plan['cycle']
+        gpu_slots = max(gpu_slots, 1)
+        rc = run_cycle(pipe, plan, make_orch=make_orch, targets=c['targets'], cfg={**c, 'gpu_slots': gpu_slots}, budget_hours=budget,
+                       elapsed_hours=lambda: (time.time() - t_session) / 3600.0, say=lambda m: print(m, flush=True))
+    else:
+        rc = make_orch(plan, budget).run()
     tel.stop()
     after = vault_snapshot()
     integ = ('the sealed concrete folder (lab/vault/) is unchanged: same files, sizes and modification times; this pipeline never reads it.' if before == after

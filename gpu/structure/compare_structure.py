@@ -3,8 +3,8 @@
   python -m gpu.structure.compare_structure --runs gpu/runs/structure/<run> [<run> ...] --trees gpu/runs/structure/trees_x_predictions.npz
 
 Each run folder needs predictions.npz (written by train_structure.py, or by predict_run.py for older runs); --trees is the
-file written next to baseline_trees.py's JSON. Rows are matched by record id. The test split is grouped by reduced formula, so
-the bootstrap resamples whole formulas (2,000 draws, fixed seed): the difference is MAE(network) - MAE(trees), so a negative
+file written next to baseline_trees.py's JSON. Rows are matched by record id. The test split is grouped by reduced formula or chemical system (whatever the run's --split was), so
+the bootstrap resamples whole groups (2,000 draws, fixed seed): the difference is MAE(network) - MAE(trees), so a negative
 number favours the network. With several runs it also scores the average of their predictions (a seed ensemble).
 """
 import argparse
@@ -20,7 +20,31 @@ B = 2000
 
 def _load_run(path):
     z = np.load(Path(path) / 'predictions.npz')
-    return {'jid': z['test_jid'], 'formula': z['test_formula'], 'y': z['test_y'], 'pred': z['test_pred']}
+    group = z['test_group'] if 'test_group' in z.files else z['test_formula']   # runs made before --split existed grouped by formula
+    return {'jid': z['test_jid'], 'formula': z['test_formula'], 'group': group, 'y': z['test_y'], 'pred': z['test_pred']}
+
+
+class Trees:
+    """One or more tree-baseline prediction files merged on the same test rows (matched by record id), exposing .files and [key] like an npz."""
+
+    def __init__(self, paths):
+        paths = [paths] if isinstance(paths, (str, Path)) else list(paths)
+        first = np.load(paths[0])
+        self.data = {k: first[k] for k in first.files}
+        for path in paths[1:]:
+            z = np.load(path)
+            if set(z['jid']) != set(first['jid']):
+                raise ValueError(f'{path}: tree baselines are on different test rows')
+            ix = np.array([{j: i for i, j in enumerate(z['jid'])}[j] for j in first['jid']])
+            for k in z.files:
+                if k.startswith('pred_'):
+                    if k in self.data:
+                        raise ValueError(f'{path}: duplicate tree feature set {k}')
+                    self.data[k] = z[k][ix]
+        self.files = list(self.data)
+
+    def __getitem__(self, k):
+        return self.data[k]
 
 
 def _paired(err_a, err_b, formulas):
@@ -40,7 +64,7 @@ def _paired(err_a, err_b, formulas):
 def align(run_dirs, trees_path):
     """Loads the runs and the tree baseline on the same rows. Returns (trees npz, y, formulas, [prediction per run], index per run).
     Raises ValueError if the runs and the tree baseline are on different rows."""
-    t = np.load(trees_path)
+    t = Trees(trees_path)
     runs = [_load_run(r) for r in run_dirs]
     order = {j: i for i, j in enumerate(t['jid'])}
     for r, path in zip(runs, run_dirs):
@@ -52,7 +76,7 @@ def align(run_dirs, trees_path):
     for p, r, ix in zip(preds, runs, idx):
         p[ix] = r['pred']
     formulas = np.empty(len(y), dtype=object)
-    formulas[idx[0]] = runs[0]['formula']
+    formulas[idx[0]] = runs[0]['group']
     return t, y, formulas, preds
 
 
@@ -87,7 +111,7 @@ def compare(run_dirs, trees_path):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--runs', nargs='+', required=True)
-    ap.add_argument('--trees', required=True)
+    ap.add_argument('--trees', required=True, nargs='+', help='one or more *_predictions.npz files from baseline_trees.py (merged on record id)')
     ap.add_argument('--output', help='optional new JSON path')
     a = ap.parse_args(argv)
     try:

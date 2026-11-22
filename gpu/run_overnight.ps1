@@ -2,7 +2,10 @@
 #
 #   .\gpu\run_overnight.ps1                    # the real run (standard profile), then the report
 #   .\gpu\run_overnight.ps1 -Rehearsal         # a few minutes: checks that everything works first
-#   .\gpu\run_overnight.ps1 -Resume            # continue the last pipeline after a reboot, power cut or stop
+#   .\gpu\run_overnight.ps1 -Cycle2 -Rehearsal # a few minutes: the second cycle in miniature (needs -Rehearsal to have been run first)
+#   .\gpu\run_overnight.ps1 -Cycle2            # the second cycle: held-out chemical systems, structure-feature trees, generations of
+#                                              # crystal networks; ADDS to the newest real run folder (nothing there is changed); default budget 12 h
+#   .\gpu\run_overnight.ps1 -Resume            # continue the last pipeline (or cycle) after a reboot, power cut or stop
 #   .\gpu\run_overnight.ps1 --budget-hours 6   # any other options are passed to python -m gpu.run_pipeline
 #
 # It runs the pipeline, and if the pipeline program itself crashes (exit code 3) it resumes the same folder, up to 3 times.
@@ -11,6 +14,7 @@
 param(
     [switch]$Resume,
     [switch]$Rehearsal,
+    [switch]$Cycle2,
     [Parameter(ValueFromRemainingArguments = $true)]$Rest
 )
 $ErrorActionPreference = 'Stop'
@@ -33,6 +37,12 @@ if ($Resume) {
     if (-not $last) { Write-Host 'No earlier pipeline found (gpu\runs\pipeline\LAST_PIPELINE.txt is missing).'; exit 4 }
     Write-Host "Resuming $last"
     & $py -m gpu.run_pipeline --resume $last @extra
+}
+elseif ($Cycle2 -and $Rehearsal) {
+    & $py -m gpu.run_pipeline --profile cycle2-smoke --device cuda --extend latest-smoke @extra
+}
+elseif ($Cycle2) {
+    & $py -m gpu.run_pipeline --profile cycle2 --device cuda --extend latest @extra
 }
 elseif ($Rehearsal) {
     & $py -m gpu.run_pipeline --profile smoke --device cuda --tag rehearsal @extra

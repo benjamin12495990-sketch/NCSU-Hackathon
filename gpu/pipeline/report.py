@@ -123,39 +123,91 @@ def tabular_section(items):
     return L
 
 
-def structure_section(items):
+def primary(t):
+    """The verdict against the tree feature set with the lowest validation error (the strongest opponent chosen without the test rows)."""
+    return t['verdicts'].get(t.get('strongest_trees_key')) or next(iter(t['verdicts'].values()))
+
+
+def structure_section(items, split='formula'):
     ok = [t for t in items if t['status'] == 'ok']
-    L = ['## Crystal-structure networks against trees', '',
-         'A crystal-graph network learns from the atom positions. The trees get either the element fractions, or the fractions plus volume per atom and atoms per cell '
-         '(two cheap structure facts). Test error is on formulas the models never saw (split by exact formula). All labels are **DFT calculations**, not measurements.', '']
+    if split == 'formula':
+        head = ['## Crystal-structure networks against trees (split by exact formula)', '',
+                'A crystal-graph network learns from the atom positions. The trees get element fractions, fractions plus cell volume, or (when that job ran) element-property '
+                'statistics plus neighbour-geometry statistics; the opponent in each verdict is the tree set with the lowest *validation* error. Test error is on formulas the '
+                'models never saw. All labels are **DFT calculations**, not measurements.', '']
+    else:
+        head = ['## Crystal-structure networks on HELD-OUT CHEMICAL SYSTEMS', '',
+                'The harder test. Every crystal whose element combination (Fe-O, Li-Fe-P-O, ...) lands in the test set is absent from training, so the test error says how the '
+                'models do on element combinations they have never seen. Same models, same trees, same verdict rules as above. Expect larger errors than the formula split; '
+                'what matters is the comparison. All labels are **DFT calculations**.', '']
+    L = list(head)
     if ok:
-        L += ['| Property | Crystals (train / test) | Guess the average | Linear | Trees: fractions | Trees: + cell | Network: mean of single runs | Network: average of runs | Average minus the stronger trees (95% interval) | Verdict: average | Verdict: single runs | Speed |',
-              '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |']
+        L += ['| Property | Crystals (train / test) | Guess the average | Linear | Trees: fractions | Trees: + cell | Trees: + structure features | Network: mean of single runs | Network: average of runs | Average minus the strongest trees (95% interval) | Verdict: average | Verdict: single runs | Speed |',
+              '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |']
         for t in ok:
-            tr = t['trees']
-            v = t['verdicts'].get('pred_comp_cell') or next(iter(t['verdicts'].values()))
+            tr, v = t['trees'], primary(t)
             sp = [r['structures_per_second'] for r in t['network_runs']]
             nm = [r['test']['mae'] for r in t['network_runs']]
-            key = 'pred_comp_cell' if 'pred_comp_cell' in t['compare']['comparisons'] else next(iter(t['compare']['comparisons']))
-            avg = [c for k2, c in t['compare']['comparisons'][key].items() if k2.startswith('network average')]
+            avg = [c for k2, c in t['compare']['comparisons'][t['strongest_trees_key']].items() if k2.startswith('network average')]
             avg_mae = avg[0]['network_mae'] if avg else sum(nm) / len(nm)
             f = t.get('fairness')
+            mae = lambda k: g(tr[k]['test']['mae']) if k in tr else '-'  # noqa: E731
             L.append(f'| {STRUCT_NAMES.get(t["target"], t["target"])} | {t["split_sizes"]["train"]} / {t["split_sizes"]["test"]} | {g(t["mean_baseline_test_mae"])} | {g(t["ridge_test_mae"])} | '
-                     f'{g(tr["composition"]["test"]["mae"])} | {g(tr["comp+cell"]["test"]["mae"])} | {g(sum(nm) / len(nm))} ({len(nm)} runs) | {g(avg_mae)} | {ci(v)} | **{v["verdict"]}** | '
+                     f'{mae("composition")} | {mae("comp+cell")} | {mae("rich")} | {g(sum(nm) / len(nm))} ({len(nm)} runs) | {g(avg_mae)} | {ci(v)} vs {t["strongest_trees"]} | **{v["verdict"]}** | '
                      f'{single_text(f) if f else "-"} | {sum(sp) / len(sp):.0f} crystals/s |')
         L.append('')
     for t in items:
         if t['status'] != 'ok':
             L.append(f'- **{STRUCT_NAMES.get(t["target"], t["target"])}**: no result ({t["reason"]}).')
     for t in ok:
-        L += [f'### {STRUCT_NAMES.get(t["target"], t["target"])}', '', '```'] + t['compare_lines'] + ['```', '']
+        L += [f'### {STRUCT_NAMES.get(t["target"], t["target"])}' + ('' if split == 'formula' else ' (held-out systems)'), '', '```'] + t['compare_lines'] + ['```', '']
+        vals = ', '.join(f'{k}: validation MAE {g(v["val"]["mae"])}' for k, v in t['trees'].items())
+        L.append(f'- Strongest trees by validation error: {t["strongest_trees"]} ({vals}).')
         if t.get('fairness'):
-            L += fairness_lines(t['fairness'], (t['verdicts'].get('pred_comp_cell') or next(iter(t['verdicts'].values())))['verdict'], 'average of runs')
+            L += fairness_lines(t['fairness'], primary(t)['verdict'], 'average of runs')
             z = t['fairness'].get('by_zero_gap')
             if z:
                 L.append(f'  - Band gap split: {z["share_exact_zero"]:.0%} of test crystals have gap exactly 0. On those, network MAE {g(z["network_mae_zero"])} vs trees {g(z["trees_mae_zero"])}; '
                          f'on the rest, network {g(z["network_mae_nonzero"])} vs trees {g(z["trees_mae_nonzero"])}.')
             L.append('')
+    return L
+
+
+def evolution_section(items):
+    ok = [e for e in items if e.get('status') == 'ok']
+    L = ['## Generations of crystal networks (held-out chemical systems)', '',
+         'A small evolutionary search per property. Generation 0 is the default settings plus random ones; each later generation is children of the two best individuals so far, '
+         'with two settings nudged. Every individual is an ordinary training run on the harder split; its **reward is the validation error on held-out systems**. The test rows '
+         'never choose anything. Nothing is deleted: `lineage.json` and every run folder keep all individuals.', '',
+         '**What counts as evidence:** the validation curve below is optimistic (it is the best of many candidates on the same rows). The only fair test is the finalist line: '
+         'the winner retrained on fresh seeds and scored on test systems it never influenced, against the default settings trained the same way earlier in this pipeline.', '']
+    for e in items:
+        if e.get('status') != 'ok':
+            L.append(f'- **{STRUCT_NAMES.get(e["target"], e["target"])}**: no result ({e.get("reason", "no individual finished")}).')
+    for e in ok:
+        name = STRUCT_NAMES.get(e['target'], e['target'])
+        curve = ' -> '.join(g(v) for v in e['best_by_generation'])
+        L += [f'### {name}', '', f'- {e["n_finished"]} of {e["n_individuals"]} individuals finished over {e["generations"]} generations.',
+              f'- Best validation MAE so far, generation by generation: {curve}. The default settings scored {g(e["default_val_mae"])} in the same protocol.']
+        if e['default_won']:
+            L.append('- The default settings were still the best by validation error: the search found nothing better, so there is no finalist retrain.')
+        else:
+            gain = (e['default_val_mae'] - e['best_val_mae']) / e['default_val_mae'] * 100 if e['default_val_mae'] else None
+            L.append(f'- Best individual {e["best_id"]}: {e["best_changes"]} (validation MAE {g(e["best_val_mae"])}' + (f', {gain:.1f}% below the defaults' if gain is not None else '') + ').')
+        fi = e.get('finalists')
+        if fi:
+            d = fi['evolved_vs_default']
+            L += [f'- **Finalists on test systems** ({fi["n_evolved_runs"]} evolved runs on fresh seeds vs {fi["n_default_runs"]} default runs): single-run MAE evolved {g(fi["evolved_single_mae_mean"])} vs default {g(fi["default_single_mae_mean"])}; '
+                  f'average of runs evolved {g(fi["evolved_average_mae"])} vs default {g(fi["default_average_mae"])}; strongest trees ({fi["strongest_trees"]}) {g(fi["trees_mae"])}.',
+                  f'  - Evolved minus default (average of runs): {ci(d)}, **{d["verdict"]}**.',
+                  f'  - Evolved against the strongest trees: {ci(fi["evolved_vs_trees"])}, {fi["evolved_vs_trees"]["verdict"]}; default against the strongest trees: {ci(fi["default_vs_trees"])}, {fi["default_vs_trees"]["verdict"]}.']
+        elif not e['default_won']:
+            L.append('- Finalist runs are missing or did not finish' + (f' ({e["finalists_error"]})' if e.get('finalists_error') else '') + '.')
+        top = sorted([x for x in e['individuals'] if x['val_mae'] is not None], key=lambda x: x['val_mae'])[:6]
+        L += ['', '| Rank | Individual | Generation | Parent | Differs from the defaults | Validation MAE |', '| --- | --- | --- | --- | --- | --- |']
+        for k, x in enumerate(top, 1):
+            L.append(f'| {k} | {x["id"]} | {x["gen"]} | {x["parent"] or "-"} | {x["changes"]} | {g(x["val_mae"])} |')
+        L.append('')
     return L
 
 
@@ -173,11 +225,14 @@ def build(pipe):
     gpu_h = sum(st[j['id']].get('seconds', 0) for j in done if j['queue'] == 'gpu') / 3600
     tab_ok = [t for t in A['tabular'] if t['status'] == 'ok']
     str_ok = [t for t in A['structure'] if t['status'] == 'ok']
+    sys_ok = [t for t in A.get('structure_system', []) if t['status'] == 'ok']
+    yv = [primary(t)['verdict'] for t in sys_ok]
+    yb = [single_bucket(t['fairness']) if t.get('fairness') else 'unclear' for t in sys_ok]
     tv = [t['network_vs_trees']['verdict'] for t in tab_ok]
     tb = [single_bucket(t['fairness']) for t in tab_ok]
-    sv = [(t['verdicts'].get('pred_comp_cell') or next(iter(t['verdicts'].values())))['verdict'] for t in str_ok]
+    sv = [primary(t)['verdict'] for t in str_ok]
     sb = [single_bucket(t['fairness']) if t.get('fairness') else 'unclear' for t in str_ok]
-    smoke = plan.get('profile') == 'smoke'
+    smoke = any(str(x).endswith('smoke') for x in [plan.get('profile'), *plan.get('profile_history', [])])
     L = [f'# Pipeline report: {pipe.name}', '', f'Generated {time.strftime("%Y-%m-%d %H:%M:%S")}. Folder: `{pipe}`', '']
     if smoke:
         L += ['> **REHEARSAL (smoke profile).** Tiny networks, a few hundred crystals, a few epochs. This run only checks that the machinery works; '
@@ -188,6 +243,15 @@ def build(pipe):
           f'**One network at a time**: clearly better in every seed on {tb.count("network")}, trees clearly better in every seed on {tb.count("trees")}, mixed or unclear on {tb.count("unclear")}.',
           f'- Crystal-structure properties ({len(str_ok)} with results), against the stronger trees. Average of runs: network clearly better on {sv.count("network clearly better")}, trees clearly better on {sv.count("trees clearly better")}, no clear difference on {sv.count("no clear difference")}. '
           f'**Single runs**: clearly better in every run on {sb.count("network")}, mixed or unclear on {sb.count("unclear")}, trees clearly better in every run on {sb.count("trees")}.']
+    evo_ok = [e for e in (A.get('evolution') or []) if e.get('status') == 'ok']
+    if evo_ok:
+        fin = [e for e in evo_ok if e.get('finalists')]
+        better = [STRUCT_NAMES.get(e['target'], e['target']) for e in fin if e['finalists']['evolved_vs_default']['verdict'] == 'evolved clearly better']
+        won = [STRUCT_NAMES.get(e['target'], e['target']) for e in evo_ok if e['default_won']]
+        L.append(f'- **Generations**: {len(evo_ok)} properties searched; on fresh seeds and test systems the evolved settings clearly beat the defaults on {len(better)}' + (f' ({", ".join(better)})' if better else '') + f'; the defaults stayed best on {len(won)}' + (f' ({", ".join(won)})' if won else '') + '.')
+    if sys_ok:
+        L.append(f'- **Held-out chemical systems** ({len(sys_ok)} properties), against the strongest trees. Average of runs: network clearly better on {yv.count("network clearly better")}, trees clearly better on {yv.count("trees clearly better")}, no clear difference on {yv.count("no clear difference")}. '
+                 f'Single runs: clearly better in every run on {yb.count("network")}, mixed or unclear on {yb.count("unclear")}, trees clearly better in every run on {yb.count("trees")}.')
     if tel['samples']:
         L.append(f'- GPU: peak temperature {g(tel["peak_temp_c"], 3)} C, peak power {g(tel["peak_power_w"], 3)} W, peak memory {g(tel["peak_mem_mib"], 4)} MiB, average utilisation {g(tel["mean_util_pct"], 3)}% ({tel["samples"]} samples).')
     integ = state.get('integrity')
@@ -198,6 +262,10 @@ def build(pipe):
     L += ['**How to read the verdicts.** "Network clearly better" means the whole 95% bootstrap interval of (network error minus trees error) is below zero; "trees clearly better" means it is '
           'entirely above zero; anything else is "no clear difference". The bootstrap resamples whole groups (mixes, alloy systems, papers, formulas), never single rows.', '']
     L += tabular_section(A['tabular']) + structure_section(A['structure'])
+    if A.get('structure_system'):
+        L += structure_section(A['structure_system'], 'system')
+    if A.get('evolution'):
+        L += evolution_section(A['evolution'])
     L += ['## What each job did', '', '| Job | Status | Minutes | Attempts |', '| --- | --- | --- | --- |']
     for j in jobs:
         s = st.get(j['id'], {})
@@ -214,16 +282,19 @@ def build(pipe):
     L += ['## What this does and does not show', '',
           '- Every number is from historical data or DFT calculations. None of it is a new measurement, so none of it is evidence of a discovery; a sealed set of new measurements is still the missing evidence.',
           '- Tabular families: the old fixed test splits were already looked at by earlier work, so this report uses cross-validation with cross-fitted selection instead. Concrete is exploratory.',
-          '- Crystal properties: the split is by exact formula, so crystals of the same structure type with different elements can sit on both sides. Expect the real error on genuinely new chemistries to be larger. A split that holds out whole chemical systems is the next test.',
+          '- Crystal properties on the formula split: crystals of the same structure type with different elements can sit on both sides, so expect the real error on genuinely new chemistries to be larger. The held-out-systems section (when present) is the harder test; even it keeps every element and most sub-systems in training, so it is not a "new element" test.',
           '- Each comparison is one of many; with a 95% interval, a few "clear" results are expected by chance. Treat single clear wins as leads to confirm, not as findings.',
           '- Rows of a family that share a source (paper, alloy system, mix) were always kept together in a fold.', '']
     nxt = []
     if sv.count('network clearly better'):
         names = [STRUCT_NAMES.get(t['target'], t['target']) for t, v in zip(str_ok, sv) if v == 'network clearly better']
-        nxt.append('The average of crystal-network runs clearly beats the cell-feature trees on: ' + ', '.join(names) + '. Check the "single runs" column before crediting the network itself, '
-                   'and validate on a split that holds out whole chemical systems and against trees given richer structure features.')
+        nxt.append('On the formula split the average of crystal-network runs clearly beats the strongest trees on: ' + ', '.join(names) + '. Check the "single runs" column before crediting the network itself'
+                   + ('' if sys_ok else ', and test on held-out chemical systems against structure-feature trees') + '.')
     elif str_ok:
-        nxt.append('No crystal property shows a clear win over trees that are given the cell volume. Either test harder splits, or use trees for these properties.')
+        nxt.append('On the formula split no crystal property shows a clear win over the strongest trees. Use trees for these properties, or change what the network is given.')
+    if sys_ok:
+        nxt.append('Held-out chemical systems: network average clearly better on ' + (', '.join(STRUCT_NAMES.get(t['target'], t['target']) for t, v in zip(sys_ok, yv) if v == 'network clearly better') or 'none')
+                   + '; trees clearly better on ' + (', '.join(STRUCT_NAMES.get(t['target'], t['target']) for t, v in zip(sys_ok, yv) if v == 'trees clearly better') or 'none') + '. This is the comparison to quote.')
     if tv.count('network clearly better'):
         names = [TAB_NAMES.get(t['family'], t['family']) for t, v in zip(tab_ok, tv) if v == 'network clearly better']
         nxt.append('The average of network seeds clearly beats the tuned trees on: ' + ', '.join(names) + '. Single networks may not; see the "one network at a time" column.')

@@ -4,9 +4,12 @@
 
 The crystal-graph network is only worth its cost if it beats strong simple models, and the ridge baseline in
 train_structure.py is weak (every other family in this project showed tuned trees well ahead of linear models).
-Two feature sets, both cheap:
+Three feature sets (--feature-sets, default the first two):
   composition  = element fractions (the ridge baseline's features)
   comp+cell    = composition plus volume per atom and atoms per cell (a little structure, no graph)
+  rich         = comp+cell plus element-property statistics and neighbour-geometry statistics (gpu/structure/features.py):
+                 the strongest tree baseline here, and the fair opponent for a crystal-graph network
+--split formula|system picks the split exactly as train_structure.py does.
 Settings are chosen on the validation rows only; the test rows are scored once, for the selected setting.
 Refuses to overwrite --output. CPU only.
 """
@@ -20,13 +23,15 @@ from types import SimpleNamespace
 import numpy as np
 
 from gpu.common import hardware, now_iso, write_json_new
-from gpu.structure.train_structure import DEFAULT_ZIP, TARGETS, element_fractions, load_records, metrics, split_of
+from gpu.structure.train_structure import DEFAULT_ZIP, SPLIT_MODES, SPLIT_RULES, TARGETS, element_fractions, group_of, load_records, metrics, parts_of
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--data', default=str(DEFAULT_ZIP))
     ap.add_argument('--target', default='bulk_modulus_kv', choices=sorted(TARGETS))
+    ap.add_argument('--split', default='formula', choices=SPLIT_MODES)
+    ap.add_argument('--feature-sets', default='composition,comp+cell', help='comma list from: composition, comp+cell, rich')
     ap.add_argument('--threads', type=int, default=2)
     ap.add_argument('--seed', type=int, default=11)
     ap.add_argument('--limit', type=int, default=0, help='first N kept records (same rule as train_structure.py), for small tests')
@@ -35,12 +40,20 @@ def main(argv=None):
     from sklearn.ensemble import ExtraTreesRegressor, HistGradientBoostingRegressor
 
     recs, source, counts = load_records(SimpleNamespace(synthetic=0, data=a.data, limit=a.limit, seed=a.seed, target=a.target))
-    parts = np.array([split_of(r['formula']) for r in recs])
+    parts = parts_of(recs, a.split)
     idx = {p: np.where(parts == p)[0] for p in ('train', 'val', 'test')}
     y = np.array([r['y'] for r in recs])
     F = np.stack([element_fractions(r['atoms']) for r in recs])
     cell = np.array([[abs(np.linalg.det(np.array(r['atoms']['lattice_mat']))) / len(r['atoms']['elements']), len(r['atoms']['elements'])] for r in recs])
+    wanted = [x.strip() for x in a.feature_sets.split(',') if x.strip()]
+    bad = [x for x in wanted if x not in ('composition', 'comp+cell', 'rich')]
+    if bad or not wanted:
+        sys.exit(f'--feature-sets: unknown {bad or "(empty)"}; choose from composition, comp+cell, rich')
     sets = {'composition': F, 'comp+cell': np.hstack([F, cell])}
+    if 'rich' in wanted:
+        from gpu.structure.features import build as build_rich
+        sets['rich'] = np.hstack([F, cell, build_rich(recs, threads=a.threads)])
+    sets = {k: v for k, v in sets.items() if k in wanted}
     models = {
         'extratrees_300_leaf1': lambda: ExtraTreesRegressor(n_estimators=300, min_samples_leaf=1, max_features=0.5, n_jobs=a.threads, random_state=a.seed),
         'extratrees_300_leaf2': lambda: ExtraTreesRegressor(n_estimators=300, min_samples_leaf=2, max_features=0.5, n_jobs=a.threads, random_state=a.seed),
@@ -53,14 +66,17 @@ def main(argv=None):
     test_preds = {}
     ytr = y[idx['train']]
     out = {'task': TARGETS[a.target]['label'] + ' (DFT-calculated)', 'target': a.target, 'counts': counts, 'source': {k: v for k, v in source.items() if k != 'zip'},
-           'split_sizes': {p: int(len(v)) for p, v in idx.items()}, 'split_rule': "sha256('split-v1:' + reduced formula) % 100: <80 train, <90 val, else test",
+           'split_sizes': {p: int(len(v)) for p, v in idx.items()}, 'split_mode': a.split, 'split_rule': SPLIT_RULES[a.split],
            'mean': {p: metrics(np.full(len(idx[p]), ytr.mean()), y[idx[p]]) for p in ('val', 'test')}, 'feature_sets': {}, 'created': now_iso(),
            'hardware': hardware(), 'selection': 'by validation MAE within each feature set; test scored once for the selected model'}
     for sname, X in sets.items():
         rows = {}
         for mname, make in models.items():
             t0 = time.perf_counter()
-            m = make().fit(X[idx['train']], ytr)
+            m = make()
+            if sname == 'rich' and isinstance(m, ExtraTreesRegressor):
+                m.set_params(max_features=0.33)  # ~190 columns: fewer per split keeps the forest fast
+            m = m.fit(X[idx['train']], ytr)
             v = metrics(m.predict(X[idx['val']]), y[idx['val']])
             rows[mname] = {'val': v, 'seconds': round(time.perf_counter() - t0, 1), '_model': m}
             print(f'{sname:12s} {mname:22s} val MAE {v["mae"]:.4f}  {rows[mname]["seconds"]:.0f} s', flush=True)
@@ -72,7 +88,7 @@ def main(argv=None):
         print(f'  -> {sname}: selected {best}; test MAE {test["mae"]:.4f}, R2 {test["r2"]:.3f}', flush=True)
     write_json_new(a.output, out)
     np.savez_compressed(pred_path, jid=np.array([recs[i]['jid'] for i in idx['test']]), formula=np.array([recs[i]['formula'] for i in idx['test']]),
-                        y=y[idx['test']], **test_preds)
+                        y=y[idx['test']], group=np.array([group_of(recs[i], a.split) for i in idx['test']]), **test_preds)
     print(f'mean baseline test MAE {out["mean"]["test"]["mae"]:.4f}; wrote {a.output}')
 
 

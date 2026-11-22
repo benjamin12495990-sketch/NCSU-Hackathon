@@ -6,18 +6,19 @@
 
 The order puts the most useful and cheapest GPU work first, so a run cut short by the time budget still leaves a useful
 report: crystal bulk and shear modulus (3 seeds each), then every tabular family, then formation energy and band gap.
-CPU jobs (the baselines) run beside the GPU queue. All time figures here are rough guesses used only for display;
+CPU jobs (the baselines) run beside the GPU queue. Time figures are the minutes measured on one RTX 5070 Laptop GPU and are used only for display;
 the report lists what each job actually took.
 """
 from gpu.train_tabular import BASE, FAMILY_DEFAULTS
 
 TAB_ORDER = ['alloys', 'polymers', 'electrolytes', 'insulators', 'concrete', 'chemistry']
-TAB_EST_MIN = {'alloys': 10, 'polymers': 12, 'electrolytes': 12, 'insulators': 15, 'concrete': 8, 'chemistry': 60}
+# minutes MEASURED on an RTX 5070 Laptop GPU (the first overnight run); other machines will differ
+TAB_EST_MIN = {'alloys': 6, 'polymers': 5, 'electrolytes': 14, 'insulators': 6, 'concrete': 2, 'chemistry': 10}
 STRUCT_SEEDS = {'bulk_modulus_kv': [11, 12, 13], 'shear_modulus_gv': [11, 12, 13], 'formation_energy_peratom': [11, 12], 'optb88vdw_bandgap': [11, 12]}
 STRUCT_ORDER_EARLY = ['bulk_modulus_kv', 'shear_modulus_gv']
 STRUCT_ORDER_LATE = ['formation_energy_peratom', 'optb88vdw_bandgap']
-STRUCT_EST_MIN = {'bulk_modulus_kv': 12, 'shear_modulus_gv': 12, 'formation_energy_peratom': 35, 'optb88vdw_bandgap': 35}
-TREES_EST_MIN = {'bulk_modulus_kv': 3, 'shear_modulus_gv': 3, 'formation_energy_peratom': 15, 'optb88vdw_bandgap': 15}
+STRUCT_EST_MIN = {'bulk_modulus_kv': 9, 'shear_modulus_gv': 8, 'formation_energy_peratom': 20, 'optb88vdw_bandgap': 18}
+TREES_EST_MIN = {'bulk_modulus_kv': 3, 'shear_modulus_gv': 2, 'formation_energy_peratom': 16, 'optb88vdw_bandgap': 19}
 BIG_TARGETS = ('formation_energy_peratom', 'optb88vdw_bandgap')  # 94,000 crystals; the graphs need several GB of memory
 
 
@@ -38,10 +39,61 @@ def tabular_grid(family, profile):
     return grid
 
 
+def limit_used(existing, target):
+    """The --limit an earlier plan used for a target's crystal jobs (so new jobs use the very same records), or None if it had none."""
+    for j in (existing or []):
+        if j.get('target') == target and '--limit' in j['argv']:
+            return j['argv'][j['argv'].index('--limit') + 1]
+    return None
+
+
+def limit_for(existing, target, smoke, small_ram):
+    """--limit arguments for a target's crystal jobs: the same records an earlier plan used, else the profile's rule."""
+    if existing is not None and any(j.get('target') == target for j in existing):
+        lim = limit_used(existing, target)
+        return ['--limit', lim] if lim else []
+    if smoke:
+        return ['--limit', '800']
+    return ['--limit', '40000'] if (target in BIG_TARGETS and small_ram) else []
+
+
+def holdout_jobs(*, device, targets, smoke, small_ram, cpu_threads, existing):
+    """Crystal-network and tree runs on a split that holds out whole chemical systems, plus the stronger structure-feature trees
+    on the original formula split (the networks for that split already exist in the pipeline folder being extended)."""
+    jobs = []
+    for t in targets:
+        lim = limit_for(existing, t, smoke, small_ram)
+        seeds = [11, 12] if smoke else STRUCT_SEEDS[t]
+        env = {'OMP_NUM_THREADS': str(cpu_threads)}
+        jobs.append({'id': f'trees_{t}_rich', 'queue': 'cpu', 'group': 'baseline', 'target': t, 'split': 'formula',
+                     'argv': ['-m', 'gpu.structure.baseline_trees', '--target', t, '--threads', str(cpu_threads), '--feature-sets', 'rich',
+                              '--output', '{JOB_DIR}/trees.json', *lim],
+                     'expect': ['trees.json', 'trees_predictions.npz'], 'env': env, 'timeout_s': 4 * 3600, 'est_minutes': 1 if smoke else (30 if t in BIG_TARGETS else 8)})
+        jobs.append({'id': f'trees_{t}_sys', 'queue': 'cpu', 'group': 'baseline', 'target': t, 'split': 'system',
+                     'argv': ['-m', 'gpu.structure.baseline_trees', '--target', t, '--threads', str(cpu_threads), '--split', 'system',
+                              '--feature-sets', 'composition,comp+cell,rich', '--output', '{JOB_DIR}/trees.json', *lim],
+                     'expect': ['trees.json', 'trees_predictions.npz'], 'env': env, 'timeout_s': 5 * 3600, 'est_minutes': 1 if smoke else (40 if t in BIG_TARGETS else 12)})
+        for sd in seeds:
+            jobs.append({'id': f'struct_{t}_sys_s{sd}', 'queue': 'gpu', 'group': 'structure', 'target': t, 'split': 'system',
+                         'argv': ['-m', 'gpu.structure.train_structure', '--device', device, '--target', t, '--split', 'system',
+                                  '--epochs', '3' if smoke else '100', '--seed', str(sd), '--runs-root', '{JOB_DIR}', '--tag', f'{t}_sys_s{sd}', *lim],
+                         'expect': ['structure/*/result.json', 'structure/*/predictions.npz'], 'resumable': True, 'resume_glob': 'structure/*/run_config.json',
+                         'timeout_s': (6 if t in BIG_TARGETS else 3) * 3600, 'est_minutes': 1 if smoke else STRUCT_EST_MIN[t]})
+    return jobs
+
+
 def build_plan(profile='standard', *, device='cuda', families=None, targets=None, tabular=True, structure=True, ram_gb=None,
-               cpu_threads=2, members=None):
+               cpu_threads=2, members=None, existing=None):
+    if profile in ('holdout', 'holdout-smoke'):
+        smoke = profile == 'holdout-smoke'
+        targets = targets or (['bulk_modulus_kv'] if smoke else STRUCT_ORDER_EARLY + STRUCT_ORDER_LATE)
+        small_ram = ram_gb is not None and ram_gb < 24
+        jobs = holdout_jobs(device=device, targets=targets, smoke=smoke, small_ram=small_ram, cpu_threads=cpu_threads, existing=existing)
+        return {'profile': profile, 'device': device, 'members': 0, 'jobs': jobs, 'grids': {},
+                'notes': ['Holdout profile: whole chemical systems are held out of training, and structure-feature trees are added on both splits.'
+                          + (' Smoke sizes: the numbers mean nothing.' if smoke else '')]}
     if profile not in ('smoke', 'standard'):
-        raise SystemExit(f'unknown profile {profile!r}; choose smoke or standard')
+        raise SystemExit(f'unknown profile {profile!r}; choose smoke, standard, holdout or holdout-smoke')
     smoke = profile == 'smoke'
     families = families or (['alloys', 'electrolytes', 'concrete'] if smoke else TAB_ORDER)
     targets = targets or (['bulk_modulus_kv'] if smoke else STRUCT_ORDER_EARLY + STRUCT_ORDER_LATE)

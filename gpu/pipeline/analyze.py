@@ -169,33 +169,51 @@ def analyze_tabular(pipe, family):
     return out
 
 
-def analyze_structure(pipe, target):
-    trees = _first(pipe, f'trees_{target}', 'trees_predictions.npz')
+TREE_KEYS = {'composition': 'pred_composition', 'comp+cell': 'pred_comp_cell', 'rich': 'pred_rich'}
+TREE_TITLES = {'pred_composition': 'trees on element fractions', 'pred_comp_cell': 'trees on fractions + cell volume',
+               'pred_rich': 'trees on element statistics + neighbour geometry'}
+
+
+def analyze_structure(pipe, target, split='formula'):
+    """Crystal networks against tree baselines on one split. split 'formula' (no formula on both sides) or 'system' (no chemical
+    system on both sides). The comparator is the tree feature set with the lowest VALIDATION error, so the opponent is picked
+    without looking at the test rows."""
+    pipe = Path(pipe)
+    if split == 'formula':
+        job_globs, tree_jobs = f'struct_{target}_s[0-9]*', [f'trees_{target}', f'trees_{target}_rich']
+    else:
+        job_globs, tree_jobs = f'struct_{target}_sys_s[0-9]*', [f'trees_{target}_sys']
+    tree_files = [p for p in (_first(pipe, j, 'trees_predictions.npz') for j in tree_jobs) if p is not None]
     run_dirs = []
-    for job in sorted(glob.glob(str(Path(pipe) / 'jobs' / f'struct_{target}_s*'))):
+    for job in sorted(glob.glob(str(pipe / 'jobs' / job_globs))):
         done = [r.parent for r in map(Path, sorted(glob.glob(str(Path(job) / 'structure' / '*' / 'result.json')))) if (r.parent / 'predictions.npz').exists()]
         if done:
             run_dirs.append(done[-1])  # one run per seed job: the latest complete one, never two copies of the same seed
-    if trees is None or not run_dirs:
-        return {'target': target, 'status': 'missing', 'reason': ('the tree baseline' if trees is None else 'the network runs') + ' did not finish'}
+    if not tree_files or not run_dirs:
+        return {'target': target, 'split': split, 'status': 'missing', 'reason': ('the tree baseline' if not tree_files else 'the network runs') + ' did not finish'}
     try:
-        cmp_out, lines = compare(run_dirs, trees)
+        cmp_out, lines = compare(run_dirs, tree_files)
     except ValueError as e:
-        return {'target': target, 'status': 'error', 'reason': str(e)}
+        return {'target': target, 'split': split, 'status': 'error', 'reason': str(e)}
     res = [json.loads((r / 'result.json').read_text()) for r in run_dirs]
-    tj = json.loads(trees.with_name('trees.json').read_text())
-    out = {'target': target, 'status': 'ok', 'label': res[0]['target'], 'n_runs': len(run_dirs), 'device': res[0]['device'],
-           'counts': res[0]['counts'], 'split_sizes': res[0]['split']['sizes'],
+    trees = {}
+    for f in tree_files:
+        for k, v in json.loads(f.with_name('trees.json').read_text())['feature_sets'].items():
+            trees[k] = {'selected': v['selected'], 'val': v['val'], 'test': v['test'], 'n_features': v.get('n_features')}
+    avail = [k for k in trees if TREE_KEYS.get(k) in cmp_out['comparisons']]
+    strongest = min(avail, key=lambda k: trees[k]['val']['mae'])
+    key = TREE_KEYS[strongest]
+    out = {'target': target, 'split': split, 'status': 'ok', 'label': res[0]['target'], 'n_runs': len(run_dirs), 'device': res[0]['device'],
+           'counts': res[0]['counts'], 'split_sizes': res[0]['split']['sizes'], 'split_groups': res[0]['split'].get('groups') or res[0]['split'].get('formulas'),
            'mean_baseline_test_mae': res[0]['baselines']['mean']['test']['mae'],
            'ridge_test_mae': res[0]['baselines']['ridge_element_fractions']['test']['mae'],
-           'network_runs': [{'seed': r['config']['seed'], 'best_epoch': r['cgcnn']['best_epoch_by_val'], 'test': r['cgcnn']['test'],
+           'network_runs': [{'seed': r['config']['seed'], 'best_epoch': r['cgcnn']['best_epoch_by_val'], 'test': r['cgcnn']['test'], 'val': r['cgcnn']['val'],
                              'train_seconds': r['timing']['train_seconds'], 'structures_per_second': r['timing']['train_structures_per_second']} for r in res],
-           'trees': {k: {'selected': v['selected'], 'test': v['test']} for k, v in tj['feature_sets'].items()},
+           'trees': trees, 'strongest_trees': strongest, 'strongest_trees_key': key,
            'compare': cmp_out, 'compare_lines': lines}
     try:
         from gpu.structure.compare_structure import align
-        tz, y, forms, preds = align(run_dirs, trees)
-        key = 'pred_comp_cell' if 'pred_comp_cell' in tz.files else [k for k in tz.files if k.startswith('pred_')][0]
+        tz, y, forms, preds = align(run_dirs, tree_files)
         out['fairness'] = fairness(y, forms, np.mean(preds, axis=0), preds, tz[key])
         out['fairness']['against'] = key
         if target == 'optb88vdw_bandgap':
@@ -206,15 +224,68 @@ def analyze_structure(pipe, target):
                                               'network_mae_nonzero': float(np.abs(net - y)[~zero].mean()), 'trees_mae_nonzero': float(np.abs(tr - y)[~zero].mean())}
     except Exception as e:  # the headline comparison above still stands
         out['fairness_error'] = repr(e)
-    for key, comps in cmp_out['comparisons'].items():
-        avg = [v for k, v in comps.items() if k.startswith('network average')] or list(comps.values())[:1]
-        out.setdefault('verdicts', {})[key] = {'diff': avg[0]['diff'], 'ci95': avg[0]['ci95'], 'verdict': verdict(*avg[0]['ci95'])}
+    for k, comps in cmp_out['comparisons'].items():
+        avg = [v for kk, v in comps.items() if kk.startswith('network average')] or list(comps.values())[:1]
+        out.setdefault('verdicts', {})[k] = {'diff': avg[0]['diff'], 'ci95': avg[0]['ci95'], 'verdict': verdict(*avg[0]['ci95'])}
     return out
+
+
+def _runs(pipe, pattern):
+    out = []
+    for job in sorted(glob.glob(str(Path(pipe) / 'jobs' / pattern))):
+        done = [r.parent for r in map(Path, sorted(glob.glob(str(Path(job) / 'structure' / '*' / 'result.json')))) if (r.parent / 'predictions.npz').exists()]
+        if done:
+            out.append(done[-1])
+    return out
+
+
+def analyze_evolution(pipe, plan):
+    """Generations of crystal networks (gpu/pipeline/evolve.py): the search curve, and the one fair test of whether the search helped:
+    the winner retrained on fresh seeds against the default settings trained the same way, on held-out chemical systems."""
+    from gpu.pipeline import evolve as E
+    from gpu.structure.compare_structure import align
+    cyc = plan.get('cycle')
+    if not cyc:
+        return None
+    res = []
+    for t in cyc['targets']:
+        arch = E.archive(pipe, plan['jobs'], t)
+        done = [x for x in arch if x['val_mae'] is not None]
+        default = next((x for x in done if E.gkey(x['genes']) == E.gkey(E.DEFAULT)), None)
+        best = E.best_of(arch)
+        e = {'target': t, 'n_individuals': len(arch), 'n_finished': len(done), 'generations': max([x['gen'] for x in arch] or [-1]) + 1,
+             'individuals': [{**x, 'changes': E.describe_genes(x['genes'])} for x in sorted(arch, key=lambda x: (x['gen'], x['id']))],
+             'best_by_generation': [min([x['val_mae'] for x in done if x['gen'] <= g] or [None]) for g in range(max([x['gen'] for x in arch] or [-1]) + 1)],
+             'default_val_mae': default['val_mae'] if default else None, 'best_val_mae': best['val_mae'] if best else None,
+             'best_id': best['id'] if best else None, 'best_changes': E.describe_genes(best['genes']) if best else None,
+             'default_won': bool(best and E.gkey(best['genes']) == E.gkey(E.DEFAULT)), 'status': 'ok' if done else 'missing'}
+        finals = _runs(pipe, f'evof_{t}_s[0-9]*')
+        defaults = _runs(pipe, f'struct_{t}_sys_s[0-9]*')
+        tree_file = _first(pipe, f'trees_{t}_sys', 'trees_predictions.npz')
+        if finals and defaults and tree_file is not None:
+            try:
+                tz, y, grp, evo = align(finals, [tree_file])
+                _, y2, grp2, dflt = align(defaults, [tree_file])
+                tj = json.loads(tree_file.with_name('trees.json').read_text())['feature_sets']
+                strongest = min((k for k in tj if TREE_KEYS.get(k) in tz.files), key=lambda k: tj[k]['val']['mae'])
+                tr = tz[TREE_KEYS[strongest]]
+                ev_avg, df_avg = np.mean(evo, axis=0), np.mean(dflt, axis=0)
+                cmpd = _cmp(ev_avg, df_avg, y, grp)
+                e['finalists'] = {'n_evolved_runs': len(evo), 'n_default_runs': len(dflt), 'strongest_trees': strongest,
+                                  'evolved_single_mae_mean': float(np.mean([np.abs(p - y).mean() for p in evo])), 'evolved_average_mae': float(np.abs(ev_avg - y).mean()),
+                                  'default_single_mae_mean': float(np.mean([np.abs(p - y).mean() for p in dflt])), 'default_average_mae': float(np.abs(df_avg - y).mean()),
+                                  'trees_mae': float(np.abs(tr - y).mean()),
+                                  'evolved_vs_default': {**cmpd, 'verdict': 'evolved clearly better' if cmpd['ci95'][1] < 0 else 'default clearly better' if cmpd['ci95'][0] > 0 else 'no clear difference'},
+                                  'evolved_vs_trees': _cmp(ev_avg, tr, y, grp), 'default_vs_trees': _cmp(df_avg, tr, y, grp)}
+            except Exception as ex:  # noqa: BLE001
+                e['finalists_error'] = repr(ex)
+        res.append(e)
+    return res
 
 
 def analyze_all(pipe, plan):
     fams = [j['family'] for j in plan['jobs'] if j['id'].startswith('tab_')]
-    targets = sorted({j['target'] for j in plan['jobs'] if j['id'].startswith('struct_')}, key=lambda t: [j['target'] for j in plan['jobs'] if j.get('target')].index(t))
+    targets = sorted({j['target'] for j in plan['jobs'] if j['id'].startswith('struct_') and j.get('split') != 'system'}, key=lambda t: [j['target'] for j in plan['jobs'] if j.get('target')].index(t))
     res = {'tabular': [], 'structure': []}
     for f in fams:
         try:
@@ -226,4 +297,16 @@ def analyze_all(pipe, plan):
             res['structure'].append(analyze_structure(pipe, t))
         except Exception as e:
             res['structure'].append({'target': t, 'status': 'error', 'reason': repr(e)})
+    sys_targets = sorted({j['target'] for j in plan['jobs'] if j['id'].startswith('struct_') and j.get('split') == 'system'},
+                         key=lambda t: [j['target'] for j in plan['jobs'] if j.get('target')].index(t))
+    res['structure_system'] = []
+    try:
+        res['evolution'] = analyze_evolution(pipe, plan)
+    except Exception as e:  # noqa: BLE001
+        res['evolution'] = [{'status': 'error', 'target': '-', 'reason': repr(e)}]
+    for t in sys_targets:
+        try:
+            res['structure_system'].append(analyze_structure(pipe, t, 'system'))
+        except Exception as e:
+            res['structure_system'].append({'target': t, 'split': 'system', 'status': 'error', 'reason': repr(e)})
     return res

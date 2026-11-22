@@ -19,6 +19,7 @@ telemetry.csv, logs/<job>.log, jobs/<job>/ (everything a job writes). Nothing he
 Stopping: create a file named STOP (finish the running job, start no more) or STOP_NOW (terminate the running jobs; they
 can be resumed). Ctrl+C acts like STOP_NOW. Resume later with the same folder: finished jobs are skipped.
 """
+import collections
 import csv
 import ctypes
 import glob
@@ -130,12 +131,12 @@ def telemetry_summary(rows):
 
 
 class Orchestrator:
-    def __init__(self, pipe_dir, jobs, *, budget_hours=None, cpu_workers=1, telemetry=None, hot_c=92.0, warm_c=82.0, cool_c=75.0,
+    def __init__(self, pipe_dir, jobs, *, budget_hours=None, cpu_workers=1, gpu_slots=1, telemetry=None, hot_c=92.0, warm_c=82.0, cool_c=75.0,
                  poll=2.0, max_attempts=2, retry_failed=False, log=None, status_every=30.0):
         self.pipe = Path(pipe_dir)
         self.jobs = {j['id']: j for j in jobs}
         self.order = [j['id'] for j in jobs]
-        self.budget_hours, self.cpu_workers = budget_hours, cpu_workers
+        self.budget_hours, self.cpu_workers, self.gpu_slots = budget_hours, cpu_workers, max(1, int(gpu_slots))
         self.tel, self.hot_c, self.warm_c, self.cool_c = telemetry, hot_c, warm_c, cool_c
         self.poll, self.max_attempts, self.retry_failed, self.status_every = poll, max_attempts, retry_failed, status_every
         self.lock = threading.Lock()
@@ -364,8 +365,13 @@ class Orchestrator:
                 return
 
     # ---- queues ------------------------------------------------------------------------------
-    def _worker(self, ids):
-        for jid in ids:
+    def _worker(self, dq):
+        """Takes the next job from a shared queue until it is empty, so workers share the load whatever the job lengths."""
+        while True:
+            try:
+                jid = dq.popleft()
+            except IndexError:
+                return
             try:
                 self.run_job(jid)
             except Exception as e:  # a bug in the runner must not kill the night
@@ -374,16 +380,19 @@ class Orchestrator:
                 self.event(jid, f'runner error: {e!r}')
                 self.save()
 
-    def _queues(self):
+    def _pools(self):
+        """[(queue, number of workers)]: GPU jobs share `gpu_slots` workers, CPU jobs share `cpu_workers` workers."""
         todo = [j for j in self.order if self.state['jobs'][j]['status'] == PENDING]
         if self.cpu_workers <= 0:
-            return [todo]
+            return [(collections.deque(todo), 1)] if todo else []
         gpu = [j for j in todo if self.jobs[j]['queue'] == 'gpu']
         cpu = [j for j in todo if self.jobs[j]['queue'] != 'gpu']
-        qs = [gpu]
-        for w in range(self.cpu_workers):  # CPU jobs are dealt out round-robin
-            qs.append(cpu[w::self.cpu_workers])
-        return [q for q in qs if q]
+        pools = []
+        if gpu:
+            pools.append((collections.deque(gpu), min(self.gpu_slots, len(gpu))))
+        if cpu:
+            pools.append((collections.deque(cpu), min(self.cpu_workers, len(cpu))))
+        return pools
 
     def write_status(self):
         c = self._counts()
@@ -399,9 +408,9 @@ class Orchestrator:
         atomic_write(self.pipe / 'HEARTBEAT', now_iso())
 
     def run(self):
-        queues = self._queues()
-        self.say(f'starting {sum(len(q) for q in queues)} job(s) in {len(queues)} queue(s)')
-        threads = [threading.Thread(target=self._worker, args=(q,), daemon=True) for q in queues]
+        pools = self._pools()
+        self.say(f'starting {sum(len(q) for q, _ in pools)} job(s) in {len(pools)} queue(s), {sum(n for _, n in pools)} worker(s)')
+        threads = [threading.Thread(target=self._worker, args=(q,), daemon=True) for q, n in pools for _ in range(n)]
         interrupted = False
         with KeepAwake():
             for t in threads:

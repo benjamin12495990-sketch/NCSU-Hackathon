@@ -86,9 +86,28 @@ def load_records(a):
     return kept, source, counts
 
 
-def split_of(formula):
-    h = int(hashlib.sha256(f'split-v1:{formula}'.encode()).hexdigest(), 16) % 100
+SPLIT_MODES = ('formula', 'system')
+SPLIT_RULES = {'formula': "sha256('split-v1:' + reduced formula) % 100: <80 train, <90 val, else test",
+               'system': "sha256('split-system-v1:' + chemical system, i.e. the sorted set of elements joined by '-') % 100: <80 train, <90 val, else test"}
+
+
+def chemical_system(elements):
+    return '-'.join(sorted(set(elements)))
+
+
+def group_of(rec, mode='formula'):
+    """The unit that is never split across train / val / test: the reduced formula, or the whole chemical system (Fe-O, Li-Fe-P-O, ...)."""
+    return rec['formula'] if mode == 'formula' else chemical_system(rec['atoms']['elements'])
+
+
+def split_of(key, mode='formula'):
+    salt = 'split-v1:' if mode == 'formula' else 'split-system-v1:'
+    h = int(hashlib.sha256(f'{salt}{key}'.encode()).hexdigest(), 16) % 100
     return 'train' if h < 80 else 'val' if h < 90 else 'test'
+
+
+def parts_of(recs, mode='formula'):
+    return np.array([split_of(group_of(r, mode), mode) for r in recs])
 
 
 def element_fractions(atoms):
@@ -129,12 +148,13 @@ def to_device(b, device):
     return {k: (torch.as_tensor(v, device=device) if k != 'n_graphs' else v) for k, v in b.items()}
 
 
-def save_predictions(path, recs, idx, y, preds):
-    """predictions.npz: for val and test, the record ids, reduced formulas, true and predicted log10 values."""
+def save_predictions(path, recs, idx, y, preds, mode='formula'):
+    """predictions.npz: for val and test, the record ids, reduced formulas, split groups (formula or chemical system), true and predicted values."""
     arrays = {}
     for p in ('val', 'test'):
         arrays[f'{p}_jid'] = np.array([recs[i]['jid'] for i in idx[p]])
         arrays[f'{p}_formula'] = np.array([recs[i]['formula'] for i in idx[p]])
+        arrays[f'{p}_group'] = np.array([group_of(recs[i], mode) for i in idx[p]])
         arrays[f'{p}_y'] = np.asarray(y[idx[p]])
         arrays[f'{p}_pred'] = np.asarray(preds[p])
     np.savez_compressed(path, **arrays)
@@ -158,6 +178,7 @@ def main(argv=None):
     ap.add_argument('--synthetic', type=int, default=0, help='use N synthetic crystals instead of JARVIS (tests)')
     ap.add_argument('--limit', type=int, default=0, help='use the first N kept records (in SHA-256-of-jid order)')
     ap.add_argument('--target', default=TARGET, choices=sorted(TARGETS), help='JARVIS-DFT property to predict (default bulk_modulus_kv)')
+    ap.add_argument('--split', default='formula', choices=SPLIT_MODES, help='formula: no reduced formula on both sides (default); system: no chemical system on both sides (a harder test)')
     ap.add_argument('--device', default='auto')
     ap.add_argument('--epochs', type=int, default=60)
     ap.add_argument('--batch', type=int, default=64)
@@ -184,7 +205,7 @@ def main(argv=None):
     t_start = time.perf_counter()
     recs, source, counts = load_records(a)
     t_load = time.perf_counter() - t_start
-    parts = np.array([split_of(r['formula']) for r in recs])
+    parts = parts_of(recs, a.split)
     split_list = [[r['jid'], p] for r, p in zip(recs, parts)]
     split_sha = sha256_bytes(json.dumps(split_list))
     idx = {p: np.where(parts == p)[0] for p in ('train', 'val', 'test')}
@@ -193,6 +214,8 @@ def main(argv=None):
     data_sha = sha256_bytes(json.dumps(ident_src, sort_keys=True), split_sha, y.tobytes())
     cfg = {k: getattr(a, k) for k in ('target', 'synthetic', 'limit', 'epochs', 'batch', 'lr', 'weight_decay', 'atom_features', 'conv',
                                       'hidden', 'cutoff', 'max_neighbors', 'seed', 'amp')}
+    if a.split != 'formula':
+        cfg['split'] = a.split  # left out for the default so older runs keep their identity
     ident = sha256_bytes(json.dumps(cfg, sort_keys=True), data_sha)
     print(f'records {counts["records"]}, missing/non-numeric {counts["missing_or_non_numeric"]}, non-positive {counts["non_positive"]}, '
           f'kept {counts["kept"]}, used {counts["used"]} | train/val/test {len(idx["train"])}/{len(idx["val"])}/{len(idx["test"])} '
@@ -208,7 +231,7 @@ def main(argv=None):
         run = new_run_dir(Path(a.runs_root) / 'structure', a.tag)
         write_json_new(run / 'run_config.json', {'ident': ident, 'config': cfg, 'data_sha256': data_sha, 'source': source,
                                                  'counts': counts, 'split_sha256': split_sha, 'argv': sys.argv, 'git': git_info(), 'created': now_iso()})
-        write_json_new(run / 'split.json', {'rule': "sha256('split-v1:' + reduced formula) % 100: <80 train, <90 val, else test",
+        write_json_new(run / 'split.json', {'rule': SPLIT_RULES[a.split],
                                             'sha256_of_list': split_sha, 'jid_part': split_list})
 
     # baselines
@@ -305,7 +328,8 @@ def main(argv=None):
               'argv': sys.argv, 'config': cfg, 'source': source, 'counts': counts,
               'target': TARGETS[a.target]['label'] + ' (DFT-calculated)' if not a.synthetic else 'synthetic (pipeline check)',
               'split': {'sha256': split_sha, 'sizes': {p: int(len(v)) for p, v in idx.items()},
-                        'formulas': {p: int(len({recs[i]['formula'] for i in v})) for p, v in idx.items()}},
+                        'mode': a.split, 'formulas': {p: int(len({recs[i]['formula'] for i in v})) for p, v in idx.items()},
+                        'groups': {p: int(len({group_of(recs[i], a.split) for i in v})) for p, v in idx.items()}},
               'graphs': {'crystals': len(graphs), 'edges': n_edges, 'build_seconds': t_graph, 'from_cache': cached,
                          'cutoff': a.cutoff, 'max_neighbors': a.max_neighbors},
               'baselines': base, 'cgcnn': {'best_epoch_by_val': best_epoch, **res_model,
@@ -317,7 +341,7 @@ def main(argv=None):
               'history': history}
     write_json_new(run / 'result.json', result)
     torch.save(best_state, run / 'best_model.pt')
-    save_predictions(run / 'predictions.npz', recs, idx, y, preds)
+    save_predictions(run / 'predictions.npz', recs, idx, y, preds, a.split)
     print(f'\n{TARGETS[a.target]["unit"]:<21s} val MAE   test MAE   test R2')
     print(f'mean baseline         {base["mean"]["val"]["mae"]:.4f}    {base["mean"]["test"]["mae"]:.4f}     {base["mean"]["test"]["r2"]:.3f}')
     rb = base['ridge_element_fractions']

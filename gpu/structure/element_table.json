@@ -1,0 +1,1004 @@
+{
+ "source": "mendeleev 1.3.0: atomic_weight, electronegativity_pauling(), covalent_radius_cordero, group_id, period, nvalence()",
+ "props": [
+  "Z",
+  "period",
+  "group",
+  "electronegativity",
+  "mass",
+  "covalent_radius",
+  "valence_electrons"
+ ],
+ "filled": {
+  "He": [
+   "electronegativity"
+  ],
+  "Ne": [
+   "electronegativity"
+  ],
+  "Ar": [
+   "electronegativity"
+  ],
+  "Kr": [
+   "electronegativity"
+  ],
+  "Pm": [
+   "electronegativity"
+  ],
+  "Eu": [
+   "electronegativity"
+  ],
+  "Tb": [
+   "electronegativity"
+  ],
+  "Yb": [
+   "electronegativity"
+  ],
+  "Rn": [
+   "electronegativity"
+  ],
+  "Am": [
+   "electronegativity"
+  ],
+  "Cm": [
+   "electronegativity"
+  ],
+  "Bk": [
+   "electronegativity",
+   "covalent_radius"
+  ],
+  "Cf": [
+   "electronegativity",
+   "covalent_radius"
+  ],
+  "Es": [
+   "electronegativity",
+   "covalent_radius"
+  ],
+  "Fm": [
+   "electronegativity",
+   "covalent_radius"
+  ],
+  "Md": [
+   "electronegativity",
+   "covalent_radius"
+  ],
+  "No": [
+   "electronegativity",
+   "covalent_radius"
+  ],
+  "Lr": [
+   "electronegativity",
+   "covalent_radius"
+  ]
+ },
+ "elements": {
+  "H": {
+   "Z": 1,
+   "period": 1,
+   "group": 1,
+   "electronegativity": 2.2,
+   "mass": 1.008,
+   "covalent_radius": 31.0,
+   "valence_electrons": 1.0
+  },
+  "He": {
+   "Z": 2,
+   "period": 1,
+   "group": 18,
+   "electronegativity": 1.7486,
+   "mass": 4.002602,
+   "covalent_radius": 28.000000000000004,
+   "valence_electrons": 2.0
+  },
+  "Li": {
+   "Z": 3,
+   "period": 2,
+   "group": 1,
+   "electronegativity": 0.98,
+   "mass": 6.94,
+   "covalent_radius": 128.0,
+   "valence_electrons": 1.0
+  },
+  "Be": {
+   "Z": 4,
+   "period": 2,
+   "group": 2,
+   "electronegativity": 1.57,
+   "mass": 9.0121831,
+   "covalent_radius": 96.0,
+   "valence_electrons": 2.0
+  },
+  "B": {
+   "Z": 5,
+   "period": 2,
+   "group": 13,
+   "electronegativity": 2.04,
+   "mass": 10.81,
+   "covalent_radius": 84.0,
+   "valence_electrons": 3.0
+  },
+  "C": {
+   "Z": 6,
+   "period": 2,
+   "group": 14,
+   "electronegativity": 2.55,
+   "mass": 12.011,
+   "covalent_radius": 73.0,
+   "valence_electrons": 4.0
+  },
+  "N": {
+   "Z": 7,
+   "period": 2,
+   "group": 15,
+   "electronegativity": 3.04,
+   "mass": 14.007,
+   "covalent_radius": 71.0,
+   "valence_electrons": 5.0
+  },
+  "O": {
+   "Z": 8,
+   "period": 2,
+   "group": 16,
+   "electronegativity": 3.44,
+   "mass": 15.999,
+   "covalent_radius": 66.0,
+   "valence_electrons": 6.0
+  },
+  "F": {
+   "Z": 9,
+   "period": 2,
+   "group": 17,
+   "electronegativity": 3.98,
+   "mass": 18.998403163,
+   "covalent_radius": 56.99999999999999,
+   "valence_electrons": 7.0
+  },
+  "Ne": {
+   "Z": 10,
+   "period": 2,
+   "group": 18,
+   "electronegativity": 1.7486,
+   "mass": 20.1797,
+   "covalent_radius": 57.99999999999999,
+   "valence_electrons": 8.0
+  },
+  "Na": {
+   "Z": 11,
+   "period": 3,
+   "group": 1,
+   "electronegativity": 0.93,
+   "mass": 22.98976928,
+   "covalent_radius": 166.0,
+   "valence_electrons": 1.0
+  },
+  "Mg": {
+   "Z": 12,
+   "period": 3,
+   "group": 2,
+   "electronegativity": 1.31,
+   "mass": 24.305,
+   "covalent_radius": 141.0,
+   "valence_electrons": 2.0
+  },
+  "Al": {
+   "Z": 13,
+   "period": 3,
+   "group": 13,
+   "electronegativity": 1.61,
+   "mass": 26.9815385,
+   "covalent_radius": 121.0,
+   "valence_electrons": 3.0
+  },
+  "Si": {
+   "Z": 14,
+   "period": 3,
+   "group": 14,
+   "electronegativity": 1.9,
+   "mass": 28.085,
+   "covalent_radius": 111.00000000000001,
+   "valence_electrons": 4.0
+  },
+  "P": {
+   "Z": 15,
+   "period": 3,
+   "group": 15,
+   "electronegativity": 2.19,
+   "mass": 30.973761998,
+   "covalent_radius": 107.0,
+   "valence_electrons": 5.0
+  },
+  "S": {
+   "Z": 16,
+   "period": 3,
+   "group": 16,
+   "electronegativity": 2.58,
+   "mass": 32.06,
+   "covalent_radius": 105.0,
+   "valence_electrons": 6.0
+  },
+  "Cl": {
+   "Z": 17,
+   "period": 3,
+   "group": 17,
+   "electronegativity": 3.16,
+   "mass": 35.45,
+   "covalent_radius": 102.0,
+   "valence_electrons": 7.0
+  },
+  "Ar": {
+   "Z": 18,
+   "period": 3,
+   "group": 18,
+   "electronegativity": 1.7486,
+   "mass": 39.948,
+   "covalent_radius": 106.0,
+   "valence_electrons": 8.0
+  },
+  "K": {
+   "Z": 19,
+   "period": 4,
+   "group": 1,
+   "electronegativity": 0.82,
+   "mass": 39.0983,
+   "covalent_radius": 202.99999999999997,
+   "valence_electrons": 1.0
+  },
+  "Ca": {
+   "Z": 20,
+   "period": 4,
+   "group": 2,
+   "electronegativity": 1.0,
+   "mass": 40.078,
+   "covalent_radius": 176.0,
+   "valence_electrons": 2.0
+  },
+  "Sc": {
+   "Z": 21,
+   "period": 4,
+   "group": 3,
+   "electronegativity": 1.36,
+   "mass": 44.955908,
+   "covalent_radius": 170.0,
+   "valence_electrons": 3.0
+  },
+  "Ti": {
+   "Z": 22,
+   "period": 4,
+   "group": 4,
+   "electronegativity": 1.54,
+   "mass": 47.867,
+   "covalent_radius": 160.0,
+   "valence_electrons": 4.0
+  },
+  "V": {
+   "Z": 23,
+   "period": 4,
+   "group": 5,
+   "electronegativity": 1.63,
+   "mass": 50.9415,
+   "covalent_radius": 153.0,
+   "valence_electrons": 5.0
+  },
+  "Cr": {
+   "Z": 24,
+   "period": 4,
+   "group": 6,
+   "electronegativity": 1.66,
+   "mass": 51.9961,
+   "covalent_radius": 139.0,
+   "valence_electrons": 6.0
+  },
+  "Mn": {
+   "Z": 25,
+   "period": 4,
+   "group": 7,
+   "electronegativity": 1.55,
+   "mass": 54.938044,
+   "covalent_radius": 150.0,
+   "valence_electrons": 7.0
+  },
+  "Fe": {
+   "Z": 26,
+   "period": 4,
+   "group": 8,
+   "electronegativity": 1.83,
+   "mass": 55.845,
+   "covalent_radius": 142.0,
+   "valence_electrons": 8.0
+  },
+  "Co": {
+   "Z": 27,
+   "period": 4,
+   "group": 9,
+   "electronegativity": 1.88,
+   "mass": 58.933194,
+   "covalent_radius": 138.0,
+   "valence_electrons": 9.0
+  },
+  "Ni": {
+   "Z": 28,
+   "period": 4,
+   "group": 10,
+   "electronegativity": 1.91,
+   "mass": 58.6934,
+   "covalent_radius": 124.0,
+   "valence_electrons": 10.0
+  },
+  "Cu": {
+   "Z": 29,
+   "period": 4,
+   "group": 11,
+   "electronegativity": 1.9,
+   "mass": 63.546,
+   "covalent_radius": 132.0,
+   "valence_electrons": 11.0
+  },
+  "Zn": {
+   "Z": 30,
+   "period": 4,
+   "group": 12,
+   "electronegativity": 1.65,
+   "mass": 65.38,
+   "covalent_radius": 122.0,
+   "valence_electrons": 12.0
+  },
+  "Ga": {
+   "Z": 31,
+   "period": 4,
+   "group": 13,
+   "electronegativity": 1.81,
+   "mass": 69.723,
+   "covalent_radius": 122.0,
+   "valence_electrons": 3.0
+  },
+  "Ge": {
+   "Z": 32,
+   "period": 4,
+   "group": 14,
+   "electronegativity": 2.01,
+   "mass": 72.63,
+   "covalent_radius": 120.0,
+   "valence_electrons": 4.0
+  },
+  "As": {
+   "Z": 33,
+   "period": 4,
+   "group": 15,
+   "electronegativity": 2.18,
+   "mass": 74.921595,
+   "covalent_radius": 119.0,
+   "valence_electrons": 5.0
+  },
+  "Se": {
+   "Z": 34,
+   "period": 4,
+   "group": 16,
+   "electronegativity": 2.55,
+   "mass": 78.971,
+   "covalent_radius": 120.0,
+   "valence_electrons": 6.0
+  },
+  "Br": {
+   "Z": 35,
+   "period": 4,
+   "group": 17,
+   "electronegativity": 2.96,
+   "mass": 79.904,
+   "covalent_radius": 120.0,
+   "valence_electrons": 7.0
+  },
+  "Kr": {
+   "Z": 36,
+   "period": 4,
+   "group": 18,
+   "electronegativity": 1.7486,
+   "mass": 83.798,
+   "covalent_radius": 115.99999999999999,
+   "valence_electrons": 8.0
+  },
+  "Rb": {
+   "Z": 37,
+   "period": 5,
+   "group": 1,
+   "electronegativity": 0.82,
+   "mass": 85.4678,
+   "covalent_radius": 220.00000000000003,
+   "valence_electrons": 1.0
+  },
+  "Sr": {
+   "Z": 38,
+   "period": 5,
+   "group": 2,
+   "electronegativity": 0.95,
+   "mass": 87.62,
+   "covalent_radius": 195.0,
+   "valence_electrons": 2.0
+  },
+  "Y": {
+   "Z": 39,
+   "period": 5,
+   "group": 3,
+   "electronegativity": 1.22,
+   "mass": 88.90584,
+   "covalent_radius": 190.0,
+   "valence_electrons": 3.0
+  },
+  "Zr": {
+   "Z": 40,
+   "period": 5,
+   "group": 4,
+   "electronegativity": 1.33,
+   "mass": 91.224,
+   "covalent_radius": 175.0,
+   "valence_electrons": 4.0
+  },
+  "Nb": {
+   "Z": 41,
+   "period": 5,
+   "group": 5,
+   "electronegativity": 1.6,
+   "mass": 92.90637,
+   "covalent_radius": 164.0,
+   "valence_electrons": 5.0
+  },
+  "Mo": {
+   "Z": 42,
+   "period": 5,
+   "group": 6,
+   "electronegativity": 2.16,
+   "mass": 95.95,
+   "covalent_radius": 154.0,
+   "valence_electrons": 6.0
+  },
+  "Tc": {
+   "Z": 43,
+   "period": 5,
+   "group": 7,
+   "electronegativity": 2.1,
+   "mass": 97.90721,
+   "covalent_radius": 147.0,
+   "valence_electrons": 7.0
+  },
+  "Ru": {
+   "Z": 44,
+   "period": 5,
+   "group": 8,
+   "electronegativity": 2.2,
+   "mass": 101.07,
+   "covalent_radius": 146.0,
+   "valence_electrons": 8.0
+  },
+  "Rh": {
+   "Z": 45,
+   "period": 5,
+   "group": 9,
+   "electronegativity": 2.28,
+   "mass": 102.9055,
+   "covalent_radius": 142.0,
+   "valence_electrons": 9.0
+  },
+  "Pd": {
+   "Z": 46,
+   "period": 5,
+   "group": 10,
+   "electronegativity": 2.2,
+   "mass": 106.42,
+   "covalent_radius": 139.0,
+   "valence_electrons": 10.0
+  },
+  "Ag": {
+   "Z": 47,
+   "period": 5,
+   "group": 11,
+   "electronegativity": 1.93,
+   "mass": 107.8682,
+   "covalent_radius": 145.0,
+   "valence_electrons": 11.0
+  },
+  "Cd": {
+   "Z": 48,
+   "period": 5,
+   "group": 12,
+   "electronegativity": 1.69,
+   "mass": 112.414,
+   "covalent_radius": 144.0,
+   "valence_electrons": 12.0
+  },
+  "In": {
+   "Z": 49,
+   "period": 5,
+   "group": 13,
+   "electronegativity": 1.78,
+   "mass": 114.818,
+   "covalent_radius": 142.0,
+   "valence_electrons": 3.0
+  },
+  "Sn": {
+   "Z": 50,
+   "period": 5,
+   "group": 14,
+   "electronegativity": 1.96,
+   "mass": 118.71,
+   "covalent_radius": 139.0,
+   "valence_electrons": 4.0
+  },
+  "Sb": {
+   "Z": 51,
+   "period": 5,
+   "group": 15,
+   "electronegativity": 2.05,
+   "mass": 121.76,
+   "covalent_radius": 139.0,
+   "valence_electrons": 5.0
+  },
+  "Te": {
+   "Z": 52,
+   "period": 5,
+   "group": 16,
+   "electronegativity": 2.1,
+   "mass": 127.6,
+   "covalent_radius": 138.0,
+   "valence_electrons": 6.0
+  },
+  "I": {
+   "Z": 53,
+   "period": 5,
+   "group": 17,
+   "electronegativity": 2.66,
+   "mass": 126.90447,
+   "covalent_radius": 139.0,
+   "valence_electrons": 7.0
+  },
+  "Xe": {
+   "Z": 54,
+   "period": 5,
+   "group": 18,
+   "electronegativity": 2.6,
+   "mass": 131.293,
+   "covalent_radius": 140.0,
+   "valence_electrons": 8.0
+  },
+  "Cs": {
+   "Z": 55,
+   "period": 6,
+   "group": 1,
+   "electronegativity": 0.79,
+   "mass": 132.90545196,
+   "covalent_radius": 244.0,
+   "valence_electrons": 1.0
+  },
+  "Ba": {
+   "Z": 56,
+   "period": 6,
+   "group": 2,
+   "electronegativity": 0.89,
+   "mass": 137.327,
+   "covalent_radius": 215.0,
+   "valence_electrons": 2.0
+  },
+  "La": {
+   "Z": 57,
+   "period": 6,
+   "group": 3,
+   "electronegativity": 1.1,
+   "mass": 138.90547,
+   "covalent_radius": 206.99999999999997,
+   "valence_electrons": 3.0
+  },
+  "Ce": {
+   "Z": 58,
+   "period": 6,
+   "group": 3,
+   "electronegativity": 1.12,
+   "mass": 140.116,
+   "covalent_radius": 204.0,
+   "valence_electrons": 4.0
+  },
+  "Pr": {
+   "Z": 59,
+   "period": 6,
+   "group": 3,
+   "electronegativity": 1.13,
+   "mass": 140.90766,
+   "covalent_radius": 202.99999999999997,
+   "valence_electrons": 5.0
+  },
+  "Nd": {
+   "Z": 60,
+   "period": 6,
+   "group": 3,
+   "electronegativity": 1.14,
+   "mass": 144.242,
+   "covalent_radius": 200.99999999999997,
+   "valence_electrons": 6.0
+  },
+  "Pm": {
+   "Z": 61,
+   "period": 6,
+   "group": 3,
+   "electronegativity": 1.7486,
+   "mass": 144.91276,
+   "covalent_radius": 199.0,
+   "valence_electrons": 7.0
+  },
+  "Sm": {
+   "Z": 62,
+   "period": 6,
+   "group": 3,
+   "electronegativity": 1.17,
+   "mass": 150.36,
+   "covalent_radius": 198.0,
+   "valence_electrons": 8.0
+  },
+  "Eu": {
+   "Z": 63,
+   "period": 6,
+   "group": 3,
+   "electronegativity": 1.7486,
+   "mass": 151.964,
+   "covalent_radius": 198.0,
+   "valence_electrons": 9.0
+  },
+  "Gd": {
+   "Z": 64,
+   "period": 6,
+   "group": 3,
+   "electronegativity": 1.2,
+   "mass": 157.25,
+   "covalent_radius": 196.0,
+   "valence_electrons": 10.0
+  },
+  "Tb": {
+   "Z": 65,
+   "period": 6,
+   "group": 3,
+   "electronegativity": 1.7486,
+   "mass": 158.92535,
+   "covalent_radius": 194.0,
+   "valence_electrons": 11.0
+  },
+  "Dy": {
+   "Z": 66,
+   "period": 6,
+   "group": 3,
+   "electronegativity": 1.22,
+   "mass": 162.5,
+   "covalent_radius": 192.0,
+   "valence_electrons": 12.0
+  },
+  "Ho": {
+   "Z": 67,
+   "period": 6,
+   "group": 3,
+   "electronegativity": 1.23,
+   "mass": 164.93033,
+   "covalent_radius": 192.0,
+   "valence_electrons": 13.0
+  },
+  "Er": {
+   "Z": 68,
+   "period": 6,
+   "group": 3,
+   "electronegativity": 1.24,
+   "mass": 167.259,
+   "covalent_radius": 189.0,
+   "valence_electrons": 14.0
+  },
+  "Tm": {
+   "Z": 69,
+   "period": 6,
+   "group": 3,
+   "electronegativity": 1.25,
+   "mass": 168.93422,
+   "covalent_radius": 190.0,
+   "valence_electrons": 15.0
+  },
+  "Yb": {
+   "Z": 70,
+   "period": 6,
+   "group": 3,
+   "electronegativity": 1.7486,
+   "mass": 173.045,
+   "covalent_radius": 187.0,
+   "valence_electrons": 16.0
+  },
+  "Lu": {
+   "Z": 71,
+   "period": 6,
+   "group": 3,
+   "electronegativity": 1.0,
+   "mass": 174.9668,
+   "covalent_radius": 187.0,
+   "valence_electrons": 17.0
+  },
+  "Hf": {
+   "Z": 72,
+   "period": 6,
+   "group": 4,
+   "electronegativity": 1.3,
+   "mass": 178.49,
+   "covalent_radius": 175.0,
+   "valence_electrons": 4.0
+  },
+  "Ta": {
+   "Z": 73,
+   "period": 6,
+   "group": 5,
+   "electronegativity": 1.5,
+   "mass": 180.94788,
+   "covalent_radius": 170.0,
+   "valence_electrons": 5.0
+  },
+  "W": {
+   "Z": 74,
+   "period": 6,
+   "group": 6,
+   "electronegativity": 1.7,
+   "mass": 183.84,
+   "covalent_radius": 162.0,
+   "valence_electrons": 6.0
+  },
+  "Re": {
+   "Z": 75,
+   "period": 6,
+   "group": 7,
+   "electronegativity": 1.9,
+   "mass": 186.207,
+   "covalent_radius": 151.0,
+   "valence_electrons": 7.0
+  },
+  "Os": {
+   "Z": 76,
+   "period": 6,
+   "group": 8,
+   "electronegativity": 2.2,
+   "mass": 190.23,
+   "covalent_radius": 144.0,
+   "valence_electrons": 8.0
+  },
+  "Ir": {
+   "Z": 77,
+   "period": 6,
+   "group": 9,
+   "electronegativity": 2.2,
+   "mass": 192.217,
+   "covalent_radius": 141.0,
+   "valence_electrons": 9.0
+  },
+  "Pt": {
+   "Z": 78,
+   "period": 6,
+   "group": 10,
+   "electronegativity": 2.2,
+   "mass": 195.084,
+   "covalent_radius": 136.0,
+   "valence_electrons": 10.0
+  },
+  "Au": {
+   "Z": 79,
+   "period": 6,
+   "group": 11,
+   "electronegativity": 2.4,
+   "mass": 196.966569,
+   "covalent_radius": 136.0,
+   "valence_electrons": 11.0
+  },
+  "Hg": {
+   "Z": 80,
+   "period": 6,
+   "group": 12,
+   "electronegativity": 1.9,
+   "mass": 200.592,
+   "covalent_radius": 132.0,
+   "valence_electrons": 12.0
+  },
+  "Tl": {
+   "Z": 81,
+   "period": 6,
+   "group": 13,
+   "electronegativity": 1.8,
+   "mass": 204.38,
+   "covalent_radius": 145.0,
+   "valence_electrons": 3.0
+  },
+  "Pb": {
+   "Z": 82,
+   "period": 6,
+   "group": 14,
+   "electronegativity": 1.8,
+   "mass": 207.2,
+   "covalent_radius": 146.0,
+   "valence_electrons": 4.0
+  },
+  "Bi": {
+   "Z": 83,
+   "period": 6,
+   "group": 15,
+   "electronegativity": 1.9,
+   "mass": 208.9804,
+   "covalent_radius": 148.0,
+   "valence_electrons": 5.0
+  },
+  "Po": {
+   "Z": 84,
+   "period": 6,
+   "group": 16,
+   "electronegativity": 2.0,
+   "mass": 209.0,
+   "covalent_radius": 140.0,
+   "valence_electrons": 6.0
+  },
+  "At": {
+   "Z": 85,
+   "period": 6,
+   "group": 17,
+   "electronegativity": 2.2,
+   "mass": 210.0,
+   "covalent_radius": 150.0,
+   "valence_electrons": 7.0
+  },
+  "Rn": {
+   "Z": 86,
+   "period": 6,
+   "group": 18,
+   "electronegativity": 1.7486,
+   "mass": 222.0,
+   "covalent_radius": 150.0,
+   "valence_electrons": 8.0
+  },
+  "Fr": {
+   "Z": 87,
+   "period": 7,
+   "group": 1,
+   "electronegativity": 0.7,
+   "mass": 223.0,
+   "covalent_radius": 260.0,
+   "valence_electrons": 1.0
+  },
+  "Ra": {
+   "Z": 88,
+   "period": 7,
+   "group": 2,
+   "electronegativity": 0.9,
+   "mass": 226.0,
+   "covalent_radius": 221.0,
+   "valence_electrons": 2.0
+  },
+  "Ac": {
+   "Z": 89,
+   "period": 7,
+   "group": 3,
+   "electronegativity": 1.1,
+   "mass": 227.0,
+   "covalent_radius": 215.0,
+   "valence_electrons": 3.0
+  },
+  "Th": {
+   "Z": 90,
+   "period": 7,
+   "group": 3,
+   "electronegativity": 1.3,
+   "mass": 232.0377,
+   "covalent_radius": 206.0,
+   "valence_electrons": 4.0
+  },
+  "Pa": {
+   "Z": 91,
+   "period": 7,
+   "group": 3,
+   "electronegativity": 1.5,
+   "mass": 231.03588,
+   "covalent_radius": 200.0,
+   "valence_electrons": 5.0
+  },
+  "U": {
+   "Z": 92,
+   "period": 7,
+   "group": 3,
+   "electronegativity": 1.7,
+   "mass": 238.02891,
+   "covalent_radius": 196.0,
+   "valence_electrons": 6.0
+  },
+  "Np": {
+   "Z": 93,
+   "period": 7,
+   "group": 3,
+   "electronegativity": 1.3,
+   "mass": 237.0,
+   "covalent_radius": 190.0,
+   "valence_electrons": 7.0
+  },
+  "Pu": {
+   "Z": 94,
+   "period": 7,
+   "group": 3,
+   "electronegativity": 1.3,
+   "mass": 244.0,
+   "covalent_radius": 187.0,
+   "valence_electrons": 8.0
+  },
+  "Am": {
+   "Z": 95,
+   "period": 7,
+   "group": 3,
+   "electronegativity": 1.7486,
+   "mass": 243.0,
+   "covalent_radius": 180.0,
+   "valence_electrons": 9.0
+  },
+  "Cm": {
+   "Z": 96,
+   "period": 7,
+   "group": 3,
+   "electronegativity": 1.7486,
+   "mass": 247.0,
+   "covalent_radius": 169.0,
+   "valence_electrons": 10.0
+  },
+  "Bk": {
+   "Z": 97,
+   "period": 7,
+   "group": 3,
+   "electronegativity": 1.7486,
+   "mass": 247.0,
+   "covalent_radius": 152.3021,
+   "valence_electrons": 11.0
+  },
+  "Cf": {
+   "Z": 98,
+   "period": 7,
+   "group": 3,
+   "electronegativity": 1.7486,
+   "mass": 251.0,
+   "covalent_radius": 152.3021,
+   "valence_electrons": 12.0
+  },
+  "Es": {
+   "Z": 99,
+   "period": 7,
+   "group": 3,
+   "electronegativity": 1.7486,
+   "mass": 252.0,
+   "covalent_radius": 152.3021,
+   "valence_electrons": 13.0
+  },
+  "Fm": {
+   "Z": 100,
+   "period": 7,
+   "group": 3,
+   "electronegativity": 1.7486,
+   "mass": 257.0,
+   "covalent_radius": 152.3021,
+   "valence_electrons": 14.0
+  },
+  "Md": {
+   "Z": 101,
+   "period": 7,
+   "group": 3,
+   "electronegativity": 1.7486,
+   "mass": 258.0,
+   "covalent_radius": 152.3021,
+   "valence_electrons": 15.0
+  },
+  "No": {
+   "Z": 102,
+   "period": 7,
+   "group": 3,
+   "electronegativity": 1.7486,
+   "mass": 259.0,
+   "covalent_radius": 152.3021,
+   "valence_electrons": 16.0
+  },
+  "Lr": {
+   "Z": 103,
+   "period": 7,
+   "group": 3,
+   "electronegativity": 1.7486,
+   "mass": 262.0,
+   "covalent_radius": 152.3021,
+   "valence_electrons": 17.0
+  }
+ }
+}

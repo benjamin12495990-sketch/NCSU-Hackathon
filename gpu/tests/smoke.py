@@ -215,11 +215,13 @@ def main():
             if name.startswith('test_') and callable(fn):
                 fn()
                 n += 1
-        from gpu.pipeline.tests import test_analyze as ta
-        for name, fn in sorted(vars(ta).items()):
-            if name.startswith('test_') and callable(fn):
-                fn()
-                n += 1
+        from gpu.pipeline.tests import test_analyze as ta, test_evolve as te
+        from gpu.tests import test_features as tf
+        for mod in (ta, te, tf):
+            for name, fn in sorted(vars(mod).items()):
+                if name.startswith('test_') and callable(fn):
+                    fn()
+                    n += 1
         return f'{n} pipeline tests passed'
 
     print('\nsummary')
