@@ -50,6 +50,42 @@ def crossfit(P, y, folds):
     return out, chosen
 
 
+def crossfit_topk(P, y, folds, k=3):
+    """Like crossfit, but averages the k best candidates (chosen on the other folds) instead of keeping one."""
+    err = np.abs(P - y)
+    out = np.empty(len(y))
+    for f in range(int(folds.max()) + 1):
+        best = np.argsort(err[:, folds != f].mean(axis=1))[:k]
+        out[folds == f] = P[best][:, folds == f].mean(axis=0)
+    return out
+
+
+def _cmp(a, b, y, grp):
+    """MAE(a) - MAE(b), paired bootstrap over groups; negative favours a."""
+    d, lo, hi, _ = _paired(np.abs(a - y), np.abs(b - y), grp)
+    return {'diff': d, 'ci95': [lo, hi], 'verdict': verdict(lo, hi)}
+
+
+def fairness(y, grp, net_ens, singles, trees, trees_top=None):
+    """Checks that the headline comparison (average of several networks against ONE tree model) is not an ensembling effect.
+      singles    one prediction vector per network seed/run (a single network each)
+      trees_top  predictions of an average of several tree models, if available
+    A blend is half the network average and half the trees, with no fitted weight, so it has no selection to be optimistic about."""
+    maes = [float(np.abs(s - y).mean()) for s in singles]
+    vs = [_cmp(s, trees, y, grp) for s in singles]
+    blend = 0.5 * net_ens + 0.5 * trees
+    out = {'single': {'maes': maes, 'mean_mae': float(np.mean(maes)), 'vs_trees': vs,
+                      'n_clearly_better': sum(v['verdict'] == 'network clearly better' for v in vs),
+                      'n_clearly_worse': sum(v['verdict'] == 'trees clearly better' for v in vs), 'n': len(vs)},
+           'blend': {'mae': float(np.abs(blend - y).mean()), 'vs_trees': _cmp(blend, trees, y, grp), 'vs_network_average': _cmp(blend, net_ens, y, grp)},
+           'median_ae': {'network average': float(np.median(np.abs(net_ens - y))), 'one network': float(np.median(np.abs(singles[0] - y))),
+                         'trees': float(np.median(np.abs(trees - y)))}}
+    if trees_top is not None:
+        out['trees_top3'] = {'mae': float(np.abs(trees_top - y).mean()), 'network_average_vs_it': _cmp(net_ens, trees_top, y, grp)}
+        out['median_ae']['top-3 trees averaged'] = float(np.median(np.abs(trees_top - y)))
+    return out
+
+
 def _cfg_text(c):
     return f'hidden {c["hidden"]}, {c["epochs"]} epochs, lr {c["lr"]:g}, decay {c["decay"]:g}, {c["loss"]} loss'
 
@@ -98,6 +134,8 @@ def analyze_tabular(pipe, family):
         for g in ('trees', 'linear'):
             d, lo, hi, share = _paired(np.abs(net_cf - y), np.abs(methods[g] - y), grp)
             out[f'network_vs_{g}'] = {'diff': d, 'ci95': [lo, hi], 'share_groups_network_better': share, 'verdict': verdict(lo, hi)}
+        singles = [crossfit(P['cv_val'][:, s, :], y, folds)[0] for s in range(P['cv_val'].shape[1])]
+        out['fairness'] = fairness(y, grp, net_cf, singles, methods['trees'], crossfit_topk(oof[gi('trees')], y, folds))
         out['note'] = 'Settings were chosen on the other folds only (cross-fitted), so the best-of-many advantage is removed.'
     else:
         sel, evl = 'test', next(iter(ds.extra))
@@ -124,6 +162,9 @@ def analyze_tabular(pipe, family):
             if g in methods:
                 d, lo, hi, share = _paired(np.abs(methods['network'] - y_ev), np.abs(methods[g] - y_ev), grp)
                 out[f'network_vs_{g}'] = {'diff': d, 'ci95': [lo, hi], 'share_groups_network_better': share, 'verdict': verdict(lo, hi)}
+        top = np.argsort([np.abs(B[f'pred_{sel}'][i] - y_sel).mean() for i in gi('trees')])[:3]
+        out['fairness'] = fairness(y_ev, grp, ens_ev[ci], [P[f'fixed_{evl}'][ci, s, :] for s in range(P[f'fixed_{evl}'].shape[1])], methods['trees'],
+                                   np.mean([B[f'pred_{evl}'][gi('trees')[i]] for i in top], axis=0))
         out['note'] = ('These concrete rows already informed project decisions. The network setting and each baseline were chosen on REWARD; the comparison is on MONITOR.')
     return out
 
@@ -151,6 +192,20 @@ def analyze_structure(pipe, target):
                              'train_seconds': r['timing']['train_seconds'], 'structures_per_second': r['timing']['train_structures_per_second']} for r in res],
            'trees': {k: {'selected': v['selected'], 'test': v['test']} for k, v in tj['feature_sets'].items()},
            'compare': cmp_out, 'compare_lines': lines}
+    try:
+        from gpu.structure.compare_structure import align
+        tz, y, forms, preds = align(run_dirs, trees)
+        key = 'pred_comp_cell' if 'pred_comp_cell' in tz.files else [k for k in tz.files if k.startswith('pred_')][0]
+        out['fairness'] = fairness(y, forms, np.mean(preds, axis=0), preds, tz[key])
+        out['fairness']['against'] = key
+        if target == 'optb88vdw_bandgap':
+            net, tr, zero = np.mean(preds, axis=0), tz[key], y == 0
+            out['fairness']['by_zero_gap'] = {'share_exact_zero': float(zero.mean()),
+                                              'network_mae_zero': float(np.abs(net - y)[zero].mean()) if zero.any() else None,
+                                              'trees_mae_zero': float(np.abs(tr - y)[zero].mean()) if zero.any() else None,
+                                              'network_mae_nonzero': float(np.abs(net - y)[~zero].mean()), 'trees_mae_nonzero': float(np.abs(tr - y)[~zero].mean())}
+    except Exception as e:  # the headline comparison above still stands
+        out['fairness_error'] = repr(e)
     for key, comps in cmp_out['comparisons'].items():
         avg = [v for k, v in comps.items() if k.startswith('network average')] or list(comps.values())[:1]
         out.setdefault('verdicts', {})[key] = {'diff': avg[0]['diff'], 'ci95': avg[0]['ci95'], 'verdict': verdict(*avg[0]['ci95'])}

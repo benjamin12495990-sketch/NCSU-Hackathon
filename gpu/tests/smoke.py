@@ -215,7 +215,12 @@ def main():
             if name.startswith('test_') and callable(fn):
                 fn()
                 n += 1
-        return f'{n} orchestrator tests passed'
+        from gpu.pipeline.tests import test_analyze as ta
+        for name, fn in sorted(vars(ta).items()):
+            if name.startswith('test_') and callable(fn):
+                fn()
+                n += 1
+        return f'{n} pipeline tests passed'
 
     print('\nsummary')
     for name, status, msg in RESULTS:

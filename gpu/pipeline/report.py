@@ -30,6 +30,37 @@ def ci(d):
     return f'{d["diff"]:+.3g} [{d["ci95"][0]:+.3g}, {d["ci95"][1]:+.3g}]'
 
 
+def single_text(f):
+    """Plain words for 'one network at a time against the trees'."""
+    sg = f['single']
+    if sg['n_clearly_better'] == sg['n']:
+        return f'clearly better in all {sg["n"]} runs'
+    if sg['n_clearly_worse'] == sg['n']:
+        return f'trees clearly better in all {sg["n"]} runs'
+    return f'clearly better in {sg["n_clearly_better"]} of {sg["n"]} runs' + (f', clearly worse in {sg["n_clearly_worse"]}' if sg['n_clearly_worse'] else '')
+
+
+def single_bucket(f):
+    sg = f['single']
+    return 'network' if sg['n_clearly_better'] == sg['n'] else 'trees' if sg['n_clearly_worse'] == sg['n'] else 'unclear'
+
+
+def fairness_lines(f, avg_verdict, avg_name='network average'):
+    L = [f'  - **Fairness checks** (the headline compares the {avg_name} with ONE tree model):',
+         f'    - One network at a time: MAE {g(f["single"]["mean_mae"])} on average; against the trees it is {single_text(f)}.']
+    if 'trees_top3' in f:
+        t3 = f['trees_top3']
+        L.append(f'    - Average of the 3 best tree models: MAE {g(t3["mae"])}; the {avg_name} against it: {ci(t3["network_average_vs_it"])}, {t3["network_average_vs_it"]["verdict"]}.')
+    b = f['blend']
+    L.append(f'    - Half {avg_name}, half trees (no fitted weight): MAE {g(b["mae"])}; against the trees {ci(b["vs_trees"])} ({b["vs_trees"]["verdict"]}); '
+             f'against the {avg_name} {ci(b["vs_network_average"])} ({b["vs_network_average"]["verdict"]}).')
+    m = f['median_ae']
+    L.append('    - Median error (the typical row, not pulled by a few bad ones): ' + ', '.join(f'{k} {g(v)}' for k, v in m.items()) + '.')
+    if avg_verdict == 'network clearly better' and single_bucket(f) != 'network':
+        L.append('    - Reading: if the average wins but single networks do not, the gain comes from averaging several networks, not from one network being better than trees.')
+    return L
+
+
 def read_log_tail(path, n=12):
     try:
         return ''.join(Path(path).read_text(encoding='utf-8', errors='replace').splitlines(True)[-n:]).rstrip()
@@ -57,12 +88,12 @@ def tabular_section(items):
          'Each network number is the best of a large sweep, **chosen without looking at the rows it is scored on** (cross-fitted); the trees and the '
          'linear models get exactly the same treatment. MAE = typical size of the miss, in the unit shown (lower is better).', '']
     if ok:
-        L += ['| Family | Predicts | Rows / groups | Guess the average | Best linear | Best trees | Network | Network minus trees (95% interval) | Verdict |',
-              '| --- | --- | --- | --- | --- | --- | --- | --- | --- |']
+        L += ['| Family | Predicts | Rows / groups | Guess the average | Best linear | Best trees | Network: average of seeds | Network: one seed | Average minus trees (95% interval) | Verdict: average | Verdict: one network at a time |',
+              '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |']
         for t in ok:
-            m = t['methods']
+            m, f = t['methods'], t['fairness']
             L.append(f'| {TAB_NAMES.get(t["family"], t["family"])} | {t["target"]} | {t["rows"]} / {t["groups"]} | {g(m["mean"]["mae"])} | {g(m["linear"]["mae"])} | '
-                     f'{g(m["trees"]["mae"])} | {g(m["network"]["mae"])} | {ci(t["network_vs_trees"])} | **{t["network_vs_trees"]["verdict"]}** |')
+                     f'{g(m["trees"]["mae"])} | {g(m["network"]["mae"])} | {g(f["single"]["mean_mae"])} | {ci(t["network_vs_trees"])} | **{t["network_vs_trees"]["verdict"]}** | {single_text(f)} |')
         L.append('')
     for t in items:
         if t['status'] != 'ok':
@@ -76,6 +107,7 @@ def tabular_section(items):
             for k in ('trees', 'linear', 'ridge_ln_age_only'):
                 if f'network_vs_{k}' in t:
                     L.append(f'- Network versus {k}: {ci(t[f"network_vs_{k}"])}, {t[f"network_vs_{k}"]["verdict"]}.')
+            L += fairness_lines(t['fairness'], t['network_vs_trees']['verdict'])
         else:
             L.append(f'- {t["n_network_settings"]} network settings x {t["n_seeds"]} seeds, {t["n_trees_models"]} tree and {t["n_linear_models"]} linear baseline models, '
                      f'{t["folds"]}-fold grouped cross-validation ({t["rows"]} rows).')
@@ -86,6 +118,7 @@ def tabular_section(items):
             L.append(f'- One seed instead of the average of {t["n_seeds"]}: network MAE {g(t["network_single_seed"]["mae"])}.')
             L.append(f'- Network versus linear models: {ci(t["network_vs_linear"])}, {t["network_vs_linear"]["verdict"]}.')
             L.append(f'- Settings chosen on each fold: ' + '; '.join(sorted(set(t['chosen']['network']))[:3]) + ('; ...' if len(set(t['chosen']['network'])) > 3 else ''))
+            L += fairness_lines(t['fairness'], t['network_vs_trees']['verdict'])
         L.append('')
     return L
 
@@ -96,21 +129,33 @@ def structure_section(items):
          'A crystal-graph network learns from the atom positions. The trees get either the element fractions, or the fractions plus volume per atom and atoms per cell '
          '(two cheap structure facts). Test error is on formulas the models never saw (split by exact formula). All labels are **DFT calculations**, not measurements.', '']
     if ok:
-        L += ['| Property | Crystals (train / test) | Guess the average | Linear | Trees: fractions | Trees: + cell | Network (runs, mean) | Network minus the stronger trees (95% interval) | Verdict | Speed |',
-              '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |']
+        L += ['| Property | Crystals (train / test) | Guess the average | Linear | Trees: fractions | Trees: + cell | Network: mean of single runs | Network: average of runs | Average minus the stronger trees (95% interval) | Verdict: average | Verdict: single runs | Speed |',
+              '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |']
         for t in ok:
             tr = t['trees']
             v = t['verdicts'].get('pred_comp_cell') or next(iter(t['verdicts'].values()))
             sp = [r['structures_per_second'] for r in t['network_runs']]
             nm = [r['test']['mae'] for r in t['network_runs']]
+            key = 'pred_comp_cell' if 'pred_comp_cell' in t['compare']['comparisons'] else next(iter(t['compare']['comparisons']))
+            avg = [c for k2, c in t['compare']['comparisons'][key].items() if k2.startswith('network average')]
+            avg_mae = avg[0]['network_mae'] if avg else sum(nm) / len(nm)
+            f = t.get('fairness')
             L.append(f'| {STRUCT_NAMES.get(t["target"], t["target"])} | {t["split_sizes"]["train"]} / {t["split_sizes"]["test"]} | {g(t["mean_baseline_test_mae"])} | {g(t["ridge_test_mae"])} | '
-                     f'{g(tr["composition"]["test"]["mae"])} | {g(tr["comp+cell"]["test"]["mae"])} | {len(nm)} runs: {g(sum(nm) / len(nm))} | {ci(v)} | **{v["verdict"]}** | {sum(sp) / len(sp):.0f} crystals/s |')
+                     f'{g(tr["composition"]["test"]["mae"])} | {g(tr["comp+cell"]["test"]["mae"])} | {g(sum(nm) / len(nm))} ({len(nm)} runs) | {g(avg_mae)} | {ci(v)} | **{v["verdict"]}** | '
+                     f'{single_text(f) if f else "-"} | {sum(sp) / len(sp):.0f} crystals/s |')
         L.append('')
     for t in items:
         if t['status'] != 'ok':
             L.append(f'- **{STRUCT_NAMES.get(t["target"], t["target"])}**: no result ({t["reason"]}).')
     for t in ok:
         L += [f'### {STRUCT_NAMES.get(t["target"], t["target"])}', '', '```'] + t['compare_lines'] + ['```', '']
+        if t.get('fairness'):
+            L += fairness_lines(t['fairness'], (t['verdicts'].get('pred_comp_cell') or next(iter(t['verdicts'].values())))['verdict'], 'average of runs')
+            z = t['fairness'].get('by_zero_gap')
+            if z:
+                L.append(f'  - Band gap split: {z["share_exact_zero"]:.0%} of test crystals have gap exactly 0. On those, network MAE {g(z["network_mae_zero"])} vs trees {g(z["trees_mae_zero"])}; '
+                         f'on the rest, network {g(z["network_mae_nonzero"])} vs trees {g(z["trees_mae_nonzero"])}.')
+            L.append('')
     return L
 
 
@@ -129,7 +174,9 @@ def build(pipe):
     tab_ok = [t for t in A['tabular'] if t['status'] == 'ok']
     str_ok = [t for t in A['structure'] if t['status'] == 'ok']
     tv = [t['network_vs_trees']['verdict'] for t in tab_ok]
+    tb = [single_bucket(t['fairness']) for t in tab_ok]
     sv = [(t['verdicts'].get('pred_comp_cell') or next(iter(t['verdicts'].values())))['verdict'] for t in str_ok]
+    sb = [single_bucket(t['fairness']) if t.get('fairness') else 'unclear' for t in str_ok]
     smoke = plan.get('profile') == 'smoke'
     L = [f'# Pipeline report: {pipe.name}', '', f'Generated {time.strftime("%Y-%m-%d %H:%M:%S")}. Folder: `{pipe}`', '']
     if smoke:
@@ -137,14 +184,18 @@ def build(pipe):
               'its accuracy numbers and verdicts mean nothing. Run `--profile standard` for real results.', '']
     L += ['## At a glance', '',
           f'- Jobs: **{len(done)} finished**, {len(bad)} failed or timed out, {len(other)} not run (stopped or out of time) of {len(jobs)}. GPU job time: {gpu_h:.2f} h.',
-          f'- Table-based families ({len(tab_ok)} with results): network clearly better on {tv.count("network clearly better")}, trees clearly better on {tv.count("trees clearly better")}, no clear difference on {tv.count("no clear difference")}.',
-          f'- Crystal-structure properties ({len(str_ok)} with results), against the stronger trees: network clearly better on {sv.count("network clearly better")}, trees clearly better on {sv.count("trees clearly better")}, no clear difference on {sv.count("no clear difference")}.']
+          f'- Table-based families ({len(tab_ok)} with results). Average of the network seeds against one tuned tree model: network clearly better on {tv.count("network clearly better")}, trees clearly better on {tv.count("trees clearly better")}, no clear difference on {tv.count("no clear difference")}. '
+          f'**One network at a time**: clearly better in every seed on {tb.count("network")}, trees clearly better in every seed on {tb.count("trees")}, mixed or unclear on {tb.count("unclear")}.',
+          f'- Crystal-structure properties ({len(str_ok)} with results), against the stronger trees. Average of runs: network clearly better on {sv.count("network clearly better")}, trees clearly better on {sv.count("trees clearly better")}, no clear difference on {sv.count("no clear difference")}. '
+          f'**Single runs**: clearly better in every run on {sb.count("network")}, mixed or unclear on {sb.count("unclear")}, trees clearly better in every run on {sb.count("trees")}.']
     if tel['samples']:
         L.append(f'- GPU: peak temperature {g(tel["peak_temp_c"], 3)} C, peak power {g(tel["peak_power_w"], 3)} W, peak memory {g(tel["peak_mem_mib"], 4)} MiB, average utilisation {g(tel["mean_util_pct"], 3)}% ({tel["samples"]} samples).')
     integ = state.get('integrity')
     if integ:
         L.append(f'- Sealed data: {integ}')
-    L += ['', '**How to read the verdicts.** "Network clearly better" means the whole 95% bootstrap interval of (network error minus trees error) is below zero; "trees clearly better" means it is '
+    L += ['', '**Averages versus single networks.** The headline "average" verdict compares several networks averaged together with ONE tree model, which favours the network just by averaging. '
+          'The "one network at a time" verdict removes that. If the two disagree, the win is an ensemble effect; the fairness checks under each family also show a no-fit blend of networks and trees.', '']
+    L += ['**How to read the verdicts.** "Network clearly better" means the whole 95% bootstrap interval of (network error minus trees error) is below zero; "trees clearly better" means it is '
           'entirely above zero; anything else is "no clear difference". The bootstrap resamples whole groups (mixes, alloy systems, papers, formulas), never single rows.', '']
     L += tabular_section(A['tabular']) + structure_section(A['structure'])
     L += ['## What each job did', '', '| Job | Status | Minutes | Attempts |', '| --- | --- | --- | --- |']
@@ -169,12 +220,13 @@ def build(pipe):
     nxt = []
     if sv.count('network clearly better'):
         names = [STRUCT_NAMES.get(t['target'], t['target']) for t, v in zip(str_ok, sv) if v == 'network clearly better']
-        nxt.append('The crystal network clearly beats the cell-feature trees on: ' + ', '.join(names) + '. Worth validating on a split that holds out whole chemical systems, with more seeds.')
+        nxt.append('The average of crystal-network runs clearly beats the cell-feature trees on: ' + ', '.join(names) + '. Check the "single runs" column before crediting the network itself, '
+                   'and validate on a split that holds out whole chemical systems and against trees given richer structure features.')
     elif str_ok:
         nxt.append('No crystal property shows a clear win over trees that are given the cell volume. Either test harder splits, or use trees for these properties.')
     if tv.count('network clearly better'):
         names = [TAB_NAMES.get(t['family'], t['family']) for t, v in zip(tab_ok, tv) if v == 'network clearly better']
-        nxt.append('The network clearly beats the tuned trees on: ' + ', '.join(names) + '.')
+        nxt.append('The average of network seeds clearly beats the tuned trees on: ' + ', '.join(names) + '. Single networks may not; see the "one network at a time" column.')
     elif tab_ok:
         nxt.append('On the table-based families the network did not clearly beat tuned trees, even with the whole sweep and the correction for picking the best setting. '
                    'That points to the amount and kind of data, not the compute, as the limit [likely, not proven]; more rows or better descriptors are the likelier lever than a bigger sweep.')

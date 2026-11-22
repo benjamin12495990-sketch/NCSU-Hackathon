@@ -37,8 +37,9 @@ def _paired(err_a, err_b, formulas):
     return float(d), float(np.percentile(diffs, 2.5)), float(np.percentile(diffs, 97.5)), better
 
 
-def compare(run_dirs, trees_path):
-    """Returns (result dict, printable lines). Raises ValueError if the runs and the tree baseline are on different rows."""
+def align(run_dirs, trees_path):
+    """Loads the runs and the tree baseline on the same rows. Returns (trees npz, y, formulas, [prediction per run], index per run).
+    Raises ValueError if the runs and the tree baseline are on different rows."""
     t = np.load(trees_path)
     runs = [_load_run(r) for r in run_dirs]
     order = {j: i for i, j in enumerate(t['jid'])}
@@ -52,6 +53,13 @@ def compare(run_dirs, trees_path):
         p[ix] = r['pred']
     formulas = np.empty(len(y), dtype=object)
     formulas[idx[0]] = runs[0]['formula']
+    return t, y, formulas, preds
+
+
+def compare(run_dirs, trees_path):
+    """Returns (result dict, printable lines). Raises ValueError if the runs and the tree baseline are on different rows."""
+    t, y, formulas, preds = align(run_dirs, trees_path)
+    runs = preds
     models = {f'network run {i + 1} ({Path(path).name})': p for i, (p, path) in enumerate(zip(preds, run_dirs))}
     if len(runs) > 1:
         models[f'network average of {len(runs)} runs'] = np.mean(preds, axis=0)
