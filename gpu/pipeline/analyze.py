@@ -14,6 +14,7 @@ Structure families (crystal-graph network vs tree baselines): gpu/structure/comp
 A "verdict" is only ever one of: network clearly better (the whole 95% interval of MAE(network) - MAE(trees) is below zero),
 trees clearly better (the whole interval is above zero), or no clear difference.
 """
+import fnmatch
 import glob
 import json
 from pathlib import Path
@@ -174,15 +175,19 @@ TREE_TITLES = {'pred_composition': 'trees on element fractions', 'pred_comp_cell
                'pred_rich': 'trees on element statistics + neighbour geometry'}
 
 
+SPLIT_SPECS = {  # (network job glob, tree jobs) per split; elementP = leave-out-elements with element-property atom inputs
+    'formula': ('struct_{t}_s[0-9]*', ['trees_{t}', 'trees_{t}_rich']),
+    'system': ('struct_{t}_sys_s[0-9]*', ['trees_{t}_sys']),
+    'element': ('struct_{t}_elem_s[0-9]*', ['trees_{t}_elem']),
+    'elementP': ('struct_{t}_elemP_s[0-9]*', ['trees_{t}_elem']),
+}
+
+
 def analyze_structure(pipe, target, split='formula'):
-    """Crystal networks against tree baselines on one split. split 'formula' (no formula on both sides) or 'system' (no chemical
-    system on both sides). The comparator is the tree feature set with the lowest VALIDATION error, so the opponent is picked
-    without looking at the test rows."""
+    """Crystal networks against tree baselines on one split: 'formula', 'system', 'element' or 'elementP' (see SPLIT_SPECS).
+    The comparator is the tree feature set with the lowest VALIDATION error, so the opponent is picked without the test rows."""
     pipe = Path(pipe)
-    if split == 'formula':
-        job_globs, tree_jobs = f'struct_{target}_s[0-9]*', [f'trees_{target}', f'trees_{target}_rich']
-    else:
-        job_globs, tree_jobs = f'struct_{target}_sys_s[0-9]*', [f'trees_{target}_sys']
+    job_globs, tree_jobs = SPLIT_SPECS[split][0].format(t=target), [j.format(t=target) for j in SPLIT_SPECS[split][1]]
     tree_files = [p for p in (_first(pipe, j, 'trees_predictions.npz') for j in tree_jobs) if p is not None]
     run_dirs = []
     for job in sorted(glob.glob(str(pipe / 'jobs' / job_globs))):
@@ -239,74 +244,250 @@ def _runs(pipe, pattern):
     return out
 
 
-def analyze_evolution(pipe, plan):
-    """Generations of crystal networks (gpu/pipeline/evolve.py): the search curve, and the one fair test of whether the search helped:
-    the winner retrained on fresh seeds against the default settings trained the same way, on held-out chemical systems."""
-    from gpu.pipeline import evolve as E
+def _vs(a_pred, b_pred, y, grp, a_name, b_name):
+    c = _cmp(a_pred, b_pred, y, grp)
+    return {**c, 'verdict': f'{a_name} clearly better' if c['ci95'][1] < 0 else f'{b_name} clearly better' if c['ci95'][0] > 0 else 'no clear difference'}
+
+
+def _strongest_trees(tree_file, tz):
+    tj = json.loads(tree_file.with_name('trees.json').read_text())['feature_sets']
+    k = min((k for k in tj if TREE_KEYS.get(k) in tz.files), key=lambda k: tj[k]['val']['mae'])
+    return k, tz[TREE_KEYS[k]]
+
+
+def compare_run_sets(new_runs, old_runs, tree_file, new_name, old_name):
+    """Two sets of network runs on the same test rows (each averaged over its runs) against each other and the strongest trees."""
     from gpu.structure.compare_structure import align
-    cyc = plan.get('cycle')
-    if not cyc:
+    tz, y, grp, new = align(new_runs, [tree_file])
+    _, _, _, old = align(old_runs, [tree_file])
+    strongest, tr = _strongest_trees(tree_file, tz)
+    na, oa = np.mean(new, axis=0), np.mean(old, axis=0)
+    return {'n_new_runs': len(new), 'n_old_runs': len(old), 'strongest_trees': strongest,
+            'new_single_mae_mean': float(np.mean([np.abs(p - y).mean() for p in new])), 'new_average_mae': float(np.abs(na - y).mean()),
+            'old_single_mae_mean': float(np.mean([np.abs(p - y).mean() for p in old])), 'old_average_mae': float(np.abs(oa - y).mean()),
+            'trees_mae': float(np.abs(tr - y).mean()),
+            'new_vs_old': _vs(na, oa, y, grp, new_name, old_name), 'new_vs_trees': _vs(na, tr, y, grp, new_name, 'trees'),
+            'old_vs_trees': _vs(oa, tr, y, grp, old_name, 'trees'),
+            'single_new_vs_trees': [_vs(p, tr, y, grp, new_name, 'trees')['verdict'] for p in new]}
+
+
+def analyze_finetune(pipe, plan):
+    """Moduli networks that start from the formation-energy network, against the same networks trained from scratch on the same split."""
+    out = []
+    specs = (('formula', 'ft_{t}_s[0-9]*', 'struct_{t}_s[0-9]*', 'trees_{t}_rich', 'trees_{t}'), ('system', 'ft_sys_{t}_s[0-9]*', 'struct_{t}_sys_s[0-9]*', 'trees_{t}_sys', None),
+             ('element', 'ft_elemP_{t}_s[0-9]*', 'struct_{t}_elemP_s[0-9]*', 'trees_{t}_elem', None))
+    targets = sorted({j['target'] for j in plan['jobs'] if j.get('group') == 'finetune'})
+    for t in targets:
+        for split, ft_pat, scratch_pat, tree_job, tree_job2 in specs:
+            ft, sc = _runs(pipe, ft_pat.format(t=t)), _runs(pipe, scratch_pat.format(t=t))
+            tree_file = _first(pipe, tree_job.format(t=t), 'trees_predictions.npz') or (tree_job2 and _first(pipe, tree_job2.format(t=t), 'trees_predictions.npz'))
+            if not any(j.get('group') == 'finetune' and j.get('target') == t and j.get('split') == split for j in plan['jobs']):
+                continue
+            e = {'target': t, 'split': split, 'status': 'missing', 'n_finetuned': len(ft), 'n_scratch': len(sc)}
+            if ft and sc and tree_file is not None:
+                try:
+                    e.update(compare_run_sets(ft, sc, tree_file, 'fine-tuned', 'from scratch'))
+                    e['status'] = 'ok'
+                except Exception as ex:  # noqa: BLE001
+                    e['status'], e['reason'] = 'error', repr(ex)
+            out.append(e)
+    return out
+
+
+def analyze_evolution(pipe, plan):
+    """Every search round (gpu/pipeline/evolve.py): the search curve, and the one fair test of whether the round helped: its winner
+    retrained on fresh seeds against what it started from (the defaults, or the previous round's winner), on held-out systems."""
+    from gpu.pipeline import evolve as E
+    rounds = list(plan.get('cycle_history', [])) + ([plan['cycle']] if plan.get('cycle') else [])
+    if not rounds:
         return None
     res = []
-    for t in cyc['targets']:
-        arch = E.archive(pipe, plan['jobs'], t)
-        done = [x for x in arch if x['val_mae'] is not None]
-        default = next((x for x in done if E.gkey(x['genes']) == E.gkey(E.DEFAULT)), None)
-        best = E.best_of(arch)
-        e = {'target': t, 'n_individuals': len(arch), 'n_finished': len(done), 'generations': max([x['gen'] for x in arch] or [-1]) + 1,
-             'individuals': [{**x, 'changes': E.describe_genes(x['genes'])} for x in sorted(arch, key=lambda x: (x['gen'], x['id']))],
-             'best_by_generation': [min([x['val_mae'] for x in done if x['gen'] <= g] or [None]) for g in range(max([x['gen'] for x in arch] or [-1]) + 1)],
-             'default_val_mae': default['val_mae'] if default else None, 'best_val_mae': best['val_mae'] if best else None,
-             'best_id': best['id'] if best else None, 'best_changes': E.describe_genes(best['genes']) if best else None,
-             'default_won': bool(best and E.gkey(best['genes']) == E.gkey(E.DEFAULT)), 'status': 'ok' if done else 'missing'}
-        finals = _runs(pipe, f'evof_{t}_s[0-9]*')
-        defaults = _runs(pipe, f'struct_{t}_sys_s[0-9]*')
-        tree_file = _first(pipe, f'trees_{t}_sys', 'trees_predictions.npz')
-        if finals and defaults and tree_file is not None:
-            try:
-                tz, y, grp, evo = align(finals, [tree_file])
-                _, y2, grp2, dflt = align(defaults, [tree_file])
-                tj = json.loads(tree_file.with_name('trees.json').read_text())['feature_sets']
-                strongest = min((k for k in tj if TREE_KEYS.get(k) in tz.files), key=lambda k: tj[k]['val']['mae'])
-                tr = tz[TREE_KEYS[strongest]]
-                ev_avg, df_avg = np.mean(evo, axis=0), np.mean(dflt, axis=0)
-                cmpd = _cmp(ev_avg, df_avg, y, grp)
-                e['finalists'] = {'n_evolved_runs': len(evo), 'n_default_runs': len(dflt), 'strongest_trees': strongest,
-                                  'evolved_single_mae_mean': float(np.mean([np.abs(p - y).mean() for p in evo])), 'evolved_average_mae': float(np.abs(ev_avg - y).mean()),
-                                  'default_single_mae_mean': float(np.mean([np.abs(p - y).mean() for p in dflt])), 'default_average_mae': float(np.abs(df_avg - y).mean()),
-                                  'trees_mae': float(np.abs(tr - y).mean()),
-                                  'evolved_vs_default': {**cmpd, 'verdict': 'evolved clearly better' if cmpd['ci95'][1] < 0 else 'default clearly better' if cmpd['ci95'][0] > 0 else 'no clear difference'},
-                                  'evolved_vs_trees': _cmp(ev_avg, tr, y, grp), 'default_vs_trees': _cmp(df_avg, tr, y, grp)}
-            except Exception as ex:  # noqa: BLE001
-                e['finalists_error'] = repr(ex)
-        res.append(e)
+    for cyc in rounds:
+        rnd = cyc.get('round')
+        for t in cyc['targets']:
+            base = (cyc.get('bases') or {}).get(t, E.DEFAULT)
+            arch = E.archive(pipe, plan['jobs'], t, rnd)
+            done = [x for x in arch if x['val_mae'] is not None]
+            start = next((x for x in done if E.gkey(x['genes']) == E.gkey(base)), None)
+            best = E.best_of(arch)
+            gens = max([x['gen'] for x in arch] or [-1]) + 1
+            e = {'target': t, 'round': rnd or 'r1', 'n_individuals': len(arch), 'n_finished': len(done), 'generations': gens,
+                 'start_label': 'the defaults' if E.gkey(base) == E.gkey(E.DEFAULT) else 'the previous winner', 'start_changes': E.describe_genes(base),
+                 'individuals': [{**x, 'changes': E.describe_genes(x['genes'])} for x in sorted(arch, key=lambda x: (x['gen'], x['id']))],
+                 'best_by_generation': [min([x['val_mae'] for x in done if x['gen'] <= g] or [None]) for g in range(gens)],
+                 'default_val_mae': start['val_mae'] if start else None, 'best_val_mae': best['val_mae'] if best else None,
+                 'best_id': best['id'] if best else None, 'best_changes': E.describe_genes(best['genes']) if best else None,
+                 'default_won': bool(best and E.gkey(best['genes']) == E.gkey(base)), 'status': 'ok' if done else 'missing',
+                 'final_epochs': cyc.get('final_epochs'), 'compare_label': cyc.get('compare_label', 'the default settings')}
+            finals = _runs(pipe, (f'evof_{t}_s[0-9]*' if rnd is None else f'evof_{rnd}_{t}_s[0-9]*'))
+            olds = _runs(pipe, cyc.get('compare_to', 'struct_{t}_sys_s[0-9]*').format(t=t))
+            tree_file = _first(pipe, f'trees_{t}_sys', 'trees_predictions.npz')
+            if finals and not (olds and tree_file is not None):
+                e['finalists_error'] = ('no runs of ' + e['compare_label'] + ' in this folder to compare with' if not olds else 'no tree baseline on the held-out-systems split in this folder')
+            if finals and olds and tree_file is not None:
+                try:
+                    c = compare_run_sets(finals, olds, tree_file, 'evolved', 'default' if rnd is None else 'previous winner')
+                    e['finalists'] = {'n_evolved_runs': c['n_new_runs'], 'n_default_runs': c['n_old_runs'], 'strongest_trees': c['strongest_trees'],
+                                      'evolved_single_mae_mean': c['new_single_mae_mean'], 'evolved_average_mae': c['new_average_mae'],
+                                      'default_single_mae_mean': c['old_single_mae_mean'], 'default_average_mae': c['old_average_mae'], 'trees_mae': c['trees_mae'],
+                                      'evolved_vs_default': c['new_vs_old'], 'evolved_vs_trees': c['new_vs_trees'], 'default_vs_trees': c['old_vs_trees']}
+                except Exception as ex:  # noqa: BLE001
+                    e['finalists_error'] = repr(ex)
+            res.append(e)
     return res
 
 
+# ---- prediction intervals ------------------------------------------------------------------------------------------------------
+LEVELS = (0.8, 0.9, 0.95)
+
+
+def _q(scores, level):
+    """Split-conformal quantile: the ceil((n+1) * level)-th smallest score."""
+    s = np.sort(np.asarray(scores, float))
+    if not len(s):
+        return float('nan')
+    k = int(np.ceil((len(s) + 1) * level)) - 1
+    return float(s[min(max(k, 0), len(s) - 1)])
+
+
+def conformal_split(val_res, test_res, val_sigma=None, test_sigma=None):
+    """Intervals pred +/- q, q from the validation residuals; coverage measured on the test rows. With sigma (the spread between
+    seeds), also scaled intervals pred +/- q * sigma: narrower where the seeds agree, wider where they do not."""
+    out = {}
+    for lv in LEVELS:
+        q = _q(np.abs(val_res), lv)
+        r = {'half_width': q, 'coverage': float(np.mean(np.abs(test_res) <= q))}
+        if val_sigma is not None and test_sigma is not None:
+            eps = max(float(np.median(val_sigma)) * 0.1, 1e-9)
+            qn = _q(np.abs(val_res) / (val_sigma + eps), lv)
+            w = qn * (test_sigma + eps)
+            r['scaled'] = {'mean_half_width': float(w.mean()), 'median_half_width': float(np.median(w)), 'coverage': float(np.mean(np.abs(test_res) <= w))}
+        out[f'{lv:.2f}'] = r
+    return out
+
+
+def conformal_cv(res, folds):
+    """Cross-conformal: each fold's interval comes from the OTHER folds' out-of-fold residuals; coverage is pooled over folds."""
+    out = {}
+    for lv in LEVELS:
+        cov, width = [], []
+        for f in range(int(folds.max()) + 1):
+            q = _q(np.abs(res[folds != f]), lv)
+            cov.append(np.abs(res[folds == f]) <= q)
+            width.append(np.full((folds == f).sum(), q))
+        out[f'{lv:.2f}'] = {'half_width': float(np.concatenate(width).mean()), 'coverage': float(np.concatenate(cov).mean())}
+    return out
+
+
+def _run_preds(run_dirs):
+    """(val y, val ensemble pred, val sigma, test y, test ensemble pred, test sigma) for runs on the same split, aligned by record id."""
+    zs = [np.load(Path(r) / 'predictions.npz') for r in run_dirs]
+    vj, tj = zs[0]['val_jid'], zs[0]['test_jid']
+    for z in zs[1:]:
+        if not (np.array_equal(z['val_jid'], vj) and np.array_equal(z['test_jid'], tj)):
+            raise ValueError('runs are on different rows')
+    vp, tp = np.stack([z['val_pred'] for z in zs]), np.stack([z['test_pred'] for z in zs])
+    sig = (vp.std(0), tp.std(0)) if len(zs) > 1 else (None, None)
+    return zs[0]['val_y'], vp.mean(0), sig[0], zs[0]['test_y'], tp.mean(0), sig[1]
+
+
+def analyze_intervals(pipe, plan, res):
+    """90% (and 80/95%) prediction intervals for every task that has the data for them, with the coverage actually reached on rows
+    the calibration never saw. Coverage near the nominal level means the intervals can be trusted on data like the test rows."""
+    out = {'tabular': [], 'crystal': []}
+    from gpu.data import load
+    for t in res.get('tabular', []):
+        if t.get('status') != 'ok':
+            continue
+        fam = t['family']
+        try:
+            sweep = _first(pipe, f'tab_{fam}', '*/*/result.json')
+            base = _first(pipe, f'base_{fam}', 'baselines.json')
+            ds = load(fam)
+            P = np.load(sweep.parent / 'predictions.npz')
+            B = np.load(base.with_name('baselines_predictions.npz'))
+            bj = json.loads(base.read_text())
+            names, groups_of = bj['model_names'], bj['groups']
+            tree_idx = [i for i, n in enumerate(names) if groups_of[n] == 'trees']
+            if bj['mode'] == 'cv':
+                y, folds = ds.y, ds.folds
+                net, _ = crossfit(P['cv_val'].mean(axis=1), y, folds)
+                trees, _ = crossfit(B['oof'][tree_idx], y, folds)
+                models = {'trees': trees, 'network average': net, 'blend': 0.5 * (net + trees)}
+                out['tabular'].append({'task': fam, 'unit': t['target'], 'method': 'cross-conformal over the grouped folds',
+                                       'models': {k: conformal_cv(v - y, folds) for k, v in models.items()}})
+            else:
+                sel, evl = 'test', next(iter(ds.extra))
+                y_sel, y_ev = ds.y_test, ds.extra[evl][1]
+                ens_sel, ens_ev = P[f'fixed_{sel}'].mean(axis=1), P[f'fixed_{evl}'].mean(axis=1)
+                ci = int(np.argmin([np.abs(e - y_sel).mean() for e in ens_sel]))
+                c = tree_idx[int(np.argmin([np.abs(B[f'pred_{sel}'][i] - y_sel).mean() for i in tree_idx]))]
+                models = {'trees': (B[f'pred_{sel}'][c], B[f'pred_{evl}'][c]), 'network average': (ens_sel[ci], ens_ev[ci])}
+                models['blend'] = (0.5 * (models['trees'][0] + models['network average'][0]), 0.5 * (models['trees'][1] + models['network average'][1]))
+                out['tabular'].append({'task': fam, 'unit': t['target'], 'method': 'split conformal: calibrated on REWARD, checked on MONITOR (exploratory)',
+                                       'models': {k: conformal_split(v[0] - y_sel, v[1] - y_ev) for k, v in models.items()}})
+        except Exception as e:  # noqa: BLE001
+            out['tabular'].append({'task': fam, 'error': repr(e)})
+    for key, split in (('structure', 'formula'), ('structure_system', 'system'), ('structure_element', 'element'), ('structure_elementP', 'elementP')):
+        for s in res.get(key, []):
+            if s.get('status') != 'ok':
+                continue
+            try:
+                runs = _runs(pipe, SPLIT_SPECS[split][0].format(t=s['target']))
+                vy, vp, vs, ty, tp, ts = _run_preds(runs)
+                models = {'network average': conformal_split(vp - vy, tp - ty, vs, ts)}
+                z0 = np.load(Path(runs[0]) / 'predictions.npz')
+                for tj in SPLIT_SPECS[split][1]:  # trees and blend too, when the tree run saved validation predictions
+                    tf = _first(pipe, tj.format(t=s['target']), 'trees_predictions.npz')
+                    if tf is None:
+                        continue
+                    tz = np.load(tf)
+                    key = 'val_' + s['strongest_trees_key']
+                    if key not in tz.files or s['strongest_trees_key'] not in tz.files:
+                        continue
+                    vix = {j: i for i, j in enumerate(tz['val_jid'])}
+                    tix = {j: i for i, j in enumerate(tz['jid'])}
+                    tv = tz[key][[vix[j] for j in z0['val_jid']]]
+                    tt = tz[s['strongest_trees_key']][[tix[j] for j in z0['test_jid']]]
+                    models['trees'] = conformal_split(tv - vy, tt - ty)
+                    models['blend'] = conformal_split(0.5 * (vp + tv) - vy, 0.5 * (tp + tt) - ty)
+                    break
+                out['crystal'].append({'task': s['target'], 'split': split, 'n_runs': len(runs), 'unit': s['label'],
+                                       'method': 'split conformal on the validation crystals (same kind of hold-out as test)', 'models': models})
+            except Exception as e:  # noqa: BLE001
+                out['crystal'].append({'task': s['target'], 'split': split, 'error': repr(e)})
+    return out
+
+
 def analyze_all(pipe, plan):
+    order = [j['target'] for j in plan['jobs'] if j.get('target')]
     fams = [j['family'] for j in plan['jobs'] if j['id'].startswith('tab_')]
-    targets = sorted({j['target'] for j in plan['jobs'] if j['id'].startswith('struct_') and j.get('split') != 'system'}, key=lambda t: [j['target'] for j in plan['jobs'] if j.get('target')].index(t))
     res = {'tabular': [], 'structure': []}
     for f in fams:
         try:
             res['tabular'].append(analyze_tabular(pipe, f))
         except Exception as e:  # one broken family must not stop the report
             res['tabular'].append({'family': f, 'status': 'error', 'reason': repr(e)})
-    for t in targets:
-        try:
-            res['structure'].append(analyze_structure(pipe, t))
-        except Exception as e:
-            res['structure'].append({'target': t, 'status': 'error', 'reason': repr(e)})
-    sys_targets = sorted({j['target'] for j in plan['jobs'] if j['id'].startswith('struct_') and j.get('split') == 'system'},
-                         key=lambda t: [j['target'] for j in plan['jobs'] if j.get('target')].index(t))
-    res['structure_system'] = []
+    keys = {'formula': 'structure', 'system': 'structure_system', 'element': 'structure_element', 'elementP': 'structure_elementP'}
+    for split, key in keys.items():
+        pat = SPLIT_SPECS[split][0]
+        targets = sorted({j['target'] for j in plan['jobs'] if j.get('target') and fnmatch.fnmatch(j['id'], pat.format(t=j['target']))}, key=order.index)
+        res[key] = []
+        for t in targets:
+            try:
+                res[key].append(analyze_structure(pipe, t, split))
+            except Exception as e:
+                res[key].append({'target': t, 'split': split, 'status': 'error', 'reason': repr(e)})
+    try:
+        res['finetune'] = analyze_finetune(pipe, plan)
+    except Exception as e:  # noqa: BLE001
+        res['finetune'] = [{'status': 'error', 'target': '-', 'reason': repr(e)}]
     try:
         res['evolution'] = analyze_evolution(pipe, plan)
     except Exception as e:  # noqa: BLE001
         res['evolution'] = [{'status': 'error', 'target': '-', 'reason': repr(e)}]
-    for t in sys_targets:
-        try:
-            res['structure_system'].append(analyze_structure(pipe, t, 'system'))
-        except Exception as e:
-            res['structure_system'].append({'target': t, 'split': 'system', 'status': 'error', 'reason': repr(e)})
+    try:
+        res['intervals'] = analyze_intervals(pipe, plan, res)
+    except Exception as e:  # noqa: BLE001
+        res['intervals'] = {'error': repr(e)}
     return res

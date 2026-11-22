@@ -48,7 +48,7 @@ def main(argv=None):
     gkey = sha256_bytes(json.dumps(ident_src, sort_keys=True), json.dumps([r['jid'] for r in recs]), args.cutoff, args.max_neighbors)[:24]
     graphs, _, _ = graphs_for(recs, args, gkey)
     device = pick_device(a.device)
-    model = CGCNN(cfg['atom_features'], cfg['conv'], cfg['hidden'], cfg['cutoff']).to(device)
+    model = CGCNN(cfg['atom_features'], cfg['conv'], cfg['hidden'], cfg['cutoff'], atom_input=cfg.get('atom_input', 'embedding')).to(device)
     model.load_state_dict(torch.load(run / 'best_model.pt', map_location=device, weights_only=False))
     preds = {p: run_model(model, graphs, idx[p], device, a.batch, bool(cfg.get('amp'))) * ys + ym for p in ('val', 'test')}
     got = {p: metrics(preds[p], y[idx[p]]) for p in ('val', 'test')}

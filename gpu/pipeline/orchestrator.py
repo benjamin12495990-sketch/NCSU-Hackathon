@@ -9,6 +9,8 @@ Knows nothing about machine learning. A job is a dict:
   expect      list of glob patterns (relative to the job folder); the job counts as done only if each matches a file
   timeout_s   a job running longer than this is killed and marked 'timeout' (not retried)
   resumable   if True, a retry continues an interrupted run found by resume_glob instead of starting again
+  after       job ids that must be done before this one starts (if one of them fails, this job is skipped, status skipped_dependency);
+              argv may contain {RUN_OF:<job id>}, replaced by that job's latest finished run folder (structure/*/ with result.json)
   resume_glob pattern (relative to the job folder) of run_config.json files; a run folder without result.json is resumable
   env         extra environment variables
   est_minutes a rough guess, shown in the plan and in STATUS.txt only
@@ -140,6 +142,7 @@ class Orchestrator:
         self.tel, self.hot_c, self.warm_c, self.cool_c = telemetry, hot_c, warm_c, cool_c
         self.poll, self.max_attempts, self.retry_failed, self.status_every = poll, max_attempts, retry_failed, status_every
         self.lock = threading.Lock()
+        self.qlock = threading.Lock()
         self.procs = {}
         self.t0 = time.time()
         self.logf = open(self.pipe / 'pipeline.log', 'a', encoding='utf-8', buffering=1)
@@ -157,7 +160,7 @@ class Orchestrator:
             self.state = {'created': now_iso(), 'jobs': {}, 'events': []}
         for jid in self.order:
             st = self.state['jobs'].setdefault(jid, {'status': PENDING, 'attempts': []})
-            if st['status'] in (RUNNING, 'interrupted', 'skipped_budget', 'skipped_stop'):
+            if st['status'] in (RUNNING, 'interrupted', 'skipped_budget', 'skipped_stop', 'skipped_dependency'):
                 st['status'] = PENDING  # an interrupted run is resumed from its checkpoint by run_job
             elif st['status'] == DONE and not self.outputs_ok(self.jobs[jid]):
                 st['status'] = PENDING  # its output went missing
@@ -198,9 +201,22 @@ class Orchestrator:
         return self.pipe / 'jobs' / jid
 
     def _argv(self, job, extra=()):
-        sub = lambda s: s.replace('{JOB_DIR}', str(self.job_dir(job['id']))).replace('{PIPE_DIR}', str(self.pipe))  # noqa: E731
+        def sub(s):
+            s = s.replace('{JOB_DIR}', str(self.job_dir(job['id']))).replace('{PIPE_DIR}', str(self.pipe))
+            while '{RUN_OF:' in s:
+                i = s.index('{RUN_OF:')
+                j = s.index('}', i)
+                s = s[:i] + str(self.run_of(s[i + 8:j])) + s[j + 1:]
+            return s
         self.job_dir(job['id']).mkdir(parents=True, exist_ok=True)  # jobs may assume their folder exists
         return [sys.executable, *[sub(a) for a in job['argv']], *extra]
+
+    def run_of(self, jid):
+        """The latest finished run folder of another job (for --init-from and the like)."""
+        hits = sorted(glob.glob(str(self.job_dir(jid) / '**' / 'result.json'), recursive=True))
+        if not hits:
+            raise RuntimeError(f'{jid} has no finished run to start from')
+        return Path(hits[-1]).parent
 
     @staticmethod
     def _file_ok(path):
@@ -365,12 +381,39 @@ class Orchestrator:
                 return
 
     # ---- queues ------------------------------------------------------------------------------
-    def _worker(self, dq):
-        """Takes the next job from a shared queue until it is empty, so workers share the load whatever the job lengths."""
+    def _take(self, dq):
+        """The first queued job whose dependencies are done. A job whose dependency ended any other way (failed, timed out, skipped)
+        is marked skipped_dependency. Waits while queued jobs only wait for pending or running ones. None when the queue is empty."""
         while True:
-            try:
-                jid = dq.popleft()
-            except IndexError:
+            waiting = False
+            with self.qlock:
+                if not dq:
+                    return None
+                if self.stop_requested():
+                    return dq.popleft()  # run_job records it as stopped
+                for i, jid in enumerate(list(dq)):
+                    deps = self.jobs[jid].get('after', [])
+                    stats = [self.state['jobs'].get(d, {}).get('status') for d in deps]
+                    if all(x == DONE for x in stats):
+                        del dq[i]
+                        return jid
+                    bad = [d for d, x in zip(deps, stats) if x not in (DONE, PENDING, RUNNING)]
+                    if bad:
+                        del dq[i]
+                        self.state['jobs'][jid]['status'] = 'skipped_dependency'
+                        self.event(jid, f'not started: it needs {", ".join(bad)}, which did not finish')
+                        self.save()
+                        break  # the queue changed: scan again at once
+                else:
+                    waiting = True
+            if waiting:
+                time.sleep(min(self.poll, 1.0))
+
+    def _worker(self, dq):
+        """Takes the next ready job from a shared queue until it is empty, so workers share the load whatever the job lengths."""
+        while True:
+            jid = self._take(dq)
+            if jid is None:
                 return
             try:
                 self.run_job(jid)
@@ -431,7 +474,7 @@ class Orchestrator:
         self.write_status()
         c = self._counts()
         self.say('finished: ' + ', '.join(f'{k}={v}' for k, v in sorted(c.items())))
-        bad = c.get(FAILED, 0) + c.get(TIMEOUT, 0)
+        bad = c.get(FAILED, 0) + c.get(TIMEOUT, 0) + c.get('skipped_dependency', 0)
         if interrupted or any(c.get(k) for k in ('interrupted', 'skipped_stop', 'skipped_budget')):
             return 2  # not everything ran: stopped, interrupted or out of time (resume to continue)
         return 1 if bad else 0

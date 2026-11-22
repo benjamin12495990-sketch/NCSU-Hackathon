@@ -216,8 +216,8 @@ def main():
                 fn()
                 n += 1
         from gpu.pipeline.tests import test_analyze as ta, test_evolve as te
-        from gpu.tests import test_features as tf
-        for mod in (ta, te, tf):
+        from gpu.tests import test_features as tf, test_splits_finetune as tsf
+        for mod in (ta, te, tf, tsf):
             for name, fn in sorted(vars(mod).items()):
                 if name.startswith('test_') and callable(fn):
                     fn()

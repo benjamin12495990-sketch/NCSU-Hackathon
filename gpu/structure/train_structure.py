@@ -86,9 +86,21 @@ def load_records(a):
     return kept, source, counts
 
 
-SPLIT_MODES = ('formula', 'system')
+SPLIT_MODES = ('formula', 'system', 'element')
 SPLIT_RULES = {'formula': "sha256('split-v1:' + reduced formula) % 100: <80 train, <90 val, else test",
-               'system': "sha256('split-system-v1:' + chemical system, i.e. the sorted set of elements joined by '-') % 100: <80 train, <90 val, else test"}
+               'system': "sha256('split-system-v1:' + chemical system, i.e. the sorted set of elements joined by '-') % 100: <80 train, <90 val, else test",
+               'element': 'leave out elements (gpu/structure/element_split.json): a crystal containing any test element is test, else any validation '
+                          'element is validation, else train; no test element appears in training or validation'}
+ELEMENT_SPLIT = Path(__file__).with_name('element_split.json')
+_ELEMENT_SETS = None
+
+
+def element_sets():
+    global _ELEMENT_SETS
+    if _ELEMENT_SETS is None:
+        d = json.loads(ELEMENT_SPLIT.read_text())
+        _ELEMENT_SETS = (frozenset(d['test_elements']), frozenset(d['val_elements']))
+    return _ELEMENT_SETS
 
 
 def chemical_system(elements):
@@ -96,7 +108,8 @@ def chemical_system(elements):
 
 
 def group_of(rec, mode='formula'):
-    """The unit that is never split across train / val / test: the reduced formula, or the whole chemical system (Fe-O, Li-Fe-P-O, ...)."""
+    """The unit that is never split across train / val / test (and the unit the bootstrap resamples): the reduced formula, or the whole
+    chemical system (Fe-O, Li-Fe-P-O, ...) for the system and element splits."""
     return rec['formula'] if mode == 'formula' else chemical_system(rec['atoms']['elements'])
 
 
@@ -107,6 +120,9 @@ def split_of(key, mode='formula'):
 
 
 def parts_of(recs, mode='formula'):
+    if mode == 'element':
+        test, val = element_sets()
+        return np.array(['test' if set(r['atoms']['elements']) & test else 'val' if set(r['atoms']['elements']) & val else 'train' for r in recs])
     return np.array([split_of(group_of(r, mode), mode) for r in recs])
 
 
@@ -178,7 +194,11 @@ def main(argv=None):
     ap.add_argument('--synthetic', type=int, default=0, help='use N synthetic crystals instead of JARVIS (tests)')
     ap.add_argument('--limit', type=int, default=0, help='use the first N kept records (in SHA-256-of-jid order)')
     ap.add_argument('--target', default=TARGET, choices=sorted(TARGETS), help='JARVIS-DFT property to predict (default bulk_modulus_kv)')
-    ap.add_argument('--split', default='formula', choices=SPLIT_MODES, help='formula: no reduced formula on both sides (default); system: no chemical system on both sides (a harder test)')
+    ap.add_argument('--split', default='formula', choices=SPLIT_MODES, help='formula: no reduced formula on both sides (default); system: no chemical system on both sides; element: some elements never seen in training')
+    ap.add_argument('--atom-input', default='embedding', choices=['embedding', 'properties', 'both'],
+                    help='how atoms enter the network: a learned vector per element (default), element properties, or both')
+    ap.add_argument('--init-from', help='a finished run folder (any target, same --split) whose weights start this run; its settings are used. '
+                                        'Refused if that run trained on any of this run\'s validation or test crystals')
     ap.add_argument('--device', default='auto')
     ap.add_argument('--epochs', type=int, default=60)
     ap.add_argument('--batch', type=int, default=64)
@@ -199,6 +219,14 @@ def main(argv=None):
     a = ap.parse_args(argv)
     import torch
     from gpu.structure.model import CGCNN
+    init_src = None
+    if a.init_from:
+        init_src = Path(a.init_from)
+        scfg = json.loads((init_src / 'run_config.json').read_text())['config']
+        for k, default in (('atom_features', 64), ('conv', 3), ('hidden', 128), ('cutoff', 8.0), ('max_neighbors', 12), ('atom_input', 'embedding')):
+            setattr(a, k, scfg.get(k, default))  # the network shape must match the weights it starts from
+        if scfg.get('split', 'formula') != a.split:
+            sys.exit(f'refusing --init-from: {init_src} used --split {scfg.get("split", "formula")}, this run uses --split {a.split}')
     if a.threads:
         torch.set_num_threads(a.threads)
     device = pick_device(a.device)
@@ -216,10 +244,23 @@ def main(argv=None):
                                       'hidden', 'cutoff', 'max_neighbors', 'seed', 'amp')}
     if a.split != 'formula':
         cfg['split'] = a.split  # left out for the default so older runs keep their identity
+    if a.atom_input != 'embedding':
+        cfg['atom_input'] = a.atom_input
+    if init_src is not None:
+        cfg['init_from'] = {'run': init_src.name, 'best_model_sha256': sha256_file(init_src / 'best_model.pt')}
     ident = sha256_bytes(json.dumps(cfg, sort_keys=True), data_sha)
     print(f'records {counts["records"]}, missing/non-numeric {counts["missing_or_non_numeric"]}, non-positive {counts["non_positive"]}, '
           f'kept {counts["kept"]}, used {counts["used"]} | train/val/test {len(idx["train"])}/{len(idx["val"])}/{len(idx["test"])} '
           f'| split sha256 {split_sha[:16]}', flush=True)
+    if init_src is not None:  # the starting weights must not have learned from this run's validation or test crystals
+        src_parts = dict((j, p) for j, p in json.loads((init_src / 'split.json').read_text())['jid_part'])
+        mine = {p: {recs[i]['jid'] for i in idx[p]} for p in ('val', 'test')}
+        leak_tr = [j for j in mine['val'] | mine['test'] if src_parts.get(j) == 'train']
+        leak_va = [j for j in mine['test'] if src_parts.get(j) == 'val']
+        if leak_tr or leak_va:
+            sys.exit(f'refusing --init-from: the source run trained on {len(leak_tr)} of this run\'s validation/test crystals and selected its epoch on '
+                     f'{len(leak_va)} of its test crystals')
+        print(f'starting from {init_src.name}: no overlap between its training/validation crystals and this run\'s held-out ones', flush=True)
     if a.resume:
         run = Path(a.resume)
         old = json.loads((run / 'run_config.json').read_text())
@@ -255,7 +296,13 @@ def main(argv=None):
           f'{"from cache" if cached else f"built in {t_graph:.1f} s"}', flush=True)
 
     torch.manual_seed(a.seed)
-    model = CGCNN(a.atom_features, a.conv, a.hidden, a.cutoff).to(device)
+    model = CGCNN(a.atom_features, a.conv, a.hidden, a.cutoff, atom_input=a.atom_input).to(device)
+    if init_src is not None:
+        state = torch.load(init_src / 'best_model.pt', map_location=device, weights_only=False)
+        keep = {k: v for k, v in state.items() if not k.startswith('head.')}  # the output head is for another property: start it fresh
+        missing, unexpected = model.load_state_dict(keep, strict=False)
+        assert not unexpected and all(k.startswith('head.') for k in missing), (missing, unexpected)
+        print(f'loaded {len(keep)} weight tensors from {init_src.name} (output head re-initialised)', flush=True)
     opt = torch.optim.AdamW(model.parameters(), lr=a.lr, weight_decay=a.weight_decay)
     ym, ys = float(ytr.mean()), float(ytr.std() or 1.0)
     rng = np.random.default_rng(a.seed)

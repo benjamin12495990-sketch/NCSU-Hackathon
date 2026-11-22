@@ -5,6 +5,10 @@
 #   .\gpu\run_overnight.ps1 -Cycle2 -Rehearsal # a few minutes: the second cycle in miniature (needs -Rehearsal to have been run first)
 #   .\gpu\run_overnight.ps1 -Cycle2            # the second cycle: held-out chemical systems, structure-feature trees, generations of
 #                                              # crystal networks; ADDS to the newest real run folder (nothing there is changed); default budget 12 h
+#   .\gpu\run_overnight.ps1 -Cycle3 -Rehearsal # a few minutes: the third cycle in miniature (extends the newest rehearsal folder)
+#   .\gpu\run_overnight.ps1 -Cycle3            # the third cycle: held-out elements, fine-tuning from formation energy, wider search;
+#                                              # ADDS to the newest real run folder; default budget 12 h
+#   .\gpu\run_overnight.ps1 -Nightly           # git pull --ff-only, then retrain whatever changed (gpu\schedule_nightly.ps1 runs this every night)
 #   .\gpu\run_overnight.ps1 -Resume            # continue the last pipeline (or cycle) after a reboot, power cut or stop
 #   .\gpu\run_overnight.ps1 --budget-hours 6   # any other options are passed to python -m gpu.run_pipeline
 #
@@ -15,6 +19,8 @@ param(
     [switch]$Resume,
     [switch]$Rehearsal,
     [switch]$Cycle2,
+    [switch]$Cycle3,
+    [switch]$Nightly,
     [Parameter(ValueFromRemainingArguments = $true)]$Rest
 )
 $ErrorActionPreference = 'Stop'
@@ -37,6 +43,20 @@ if ($Resume) {
     if (-not $last) { Write-Host 'No earlier pipeline found (gpu\runs\pipeline\LAST_PIPELINE.txt is missing).'; exit 4 }
     Write-Host "Resuming $last"
     & $py -m gpu.run_pipeline --resume $last @extra
+}
+elseif ($Nightly) {
+    if (Get-Command git -ErrorAction SilentlyContinue) {
+        git pull --ff-only
+        if ($LASTEXITCODE -ne 0) { Write-Host 'git pull did not fast-forward (local changes?); training the code and data as they are.' }
+    }
+    $prof = 'nightly'; if ($Rehearsal) { $prof = 'nightly-smoke' }
+    & $py -m gpu.run_pipeline --profile $prof --device cuda @extra
+}
+elseif ($Cycle3 -and $Rehearsal) {
+    & $py -m gpu.run_pipeline --profile cycle3-smoke --device cuda --extend latest-smoke @extra
+}
+elseif ($Cycle3) {
+    & $py -m gpu.run_pipeline --profile cycle3 --device cuda --extend latest @extra
 }
 elseif ($Cycle2 -and $Rehearsal) {
     & $py -m gpu.run_pipeline --profile cycle2-smoke --device cuda --extend latest-smoke @extra

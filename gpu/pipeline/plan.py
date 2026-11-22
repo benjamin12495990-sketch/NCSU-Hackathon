@@ -84,6 +84,12 @@ def holdout_jobs(*, device, targets, smoke, small_ram, cpu_threads, existing):
 
 def build_plan(profile='standard', *, device='cuda', families=None, targets=None, tabular=True, structure=True, ram_gb=None,
                cpu_threads=2, members=None, existing=None):
+    if profile in ('cycle3', 'cycle3-smoke'):
+        smoke = profile == 'cycle3-smoke'
+        jobs = cycle3_jobs(device=device, smoke=smoke, small_ram=ram_gb is not None and ram_gb < 24, cpu_threads=cpu_threads, existing=existing)
+        return {'profile': profile, 'device': device, 'members': 0, 'jobs': jobs, 'grids': {},
+                'notes': ['Cycle 3: leave-out-elements split (with and without element-property atom inputs), bulk and shear moduli fine-tuned from the '
+                          'formation-energy network, and a wider formation-energy search.' + (' Smoke sizes: the numbers mean nothing.' if smoke else '')]}
     if profile in ('holdout', 'holdout-smoke'):
         smoke = profile == 'holdout-smoke'
         targets = targets or (['bulk_modulus_kv'] if smoke else STRUCT_ORDER_EARLY + STRUCT_ORDER_LATE)
@@ -154,10 +160,64 @@ def describe(plan):
     lines = [f'profile {plan["profile"]}, device {plan["device"]}, {plan["members"]} seeds per setting']
     gpu = [j for j in plan['jobs'] if j['queue'] == 'gpu']
     cpu = [j for j in plan['jobs'] if j['queue'] != 'gpu']
-    for title, js in (('GPU queue (one job at a time)', gpu), ('CPU queue (beside the GPU queue)', cpu)):
+    for title, js in (('GPU queue', gpu), ('CPU queue (beside the GPU queue)', cpu)):
         lines.append(f'\n{title}: {len(js)} jobs, rough guess {sum(j.get("est_minutes", 0) for j in js) / 60:.1f} h')
         for j in js:
             extra = f', {len(plan["grids"][j["family"]])} settings' if j['id'].startswith('tab_') else ''
             lines.append(f'  {j["id"]:34s} ~{j.get("est_minutes", 0):4.0f} min{extra}')
     lines += [''] + [f'note: {n}' for n in plan['notes']]
     return '\n'.join(lines)
+
+
+# ---- cycle 3: leave-out-elements, fine-tuning from formation energy, and a wider formation-energy search ---------------------------
+PRETRAIN = 'formation_energy_peratom'
+FT_TARGETS = ('bulk_modulus_kv', 'shear_modulus_gv')
+SPACE_WIDE = {'atom_features': [64, 96, 128, 160, 192, 256], 'conv': [3, 4, 5, 6, 7, 8], 'hidden': [128, 192, 256, 384],
+              'lr': [1e-3, 2e-3, 4e-3, 6e-3, 8e-3], 'weight_decay': [0.0, 1e-5, 1e-4], 'batch': [32, 64, 128]}
+
+
+def _struct_job(jid, t, split, seed, *, device, epochs, lim, smoke, extra=(), after=None, tag=None, est=None, group='structure'):
+    job = {'id': jid, 'queue': 'gpu', 'group': group, 'target': t, 'split': split,
+           'argv': ['-m', 'gpu.structure.train_structure', '--device', device, '--target', t, '--split', split, '--epochs', str(epochs),
+                    '--seed', str(seed), '--runs-root', '{JOB_DIR}', '--tag', tag or jid, *extra, *lim],
+           'expect': ['structure/*/result.json', 'structure/*/predictions.npz'], 'resumable': True, 'resume_glob': 'structure/*/run_config.json',
+           'timeout_s': (8 if t in BIG_TARGETS else 4) * 3600, 'est_minutes': 1 if smoke else (est or STRUCT_EST_MIN[t])}
+    if after:
+        job['after'] = list(after)
+    return job
+
+
+def cycle3_jobs(*, device, smoke, small_ram, cpu_threads, existing):
+    """Static jobs of cycle 3 (the search round is added by gpu/pipeline/evolve.py)."""
+    targets = ['bulk_modulus_kv'] if smoke else STRUCT_ORDER_EARLY + STRUCT_ORDER_LATE
+    if smoke and PRETRAIN not in targets:
+        targets = targets + [PRETRAIN]
+    epochs = 3 if smoke else 100
+    seeds_e = [11, 12]
+    jobs = []
+    env = {'OMP_NUM_THREADS': str(cpu_threads)}
+    for t in targets:
+        lim = limit_for(existing, t, smoke, small_ram)
+        jobs.append({'id': f'trees_{t}_elem', 'queue': 'cpu', 'group': 'baseline', 'target': t, 'split': 'element',
+                     'argv': ['-m', 'gpu.structure.baseline_trees', '--target', t, '--threads', str(cpu_threads), '--split', 'element',
+                              '--feature-sets', 'composition,comp+cell,rich', '--output', '{JOB_DIR}/trees.json', *lim],
+                     'expect': ['trees.json', 'trees_predictions.npz'], 'env': env, 'timeout_s': 5 * 3600, 'est_minutes': 1 if smoke else TREES_EST_MIN[t] + 5})
+        for sd in seeds_e:  # the learned element vectors (default): blind to elements never seen in training
+            jobs.append(_struct_job(f'struct_{t}_elem_s{sd}', t, 'element', sd, device=device, epochs=epochs, lim=lim, smoke=smoke))
+        for sd in seeds_e:  # element properties as the atom input: the fix
+            jobs.append(_struct_job(f'struct_{t}_elemP_s{sd}', t, 'element', sd, device=device, epochs=epochs, lim=lim, smoke=smoke,
+                                    extra=['--atom-input', 'both']))
+    sources = {'formula': f'struct_{PRETRAIN}_s11', 'system': f'struct_{PRETRAIN}_sys_s11', 'element': f'struct_{PRETRAIN}_elemP_s11'}
+    have = {j['id'] for j in (existing or [])} | {j['id'] for j in jobs}
+    for t in FT_TARGETS:
+        if smoke and t not in targets:
+            continue  # rehearsal: only the properties it also trains from scratch
+        lim = limit_for(existing, t, smoke, small_ram)
+        for split, seeds, tag in (('formula', [11, 12, 13], 'ft'), ('system', [11, 12, 13], 'ft_sys'), ('element', [11, 12], 'ft_elemP')):
+            src = sources[split]
+            if src not in have:
+                continue  # no pretrained source for this split in this folder
+            for sd in ([11, 12] if smoke else seeds):
+                jobs.append(_struct_job(f'{tag}_{t}_s{sd}', t, split, sd, device=device, epochs=epochs, lim=lim, smoke=smoke,
+                                        extra=['--init-from', '{RUN_OF:' + src + '}', '--lr', '1e-3'], after=[src], group='finetune'))
+    return jobs

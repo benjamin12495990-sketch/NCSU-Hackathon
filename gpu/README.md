@@ -21,7 +21,9 @@ first time this code meets a GPU, so run the checks below in order.
 | `laptop_suite.py` | Runs the whole first-day sequence below and gathers the JSONs to share, with a comparison against `reference_cpu/`. |
 | `run_pipeline.py`, `run_overnight.ps1` | **The unattended pipeline (section 5).** One command trains every model family, runs strong CPU baselines beside it, survives crashes and reboots, and writes `REPORT.md` + `share.zip`. Start here if you do not want to run the steps by hand. |
 | `structure/features.py`, `structure/element_table.json` | Hand-built features for the strongest tree baseline: element-property statistics plus neighbour-geometry statistics (checked against rocksalt NaCl in `tests/test_features.py`). The element table was generated once from the `mendeleev` library (`make_element_table.py`) and is committed. |
-| `pipeline/evolve.py` | Generations of crystal networks (section 6). |
+| `pipeline/evolve.py` | Generations of crystal networks (sections 6, 7). |
+| `pipeline/nightly.py`, `recipes.json`, `schedule_nightly.ps1` | The nightly run (section 8): retrains what changed, keeps a registry of current models. `recipes.json` is the committed list of what to train and which model is recommended. |
+| `structure/element_split.json` | The fixed leave-out-elements split (made by `make_element_split.py`). |
 | `pipeline/` | Its parts: `orchestrator.py` (job runner, resume, thermal guard), `plan.py` (what runs), `analyze.py` (cross-fitted comparisons), `report.py`. `baselines_tabular.py` (next to this file) is the tuned tree/linear baseline for each table-based family. |
 | `tests/smoke.py` | CPU end-to-end test of every piece on tiny settings: `python -m gpu.tests.smoke`. `tests/test_guard.py` tests the sealed-data guard on its own. |
 | `reference_cpu/` | Compact CPU results from the build machine, to compare the laptop against. |
@@ -319,3 +321,36 @@ If the time budget would be exceeded the program skips the remaining generations
 **How to read the result.** The search curve ("best validation MAE by generation") is optimistic by construction: it is the best of ~18 candidates on the same rows. Only the finalist line counts: evolved vs default, on fresh seeds and
 unseen test systems, paired bootstrap over whole chemical systems. My expectation before running it [likely, not proven]: a few percent on validation, little or nothing on the finalist test; if the finalists beat the defaults clearly, that is a real finding.
 Even this split keeps every element and most sub-systems in training, so it is not a "new element" test.
+
+
+## 7. Third cycle: held-out elements, fine-tuning, a wider formation-energy search
+
+```
+git pull
+.\gpu\run_overnight.ps1 -Cycle3 -Rehearsal    # a few minutes (extends the newest rehearsal folder)
+.\gpu\run_overnight.ps1 -Cycle3               # the real thing: ADDS to your newest real run folder; default budget 12 h
+```
+1. **Held-out elements** (`--split element`, `structure/element_split.json`): every crystal containing Pu, Pa, Hf, I, He, Ce or Cr is test (10% of crystals),
+   every crystal containing Tb, Tm, Yb, Pr, Ag or Mo (and none of those) is validation; neither set appears in training. Two network variants:
+   the default (one learned vector per element: an unseen element keeps its random start, so it is expected to fail) and `--atom-input both`
+   (element properties, as in the original CGCNN paper, so an unseen element is described by what it is). Trees on all three feature sets on the same split.
+2. **Fine-tuning** (`--init-from <run>`): bulk and shear modulus networks start from the formation-energy network (94k labels) trained on the same split,
+   output layer reset, lr 1e-3. The trainer refuses a source that trained on, or chose its epoch with, any of the new run's validation or test crystals.
+   Compared with the same network from scratch on formula, held-out-systems and held-out-elements splits.
+3. **Wider formation-energy search** (round r2): starts from the cycle-2 winner, allows up to 8 convolutions, 256 atom features, 384 hidden, lr 8e-3;
+   finalists trained 150 epochs on fresh seeds and compared with the cycle-2 winner.
+4. **Prediction intervals** for every task in every report (also old folders: rebuild the report), see the "Prediction intervals" section.
+
+## 8. Nightly
+
+```
+.\gpu\run_overnight.ps1 -Nightly -Rehearsal   # a few minutes: proves it works
+.\gpu\schedule_nightly.ps1                    # then: a Windows scheduled task runs -Nightly every day at 01:17 (-Time to change, -Remove to stop)
+```
+Each night (own folder `gpu\runs\pipeline\<time>_nightly`): `git pull --ff-only`, then for each of the 10 tasks a key from (data hash, `recipes.json` entry, code version);
+a task is retrained only if its key changed since its last nightly (`gpu\runs\pipeline\registry.json`), `--force` retrains all. Table families: the standard sweep + baselines
+(the report shows the recommended trees or blend). Crystal properties: the recipe's settings and seeds on the held-out-systems split + tree baselines. The report starts with a table
+of the current model, test error and 90% interval for every task. The first night trains everything (about 2-3 h on the RTX 5070 Laptop); a night with nothing new trains nothing.
+A pipeline refuses to start while another is running (`RUNNING.lock`), so the nightly task never collides with a long cycle.
+**Recipes change only by a reviewed commit**: a cycle that finds a better model is evidence for editing `gpu/recipes.json`, never an automatic promotion,
+and no decision is ever made on test rows.

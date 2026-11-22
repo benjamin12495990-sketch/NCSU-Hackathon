@@ -1,0 +1,39 @@
+{
+ "rule": ", so every property and every machine uses the same split):\n  candidates  elements present in 0.05% to 3.5% of all JARVIS dft_3d crystals (O, Li, S, Ba, F and the like are never held out:\n              each is in so many crystals that holding it out would gut the training set)\n  order       candidates sorted by sha256('element-split-v1:' + symbol)\n  test        take candidates in that order until the crystals containing ANY of them reach 10% of all crystals\n  val         the next candidates, until crystals containing any of them (and no test element) reach a further 10%\nA crystal containing a test element is in test; else one containing a validation element is in validation; else train.\nSo no test element appears in any training or validation crystal: the network meets those elements for the first time at test.\nCounted over ALL crystals in the file, not per property, so the bulk-modulus and formation-energy splits hold out the same elements.",
+ "test_elements": [
+  "Pu",
+  "Pa",
+  "Hf",
+  "I",
+  "He",
+  "Ce",
+  "Cr"
+ ],
+ "val_elements": [
+  "Tb",
+  "Tm",
+  "Yb",
+  "Pr",
+  "Ag",
+  "Mo"
+ ],
+ "share_test": 0.1022,
+ "share_val": 0.1166,
+ "crystals": 93902,
+ "element_frequency_percent": {
+  "Pu": 0.34,
+  "Pa": 0.42,
+  "Hf": 2.16,
+  "I": 2.09,
+  "He": 0.08,
+  "Ce": 1.98,
+  "Cr": 3.29,
+  "Tb": 1.48,
+  "Tm": 1.35,
+  "Yb": 1.67,
+  "Pr": 1.85,
+  "Ag": 3.24,
+  "Mo": 3.18
+ },
+ "source_zip_sha256": "f9e0a3309f0000d5de1ec9e49c93963109ea45e63f451103f8f6595d2eabf7f5"
+}

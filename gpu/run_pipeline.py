@@ -53,7 +53,7 @@ def find_pipeline(root, smoke):
             plan = json.loads((d / 'plan.json').read_text())
         except (OSError, ValueError):
             continue
-        if (d / 'state.json').exists() and plan_is_smoke(plan) == smoke and not plan.get('cycle'):
+        if (d / 'state.json').exists() and plan_is_smoke(plan) == smoke:
             return d
     return None
 
@@ -137,9 +137,64 @@ def ensure_jarvis(plan, warn):
         plan['notes'].append('crystal-structure jobs dropped: JARVIS download failed')
 
 
+def pid_alive(pid):
+    """True if a process with this id is running. On Windows os.kill(pid, 0) would TERMINATE it, so ask the kernel instead."""
+    if pid <= 0:
+        return False
+    if os.name == 'nt':
+        h = ctypes.windll.kernel32.OpenProcess(0x1000, False, pid)  # PROCESS_QUERY_LIMITED_INFORMATION
+        if not h:
+            return False
+        code = ctypes.c_ulong()
+        ok = ctypes.windll.kernel32.GetExitCodeProcess(h, ctypes.byref(code))
+        ctypes.windll.kernel32.CloseHandle(h)
+        return bool(ok) and code.value == 259  # STILL_ACTIVE
+    try:
+        os.kill(pid, 0)
+        return True
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+
+
+class LockBusy(Exception):
+    pass
+
+
+class RunLock:
+    """gpu/runs/pipeline/RUNNING.lock while a pipeline runs: a second one (say, the nightly task while a cycle is still going) refuses to start.
+    A lock left by a process that is no longer running is taken over. On exit the lock is marked released (overwritten, not deleted)."""
+
+    def __init__(self, root):
+        self.path = Path(root) / 'RUNNING.lock'
+
+    def __enter__(self):
+        import json
+        if self.path.exists():
+            try:
+                old = json.loads(self.path.read_text())
+            except (OSError, ValueError):
+                old = {}
+            if old.get('pid') and old.get('pid') != os.getpid() and pid_alive(int(old['pid'])):
+                raise LockBusy(f'another pipeline is running (process {old["pid"]}, started {old.get("started")}); not starting a second one on the same GPU. '
+                               f'Wait for it to finish, or stop it with a STOP file in its folder.')
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        atomic_write(self.path, json.dumps({'pid': os.getpid(), 'started': now_iso()}))
+        return self
+
+    def __exit__(self, *exc):
+        import json
+        try:
+            atomic_write(self.path, json.dumps({'pid': None, 'released': now_iso()}))
+        except OSError:
+            pass
+        return False
+
+
 def run(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--profile', default='standard', choices=['smoke', 'standard', 'holdout', 'holdout-smoke', 'cycle2', 'cycle2-smoke'],
+    ap.add_argument('--profile', default='standard', choices=['smoke', 'standard', 'holdout', 'holdout-smoke', 'cycle2', 'cycle2-smoke', 'cycle3', 'cycle3-smoke', 'nightly', 'nightly-smoke'],
                     help='cycle2 = the holdout jobs plus generations of crystal networks; needs --extend <an earlier pipeline folder>')
     ap.add_argument('--device', default='cuda')
     ap.add_argument('--tag', default='')
@@ -162,11 +217,12 @@ def run(argv=None):
     ap.add_argument('--search-epochs', type=int, default=None)
     ap.add_argument('--final-epochs', type=int, default=None)
     ap.add_argument('--retry-failed', action='store_true')
+    ap.add_argument('--force', action='store_true', help='nightly: retrain every task even if its data and recipe did not change')
     ap.add_argument('--runs-root', default=str(RUNS / 'pipeline'))
     a = ap.parse_args(argv)
     import json
 
-    cycle = a.profile.startswith('cycle2')
+    cycle = a.profile.startswith(('cycle2', 'cycle3'))
     smoke_run = a.profile.endswith('smoke') or a.profile == 'smoke'
     ram = total_ram_gb()
     if a.gpu_slots is not None:
@@ -178,11 +234,12 @@ def run(argv=None):
         if cycle:
             print(f'using 1 GPU job at a time: this computer reports {"an unknown amount of" if ram is None else f"{ram:.0f} GB of"} memory, and two full-size crystal jobs each hold several GB '
                   'of graphs. Pass --gpu-slots 2 to run two at once if you have the memory to spare.')
-    plan_profile = {'cycle2': 'holdout', 'cycle2-smoke': 'holdout-smoke'}.get(a.profile, a.profile)
+    plan_profile = {'cycle2': 'holdout', 'cycle2-smoke': 'holdout-smoke'}.get(a.profile, a.profile)  # cycle3 has its own plan
     plan_args = dict(profile=plan_profile, device=a.device, families=a.families.split(',') if a.families else None,
                      targets=a.targets.split(',') if a.targets else None, tabular=not a.no_tabular, structure=not a.no_structure,
                      ram_gb=total_ram_gb(), cpu_threads=a.cpu_threads)
-    budget = a.budget_hours if a.budget_hours is not None else (None if smoke_run else (12.0 if cycle else 10.0))
+    nightly = a.profile.startswith('nightly')
+    budget = a.budget_hours if a.budget_hours is not None else (None if smoke_run else (12.0 if cycle else 8.0 if nightly else 10.0))
     if a.extend in ('latest', 'latest-smoke'):
         found = find_pipeline(a.runs_root, smoke=(a.extend == 'latest-smoke'))
         if found is None:
@@ -217,7 +274,15 @@ def run(argv=None):
             return 0
         info, stop, warn = preflight(a, {**plan, 'jobs': plan['jobs'] + new['jobs']})
     else:
-        plan = build_plan(**plan_args)
+        if nightly:
+            from gpu.pipeline.nightly import build_nightly_plan
+            plan = build_nightly_plan(device=a.device, smoke=smoke_run, ram_gb=ram, cpu_threads=a.cpu_threads, force=a.force,
+                                      registry_path=Path(a.runs_root) / ('registry_smoke.json' if smoke_run else 'registry.json'),
+                                      families=plan_args['families'], targets=plan_args['targets'])
+            if a.tag == '':
+                a.tag = 'nightly'
+        else:
+            plan = build_plan(**plan_args)
         if a.dry_run:
             print(describe(plan))
             return 0
@@ -237,24 +302,44 @@ def run(argv=None):
         plan['notes'] = list(plan.get('notes', [])) + new['notes']
         plan['profile_history'] = list(plan.get('profile_history', [plan['profile']])) + [a.profile]
         if cycle:
-            targets = a.targets.split(',') if a.targets else ['bulk_modulus_kv'] if smoke_run else STRUCT_ORDER_EARLY + STRUCT_ORDER_LATE
             small_ram = (total_ram_gb() or 99) < 24
             threads = max(1, min(4, ((os.cpu_count() or 8) - a.cpu_threads) // gpu_slots))
-            plan['cycle'] = {'targets': targets, 'generations': a.generations or (2 if smoke_run else 4), 'population': a.population or (3 if smoke_run else 6),
-                             'children': a.children or (2 if smoke_run else 4), 'search_epochs': a.search_epochs or (2 if smoke_run else 40),
-                             'final_epochs': a.final_epochs or (3 if smoke_run else 100), 'device': a.device, 'budget_hours': budget, 'smoke': smoke_run, 'gpu_slots': gpu_slots, 'threads': threads,
-                             'limits': {t: limit_for(plan['jobs'], t, smoke_run, small_ram) for t in targets}}
+            common = {'device': a.device, 'budget_hours': budget, 'smoke': smoke_run, 'gpu_slots': gpu_slots, 'threads': threads}
+            if a.profile.startswith('cycle3'):
+                from gpu.pipeline import evolve as E
+                from gpu.pipeline.plan import PRETRAIN, SPACE_WIDE
+                r1 = E.best_of(E.archive(pipe, plan['jobs'], PRETRAIN, None))
+                base = dict(r1['genes']) if r1 else dict(E.DEFAULT)
+                space = {k: sorted(set(v) | {base[k]}) for k, v in SPACE_WIDE.items()}
+                r1_finals = any(j['id'].startswith(f'evof_{PRETRAIN}_s') for j in plan['jobs'])
+                cfg = {'round': 'r2', 'targets': [PRETRAIN], 'split': 'system', 'space': space, 'seed_mode': 'mutants', 'bases': {PRETRAIN: base},
+                       'generations': a.generations or (2 if smoke_run else 3), 'population': a.population or (3 if smoke_run else 5),
+                       'children': a.children or (2 if smoke_run else 3), 'search_epochs': a.search_epochs or (2 if smoke_run else 40),
+                       'final_epochs': a.final_epochs or (3 if smoke_run else 150), 'final_seeds': {PRETRAIN: [31, 32]},
+                       'compare_to': 'evof_{t}_s[0-9]*' if r1_finals else 'struct_{t}_sys_s[0-9]*',
+                       'compare_label': 'the round-1 winner (100 epochs)' if r1_finals else 'the default settings',
+                       'limits': {PRETRAIN: limit_for(plan['jobs'], PRETRAIN, smoke_run, small_ram)}, **common}
+            else:
+                targets = a.targets.split(',') if a.targets else ['bulk_modulus_kv'] if smoke_run else STRUCT_ORDER_EARLY + STRUCT_ORDER_LATE
+                cfg = {'targets': targets, 'generations': a.generations or (2 if smoke_run else 4), 'population': a.population or (3 if smoke_run else 6),
+                       'children': a.children or (2 if smoke_run else 4), 'search_epochs': a.search_epochs or (2 if smoke_run else 40),
+                       'final_epochs': a.final_epochs or (3 if smoke_run else 100), 'limits': {t: limit_for(plan['jobs'], t, smoke_run, small_ram) for t in targets},
+                       'compare_to': 'struct_{t}_sys_s[0-9]*', 'compare_label': 'the default settings', **common}
+            if plan.get('cycle') and plan['cycle'].get('round') != cfg.get('round'):
+                plan['cycle_history'] = list(plan.get('cycle_history', [])) + [plan['cycle']]  # the earlier round's settings are kept
+            plan['cycle'] = cfg
         write_json_atomic(pipe / 'plan.json', plan)
         print(describe(new))
         if cycle:
             from gpu.pipeline.evolve import forecast_hours
             c = plan['cycle']
-            fh, per, sp = forecast_hours(pipe, plan, c)
+            fh, per, sp = forecast_hours(pipe, plan, c, new['jobs'])
             per_text = ', '.join(f'{t.split("_")[0]} {v:.1f} h' for t, v in per.items())
             print(f'\nrough forecast for the whole cycle on the GPU queue: about {fh:.1f} h ({per_text} of GPU time, {c["gpu_slots"]} job(s) at a time, '
                   f'assuming {sp}x speed-up from sharing). Based on how long the same jobs took earlier in this folder; the report records the real times.')
-            print(f'\nplus generations of crystal networks on held-out chemical systems: {len(c["targets"])} properties x {c["generations"]} generations '
-                  f'(population {c["population"]}, {c["children"]} children each, {c["search_epochs"]} epochs per search run), then finalists at {c["final_epochs"]} epochs on fresh seeds.')
+            print(f'\nplus {"search round " + c["round"] if c.get("round") else "generations"} of crystal networks on held-out chemical systems: {len(c["targets"])} properties x {c["generations"]} generations '
+                  f'(population {c["population"]}, {c["children"]} children each, {c["search_epochs"]} epochs per search run), then finalists at {c["final_epochs"]} epochs on fresh seeds, '
+                  f'compared with {c.get("compare_label", "the default settings")}.')
     elif not a.resume:
         ensure_jarvis(plan, warn)
         pipe = new_run_dir(Path(a.runs_root), a.tag)
@@ -290,6 +375,13 @@ def run(argv=None):
     st = json.loads(state_path.read_text())
     st['integrity'] = integ
     atomic_write(state_path, json.dumps(st, indent=1))
+    if plan.get('nightly'):
+        try:
+            from gpu.pipeline.analyze import analyze_all
+            from gpu.pipeline.nightly import update_registry
+            update_registry(pipe, plan, analyze_all(pipe, plan))
+        except Exception as e:  # noqa: BLE001 - the night's results are on disk either way
+            print(f'the registry could not be updated ({e!r})')
     from gpu.pipeline.report import generate
     try:
         rep, z = generate(pipe)
@@ -301,7 +393,16 @@ def run(argv=None):
 
 def main(argv=None):
     try:
-        return run(argv)
+        if argv is None:
+            argv = sys.argv[1:]
+        if '--dry-run' in argv:
+            return run(argv)
+        root = argv[argv.index('--runs-root') + 1] if '--runs-root' in argv else str(RUNS / 'pipeline')
+        with RunLock(root):
+            return run(argv)
+    except LockBusy as e:
+        print(f'NOT STARTED: {e}')
+        return 4
     except KeyboardInterrupt:
         return 2
     except Exception:  # noqa: BLE001 - the launcher resumes after this

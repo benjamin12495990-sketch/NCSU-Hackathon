@@ -83,12 +83,14 @@ def main(argv=None):
         best = min(rows, key=lambda k: rows[k]['val']['mae'])
         test = metrics(rows[best]['_model'].predict(X[idx['test']]), y[idx['test']])
         test_preds['pred_' + sname.replace('+', '_')] = rows[best]['_model'].predict(X[idx['test']])
+        test_preds['val_pred_' + sname.replace('+', '_')] = rows[best]['_model'].predict(X[idx['val']])  # for calibrating intervals
         out['feature_sets'][sname] = {'n_features': int(X.shape[1]), 'selected': best, 'val': rows[best]['val'], 'test': test,
                                       'all_val_mae': {k: v['val']['mae'] for k, v in rows.items()}}
         print(f'  -> {sname}: selected {best}; test MAE {test["mae"]:.4f}, R2 {test["r2"]:.3f}', flush=True)
     write_json_new(a.output, out)
     np.savez_compressed(pred_path, jid=np.array([recs[i]['jid'] for i in idx['test']]), formula=np.array([recs[i]['formula'] for i in idx['test']]),
-                        y=y[idx['test']], group=np.array([group_of(recs[i], a.split) for i in idx['test']]), **test_preds)
+                        y=y[idx['test']], group=np.array([group_of(recs[i], a.split) for i in idx['test']]),
+                        val_jid=np.array([recs[i]['jid'] for i in idx['val']]), val_y=y[idx['val']], **test_preds)
     print(f'mean baseline test MAE {out["mean"]["test"]["mae"]:.4f}; wrote {a.output}')
 
 

@@ -159,6 +159,20 @@ def test_two_gpu_slots_run_two_gpu_jobs_at_once():
         assert rc == 0 and 2.9 <= dt < 4.4, dt   # three 1.5 s jobs on two slots: two rounds (~3 s), not one (1.5 s) and not three (4.5 s)
 
 
+def test_dependencies_wait_pass_the_run_folder_and_skip_after_a_failure():
+    pre = ("run = d / 'structure' / '20260101T000000Z_pre'; run.mkdir(parents=True, exist_ok=True); import time; time.sleep(1.0)\n"
+           "(run / 'result.json').write_text('{}'); (d / 'out.txt').write_text('x')")
+    use = "assert sys.argv[-1].endswith('20260101T000000Z_pre'), sys.argv; (d / 'out.txt').write_text(sys.argv[-1])"
+    with tempfile.TemporaryDirectory() as t:
+        jobs = [job('ft', use, queue='gpu', after=['pre']), job('pre', pre, queue='gpu'), job('bad', 'sys.exit(1)'), job('needs_bad', WRITE, after=['bad'])]
+        jobs[0]['argv'].append('{RUN_OF:pre}')
+        o, rc = run(jobs, t, gpu_slots=2)
+        assert status(o, 'pre') == 'done' and status(o, 'ft') == 'done', o.state['jobs']
+        assert status(o, 'needs_bad') == 'skipped_dependency' and rc == 1
+        o2, rc2 = run(jobs, t)          # next session: the skipped job is reconsidered (its dependency is still failed, so skipped again)
+        assert status(o2, 'needs_bad') == 'skipped_dependency' and status(o2, 'ft') == 'done'
+
+
 def test_truncated_output_is_not_accepted():
     code = "(d / 'out.json').write_text('{\"half\": ')"
     with tempfile.TemporaryDirectory() as t:
