@@ -199,7 +199,7 @@ def evolution_section(items):
         name = STRUCT_NAMES.get(e['target'], e['target'])
         curve = ' -> '.join(g(v) for v in e['best_by_generation'])
         start = 'The default settings' if e.get('round', 'r1') == 'r1' else f'The starting point ({e.get("start_label")}: {e.get("start_changes")})'
-        L += [f'### {name}' + ('' if e.get('round', 'r1') == 'r1' else f' — search round {e["round"]} (wider settings, starting from the round-1 winner; finalists trained {e.get("final_epochs")} epochs)'), '',
+        L += [f'### {name}' + ('' if e.get('round', 'r1') == 'r1' else f' — search round {e["round"]} (wider settings, starting from the round-1 winner; finalists trained {e.get("final_epochs")} epochs, the same as the runs they are compared with)'), '',
               f'- {e["n_finished"]} of {e["n_individuals"]} individuals finished over {e["generations"]} generations.',
               f'- Best validation MAE so far, generation by generation: {curve}. {start} scored {g(e["default_val_mae"])} in the same protocol.']
         if e['default_won']:
@@ -235,7 +235,10 @@ def finetune_section(items):
     L = ['## Moduli networks that start from the formation-energy network', '',
          'Bulk and shear modulus have about 30,000 labelled crystals; formation energy has about 94,000. Each fine-tuned network starts from a formation-energy network '
          '(every layer except the output) trained on the **same split**, and the trainer refuses to start if that network ever trained on, or chose its epoch with, '
-         'this run\'s validation or test crystals. It is then compared with the same network trained from scratch on the same rows, and with the strongest trees.', '']
+         'this run\'s validation or test crystals. It is then compared with the same architecture trained from scratch on the same rows, and with the strongest trees. '
+         'Two things differ besides the starting weights, so read the verdict as "this fine-tuning recipe against the from-scratch recipe": fine-tuned runs use learning rate 1e-3 '
+         '(from-scratch runs 2e-3), and every fine-tuned seed of a split starts from the same formation-energy network (seed 11), so their average is an average of less '
+         'independent networks than the from-scratch average.', '']
     if ok:
         L += ['| Property | Split | Fine-tuned: single / average | From scratch: single / average | Fine-tuned minus scratch (95%) | Verdict | Fine-tuned minus strongest trees | Verdict vs trees | Single fine-tuned runs vs trees |',
               '| --- | --- | --- | --- | --- | --- | --- | --- | --- |']
@@ -310,7 +313,7 @@ def build(pipe):
               'its accuracy numbers and verdicts mean nothing. Run `--profile standard` for real results.', '']
     if plan.get('nightly'):
         from gpu.pipeline.nightly import registry_lines
-        L += registry_lines(plan)
+        L += registry_lines(plan, pipe)
     L += ['## At a glance', '',
           f'- Jobs: **{len(done)} finished**, {len(bad)} failed or timed out, {len(other)} not run (stopped or out of time) of {len(jobs)}. GPU job time: {gpu_h:.2f} h.',
           f'- Table-based families ({len(tab_ok)} with results). Average of the network seeds against one tuned tree model: network clearly better on {tv.count("network clearly better")}, trees clearly better on {tv.count("trees clearly better")}, no clear difference on {tv.count("no clear difference")}. '
@@ -319,10 +322,23 @@ def build(pipe):
           f'**Single runs**: clearly better in every run on {sb.count("network")}, mixed or unclear on {sb.count("unclear")}, trees clearly better in every run on {sb.count("trees")}.']
     evo_ok = [e for e in (A.get('evolution') or []) if e.get('status') == 'ok']
     if evo_ok:
-        fin = [e for e in evo_ok if e.get('finalists')]
+        r1 = [e for e in evo_ok if e.get('round', 'r1') == 'r1']
+        fin = [e for e in r1 if e.get('finalists')]
         better = [STRUCT_NAMES.get(e['target'], e['target']) for e in fin if e['finalists']['evolved_vs_default']['verdict'] == 'evolved clearly better']
-        won = [STRUCT_NAMES.get(e['target'], e['target']) for e in evo_ok if e['default_won']]
-        L.append(f'- **Generations**: {len(evo_ok)} properties searched; on fresh seeds and test systems the evolved settings clearly beat the defaults on {len(better)}' + (f' ({", ".join(better)})' if better else '') + f'; the defaults stayed best on {len(won)}' + (f' ({", ".join(won)})' if won else '') + '.')
+        won = [STRUCT_NAMES.get(e['target'], e['target']) for e in r1 if e['default_won']]
+        if r1:
+            L.append(f'- **Generations**: {len(r1)} properties searched; on fresh seeds and test systems the evolved settings clearly beat the defaults on {len(better)}' + (f' ({", ".join(better)})' if better else '') + f'; the defaults stayed best on {len(won)}' + (f' ({", ".join(won)})' if won else '') + '.')
+        for e in evo_ok:
+            if e.get('round', 'r1') == 'r1':
+                continue
+            name = STRUCT_NAMES.get(e['target'], e['target'])
+            if e['default_won']:
+                txt = 'nothing beat the starting settings (the previous winner)'
+            elif e.get('finalists'):
+                txt = f'finalists against {e.get("compare_label", "the previous winner")}: {e["finalists"]["evolved_vs_default"]["verdict"]}'
+            else:
+                txt = 'finalists not finished'
+            L.append(f'- **Search round {e["round"]}** ({name}, wider settings): {txt}.')
     for key, label in (('structure_element', 'Held-out elements, learned element vectors'), ('structure_elementP', 'Held-out elements, element-property inputs')):
         ok_e = [t for t in A.get(key, []) if t['status'] == 'ok']
         if ok_e:

@@ -106,6 +106,25 @@ def test_nightly_retrains_only_what_changed():
         assert {j['id'] for j in forced['jobs']} == first
 
 
+def test_registry_remembers_a_task_only_when_all_its_jobs_finished():
+    from gpu.pipeline import nightly as N
+    with tempfile.TemporaryDirectory() as d:
+        pipe, reg = Path(d) / 'night', Path(d) / 'registry.json'
+        pipe.mkdir()
+        plan = {'jobs': [{'id': 'tab_alloys', 'family': 'alloys'}, {'id': 'base_alloys', 'family': 'alloys'}],
+                'nightly': {'keys': {'tab:alloys': 'K1'}, 'retrain': ['tab:alloys'], 'skipped': [], 'registry': str(reg)}}
+        analysis = {'tabular': [{'family': 'alloys', 'status': 'ok', 'target': 'HV', 'methods': {'trees': {'mae': 70.0}, 'network': {'mae': 75.0}}, 'fairness': {}}], 'intervals': {}}
+        (pipe / 'state.json').write_text(json.dumps({'jobs': {'tab_alloys': {'status': 'done'}, 'base_alloys': {'status': 'skipped_budget'}}}))
+        N.update_registry(pipe, plan, analysis)
+        assert 'tab:alloys' not in N.load_registry(reg)['tasks'], 'a half-finished task must be retried, not remembered'
+        lines = '\n'.join(N.registry_lines(plan, pipe))
+        assert 'NOT finished' in lines and 'tab:alloys' in lines
+        (pipe / 'state.json').write_text(json.dumps({'jobs': {'tab_alloys': {'status': 'done'}, 'base_alloys': {'status': 'done'}}}))
+        N.update_registry(pipe, plan, analysis)
+        assert N.load_registry(reg)['tasks']['tab:alloys']['key'] == 'K1'
+        assert 'Retrained tonight: tab:alloys' in '\n'.join(N.registry_lines(plan, pipe))
+
+
 def test_run_lock_refuses_a_live_beating_holder_and_takes_over_a_dead_or_silent_one():
     import time
     from gpu.run_pipeline import LockBusy, RunLock

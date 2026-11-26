@@ -311,6 +311,11 @@ def run(argv=None):
     else:
         if nightly:
             from gpu.pipeline.nightly import build_nightly_plan
+            if not JARVIS_ZIP.exists() and not a.dry_run:   # a fresh clone: without the file the crystal tasks would be dropped without a word
+                print('fetching the JARVIS-DFT file (about 46 MB) ...', flush=True)
+                r = subprocess.run([sys.executable, '-m', 'gpu.structure.fetch_jarvis', '--download'], cwd=str(REPO), capture_output=True, text=True)
+                if r.returncode != 0 or not JARVIS_ZIP.exists():
+                    print('WARNING: the JARVIS file could not be downloaded; tonight trains the table families only. ' + (r.stderr or r.stdout)[-200:])
             plan = build_nightly_plan(device=a.device, smoke=smoke_run, ram_gb=ram, cpu_threads=a.cpu_threads, force=a.force,
                                       registry_path=Path(a.runs_root) / ('registry_smoke.json' if smoke_run else 'registry.json'),
                                       families=plan_args['families'], targets=plan_args['targets'])
@@ -356,9 +361,10 @@ def run(argv=None):
                 cfg = {'round': 'r2', 'targets': [PRETRAIN], 'split': 'system', 'space': space, 'seed_mode': 'mutants', 'bases': {PRETRAIN: base},
                        'generations': a.generations or (2 if smoke_run else 3), 'population': a.population or (3 if smoke_run else 5),
                        'children': a.children or (2 if smoke_run else 3), 'search_epochs': a.search_epochs or (2 if smoke_run else 40),
-                       'final_epochs': a.final_epochs or (3 if smoke_run else 150), 'final_seeds': {PRETRAIN: [31, 32]},
+                       # the same number of epochs as the runs the finalists are compared with: otherwise longer training alone looks like a win
+                       'final_epochs': a.final_epochs or (3 if smoke_run else int((plan.get('cycle') or {}).get('final_epochs') or 100)), 'final_seeds': {PRETRAIN: [31, 32]},
                        'compare_to': 'evof_{t}_s[0-9]*' if r1_finals else 'struct_{t}_sys_s[0-9]*',
-                       'compare_label': 'the round-1 winner (100 epochs)' if r1_finals else 'the default settings',
+                       'compare_label': 'the round-1 winner' if r1_finals else 'the default settings',
                        'limits': {PRETRAIN: limit_for(plan['jobs'], PRETRAIN, smoke_run, small_ram)}, **common}
             else:
                 targets = a.targets.split(',') if a.targets else ['bulk_modulus_kv'] if smoke_run else STRUCT_ORDER_EARLY + STRUCT_ORDER_LATE

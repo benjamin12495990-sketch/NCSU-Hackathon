@@ -191,10 +191,20 @@ def load_chemistry(rebuild=False):
     nn = out / 'nn_data.json'
     csv_path = REPO / 'domains/chemistry/work/data/data_curated.csv'
     prep = REPO / 'domains/chemistry/work/prepare.py'
-    if rebuild or not nn.exists():
+    # The cache is git-ignored, so it must notice when its sources change (new data arriving by git pull): a stamp of the source
+    # hashes sits beside it. A cache without a stamp (made by older code) is taken as current and stamped, never rebuilt blindly.
+    stamp_path = out / 'source_stamp.json'
+    stamp = {'data_curated.csv': sha256_file(guard_path(csv_path)), 'prepare.py': sha256_file(prep)}
+    try:
+        old_stamp = json.loads(stamp_path.read_text())
+    except (OSError, ValueError):
+        old_stamp = None
+    if rebuild or not nn.exists() or (old_stamp is not None and old_stamp != stamp):
         out.mkdir(parents=True, exist_ok=True)
-        guard_path(csv_path)
         subprocess.run([sys.executable, '-I', str(prep), str(csv_path), str(out)], check=True, stdout=subprocess.DEVNULL)
+        old_stamp = None
+    if old_stamp is None:
+        stamp_path.write_text(json.dumps(stamp, indent=1))
     ds = _from_nn_data('chemistry', nn, 'aqueous solubility LogS, log10 mol/L')
     ds.sources = {}
     for p in (csv_path, prep):

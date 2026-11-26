@@ -173,6 +173,42 @@ def test_dependencies_wait_pass_the_run_folder_and_skip_after_a_failure():
         assert status(o2, 'needs_bad') == 'skipped_dependency' and status(o2, 'ft') == 'done'
 
 
+def test_no_cool_down_wait_while_the_other_gpu_slot_is_training():
+    class Warm:                       # the card reads 85 C all the time: hot enough to wait, never hot enough to stop a job
+        def temps(self, n=3, max_age_s=None):
+            return [85.0] * n
+    nap = lambda s: f'import time; time.sleep({s}); ' + WRITE  # noqa: E731
+    with tempfile.TemporaryDirectory() as t:
+        t0 = time.time()
+        # different lengths, as real jobs have: when one slot finishes, the other is still training
+        o = Orchestrator(t, [job('g0', nap(0.6), queue='gpu'), job('g1', nap(2.4), queue='gpu'), job('g2', nap(0.6), queue='gpu'), job('g3', nap(0.6), queue='gpu')],
+                         gpu_slots=2, telemetry=Warm(), poll=0.1, status_every=0.5)
+        o.cool_down = (lambda orig: (lambda jid, limit_s=3: orig(jid, limit_s)))(o.cool_down)   # a 3 s idle wait instead of 15 min
+        rc = o.run()
+        dt = time.time() - t0
+        skipped = [e for e in o.state['events'] if 'without a cool-down wait' in e['what']]
+        assert rc == 0 and len(skipped) >= 2, (dt, [e['what'] for e in o.state['events']])   # g2 and g3 start beside g1 without waiting
+        assert dt < 8.0, dt     # one shared 3 s idle wait at the start, then about 2.5 s of work; waiting before every job would be 12 s+
+
+
+def test_telemetry_survives_a_locked_file_and_ignores_stale_readings():
+    from gpu.pipeline.orchestrator import Telemetry
+    with tempfile.TemporaryDirectory() as t:
+        tel = Telemetry(Path(t) / 'no_such_dir' / 'telemetry.csv', interval=0.05)   # every append fails
+        tel.available = True
+        import subprocess as sp
+        real = sp.run
+        class R:
+            stdout = '50, 1000, 40.0, 70, 2000\n'
+        sp.run = lambda *a, **k: R()
+        try:
+            assert tel.sample() is not None and tel.sample() is not None            # no exception although the file cannot be written
+            assert tel.temps(3) == [70.0, 70.0]
+            assert tel.temps(3, max_age_s=0.0) == []                                 # stale readings are not used
+        finally:
+            sp.run = real
+
+
 def test_truncated_output_is_not_accepted():
     code = "(d / 'out.json').write_text('{\"half\": ')"
     with tempfile.TemporaryDirectory() as t:

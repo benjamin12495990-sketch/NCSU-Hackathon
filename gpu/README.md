@@ -343,7 +343,7 @@ git pull
    output layer reset, lr 1e-3. The trainer refuses a source that trained on, or chose its epoch with, any of the new run's validation or test crystals.
    Compared with the same network from scratch on formula, held-out-systems and held-out-elements splits.
 3. **Wider formation-energy search** (round r2): starts from the cycle-2 winner, allows up to 8 convolutions, 256 atom features, 384 hidden, lr 8e-3;
-   finalists trained 150 epochs on fresh seeds and compared with the cycle-2 winner.
+   finalists trained on fresh seeds for the same 100 epochs as the cycle-2 winner they are compared with (so longer training cannot pass for better settings).
 4. **Prediction intervals** for every task in every report (also old folders: rebuild the report), see the "Prediction intervals" section.
 
 ## 8. Nightly

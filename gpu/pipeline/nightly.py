@@ -94,6 +94,9 @@ def build_nightly_plan(*, device, smoke, ram_gb, cpu_threads, registry_path, for
         plan['jobs'] += crystal_jobs(t, recipes['crystal'][t], device=device, smoke=smoke, small_ram=ram_gb is not None and ram_gb < 24, cpu_threads=cpu_threads)
     plan['notes'].append(f'Nightly: {len(todo_f)} table famil{"y" if len(todo_f) == 1 else "ies"} and {len(todo_t)} crystal propert{"y" if len(todo_t) == 1 else "ies"} changed and are retrained; '
                          f'{len(skipped)} task(s) unchanged since their last nightly: {", ".join(skipped) or "none"}.')
+    if not jarvis_sha:
+        plan['notes'].append('The JARVIS file is missing (gpu/data_cache/jarvis/), so NO crystal property was planned tonight; '
+                             'run: python -m gpu.structure.fetch_jarvis --download')
     if smoke:
         plan['notes'].append('Smoke sizes: the numbers mean nothing.')
     plan['nightly'] = {'keys': keys, 'retrain': [f'tab:{f}' for f in todo_f] + [f'crystal:{t}' for t in todo_t], 'skipped': skipped,
@@ -123,9 +126,20 @@ def update_registry(pipe, plan, analysis):
     ivt = {x['task']: x for x in iv.get('tabular', []) if 'models' in x}
     ivc = {x['task']: x for x in iv.get('crystal', []) if 'models' in x and x.get('split') == 'system'}
     stamp = time.strftime('%Y-%m-%d %H:%M:%S')
+    try:
+        state = json.loads((Path(pipe) / 'state.json').read_text())['jobs']
+    except (OSError, ValueError, KeyError):
+        state = {}
+
+    def all_done(pred):
+        # A task counts as trained only when EVERY one of its jobs finished: a night cut short (budget, STOP, a failed seed) must be
+        # retried the next night, not remembered as done with fewer runs than the recipe asks for.
+        ids = [j['id'] for j in plan['jobs'] if pred(j)]
+        return bool(ids) and all(state.get(i, {}).get('status') == 'done' for i in ids)
+
     for t in analysis.get('tabular', []):
         k = f'tab:{t["family"]}'
-        if k not in nightly['retrain'] or t.get('status') != 'ok':
+        if k not in nightly['retrain'] or t.get('status') != 'ok' or not all_done(lambda j, f=t['family']: j.get('family') == f):
             continue
         rec = recipes['tabular'].get(t['family'], {}).get('recommended', 'trees')
         name, mae = _recommended_tab(t, rec)
@@ -134,7 +148,7 @@ def update_registry(pipe, plan, analysis):
                            'trees_mae': t['methods']['trees']['mae'], 'interval90_half_width': model_iv.get('half_width'), 'interval90_coverage': model_iv.get('coverage')}
     for s in analysis.get('structure_system', []):
         k = f'crystal:{s["target"]}'
-        if k not in nightly['retrain'] or s.get('status') != 'ok':
+        if k not in nightly['retrain'] or s.get('status') != 'ok' or not all_done(lambda j, tg=s['target']: j.get('target') == tg):
             continue
         rec = recipes['crystal'][s['target']]['recommended']
         f = s.get('fairness', {})
@@ -155,19 +169,27 @@ def update_registry(pipe, plan, analysis):
     return reg
 
 
-def registry_lines(plan):
+def registry_lines(plan, pipe=None):
     """Report lines: what is current for every task, retrained tonight or not."""
     nightly = plan.get('nightly')
     if not nightly:
         return []
     reg = load_registry(nightly['registry'])['tasks']
+    here = None if pipe is None else str(pipe)
+    ok = [k for k in nightly['retrain'] if reg.get(k, {}).get('key') == nightly['keys'][k] and (here is None or reg[k].get('folder') == here)]
+    not_ok = [k for k in nightly['retrain'] if k not in ok]
     L = ['## Nightly: the current model for every task', '',
-         f'Retrained tonight: {", ".join(nightly["retrain"]) or "nothing (no data or recipe changed)"}. Unchanged: {", ".join(nightly["skipped"]) or "none"}.', '',
+         f'Retrained tonight: {", ".join(ok) or ("nothing" if not_ok else "nothing (no data or recipe changed)")}. '
+         + (f'**Planned but NOT finished (will be retried next night): {", ".join(not_ok)}.** ' if not_ok else '')
+         + f'Unchanged: {", ".join(nightly["skipped"]) or "none"}.', '',
          '| Task | Recommended model | Test MAE | Strongest trees MAE | 90% interval half-width / coverage | Trained |', '| --- | --- | --- | --- | --- | --- |']
     for k in sorted(nightly['keys']):
         e = reg.get(k)
         if not e:
             L.append(f'| {k} | - | not trained yet | - | - | - |')
+            continue
+        if e.get('key') != nightly['keys'][k]:
+            L.append(f'| {k} | OUT OF DATE: the data or recipe changed and the retrain did not finish; the last finished model ({e.get("date")}) was {e.get("recommended")}, MAE {e.get("mae")} | - | - | - | - |')
             continue
         hw = e.get('interval90_half_width', e.get('interval90_half_width_network'))
         cov = e.get('interval90_coverage', e.get('interval90_coverage_network'))

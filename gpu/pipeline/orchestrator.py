@@ -79,6 +79,8 @@ class Telemetry(threading.Thread):
     def __init__(self, path, interval=10.0):
         super().__init__(daemon=True)
         self.path, self.interval, self.rows = Path(path), interval, []
+        self.stamps = []          # time.time() of each row, so stale readings can be ignored
+        self.pending = []         # rows not yet written (the file was locked, e.g. open in Excel)
         self.stop_event = threading.Event()
         self.available = shutil.which('nvidia-smi') is not None
         self.lock = threading.Lock()
@@ -102,22 +104,36 @@ class Telemetry(threading.Thread):
         row = [now_iso(), *vals]
         with self.lock:
             self.rows.append(row)
-        new = not self.path.exists()
-        with open(self.path, 'a', newline='') as f:
-            w = csv.writer(f)
-            if new:
-                w.writerow(['time', 'util_pct', 'mem_mib', 'power_w', 'temp_c', 'sm_clock_mhz'])
-            w.writerow(row)
+            self.stamps.append(time.time())
+            self.pending.append(row)
+        try:  # the file may be locked by another program; keep sampling and write the backlog next time
+            new = not self.path.exists()
+            with open(self.path, 'a', newline='') as f:
+                w = csv.writer(f)
+                if new:
+                    w.writerow(['time', 'util_pct', 'mem_mib', 'power_w', 'temp_c', 'sm_clock_mhz'])
+                with self.lock:
+                    backlog, self.pending = self.pending, []
+                w.writerows(backlog)
+        except OSError:
+            pass
         return row
 
     def run(self):
         while not self.stop_event.is_set():
-            self.sample()
+            try:
+                self.sample()
+            except Exception:  # noqa: BLE001 - the sampler must outlive any one bad sample
+                pass
             self.stop_event.wait(self.interval)
 
-    def temps(self, n=3):
+    def temps(self, n=3, max_age_s=None):
+        """The last n temperatures, ignoring readings older than max_age_s (default: 4 sampling intervals, at least 60 s),
+        so a stalled sampler can neither trigger nor silence the thermal guard."""
+        max_age_s = max(60.0, 4 * self.interval) if max_age_s is None else max_age_s
+        now = time.time()
         with self.lock:
-            return [r[4] for r in self.rows[-n:] if r[4] is not None]
+            return [r[4] for r, t in list(zip(self.rows, self.stamps))[-n:] if r[4] is not None and now - t <= max_age_s]
 
     def stop(self):
         self.stop_event.set()
@@ -265,16 +281,24 @@ class Orchestrator:
         t = self.tel.temps(3) if self.tel else []
         return len(t) >= 3 and min(t) >= self.hot_c
 
+    def gpu_jobs_running(self):
+        return sum(1 for j in list(self.procs) if self.jobs.get(j, {}).get('queue') == 'gpu')
+
     def cool_down(self, jid, limit_s=900):
-        """Between GPU jobs: if the card is hot, wait until it is below cool_c (at most limit_s)."""
+        """Between GPU jobs: if the card is hot AND idle, wait until it is below cool_c (at most limit_s).
+        While another GPU job is training the card cannot cool, so waiting would only stall this slot for the full limit before
+        every job; the in-job guard (hot_c) still protects the card."""
         t = self.tel.temps(1) if self.tel else []
         if not t or t[0] < self.warm_c:
+            return
+        if self.gpu_jobs_running():
+            self.event(jid, f'GPU at {t[0]:.0f} C with another GPU job running: starting without a cool-down wait (the {self.hot_c:.0f} C guard still applies)')
             return
         self.event(jid, f'GPU at {t[0]:.0f} C before starting; waiting for it to cool below {self.cool_c:.0f} C')
         end = time.time() + limit_s
         while time.time() < end and not self.stop_now():
             t = self.tel.temps(1)
-            if t and t[0] <= self.cool_c:
+            if not t or t[0] <= self.cool_c:   # no fresh reading: do not wait blind
                 break
             time.sleep(self.poll)
 
@@ -412,16 +436,24 @@ class Orchestrator:
     def _worker(self, dq):
         """Takes the next ready job from a shared queue until it is empty, so workers share the load whatever the job lengths."""
         while True:
-            jid = self._take(dq)
+            try:
+                jid = self._take(dq)
+            except Exception as e:  # noqa: BLE001 - e.g. state.json briefly unwritable: try again rather than drop the queue
+                self.say(f'queue error: {e!r}; retrying')
+                time.sleep(5)
+                continue
             if jid is None:
                 return
             try:
                 self.run_job(jid)
             except Exception as e:  # a bug in the runner must not kill the night
-                self.state['jobs'][jid]['status'] = FAILED
-                self.state['jobs'][jid]['error'] = repr(e)
-                self.event(jid, f'runner error: {e!r}')
-                self.save()
+                try:
+                    self.state['jobs'][jid]['status'] = FAILED
+                    self.state['jobs'][jid]['error'] = repr(e)
+                    self.event(jid, f'runner error: {e!r}')
+                    self.save()
+                except Exception as e2:  # noqa: BLE001
+                    self.say(f'[{jid}] runner error {e!r}; could not record it ({e2!r})')
 
     def _pools(self):
         """[(queue, number of workers)]: GPU jobs share `gpu_slots` workers, CPU jobs share `cpu_workers` workers."""
@@ -462,19 +494,33 @@ class Orchestrator:
             try:
                 while any(t.is_alive() for t in threads):
                     if time.time() - last >= self.status_every:
-                        self.write_status()
+                        self._status_safely()
                         last = time.time()
                     time.sleep(self.poll)
-            except KeyboardInterrupt:
+            except BaseException as e:  # Ctrl+C, or anything unexpected: never leave trainer processes running unattended
                 interrupted = True
-                self.say('Ctrl+C: stopping running jobs (they can be resumed)')
-                atomic_write(self.pipe / 'STOP_NOW', now_iso())
+                self.say('Ctrl+C: stopping running jobs (they can be resumed)' if isinstance(e, KeyboardInterrupt)
+                         else f'unexpected error in the pipeline loop ({e!r}): stopping running jobs (they can be resumed)')
+                try:
+                    atomic_write(self.pipe / 'STOP_NOW', now_iso())
+                except OSError:
+                    for proc in list(self.procs.values()):
+                        proc.terminate()
                 for t in threads:
                     t.join(timeout=60)
-        self.write_status()
+                if not isinstance(e, KeyboardInterrupt):
+                    raise
+        self._status_safely()
         c = self._counts()
         self.say('finished: ' + ', '.join(f'{k}={v}' for k, v in sorted(c.items())))
         bad = c.get(FAILED, 0) + c.get(TIMEOUT, 0) + c.get('skipped_dependency', 0)
-        if interrupted or any(c.get(k) for k in ('interrupted', 'skipped_stop', 'skipped_budget')):
-            return 2  # not everything ran: stopped, interrupted or out of time (resume to continue)
+        mine = [self.state['jobs'][j]['status'] for j in self.order]
+        if interrupted or any(x in ('interrupted', 'skipped_stop', 'skipped_budget', PENDING, RUNNING) for x in mine):
+            return 2  # not everything ran: stopped, interrupted, out of time, or left in the queue (resume to continue)
         return 1 if bad else 0
+
+    def _status_safely(self):
+        try:
+            self.write_status()
+        except Exception as e:  # noqa: BLE001 - a locked STATUS.txt must not stop the run
+            self.say(f'status file not written ({e!r})')
