@@ -8,12 +8,15 @@ An earlier REPORT.md is renamed, not overwritten.
 import argparse
 import csv
 import json
+import re
 import shutil
 import time
+import zipfile
 from pathlib import Path
 
 from gpu.pipeline.analyze import analyze_all
 from gpu.pipeline.orchestrator import atomic_write, telemetry_summary
+from gpu.common import REPO
 
 TAB_NAMES = {'alloys': 'Alloys (hardness)', 'polymers': 'Polymers (glass transition)', 'electrolytes': 'Solid electrolytes (conductivity)',
              'insulators': 'Insulators (dielectric constant, calculated)', 'concrete': 'Concrete (strength, ages 14-28 d from 1-7 d)',
@@ -22,6 +25,15 @@ TAB_NAMES = {'alloys': 'Alloys (hardness)', 'polymers': 'Polymers (glass transit
 STRUCT_NAMES = {'bulk_modulus_kv': 'Bulk modulus (log10 GPa)', 'shear_modulus_gv': 'Shear modulus (log10 GPa)',
                 'formation_energy_peratom': 'Formation energy (eV/atom)', 'optb88vdw_bandgap': 'Band gap (eV)'}
 
+
+
+def shown_folder(pipe):
+    """The pipeline folder as the report prints it: relative to the repo when inside it, so a shared report or share.zip
+    does not carry the local path (which holds the user name); otherwise just the folder name."""
+    try:
+        return str(Path(pipe).resolve().relative_to(REPO.resolve()))
+    except ValueError:
+        return Path(pipe).name
 
 def g(x, n=4):
     return '-' if x is None else f'{x:.{n}g}'
@@ -482,7 +494,7 @@ def build(pipe):
     sv = [primary(t)['verdict'] for t in str_ok]
     sb = [single_bucket(t['fairness']) if t.get('fairness') else 'unclear' for t in str_ok]
     smoke = any(str(x).endswith('smoke') for x in [plan.get('profile'), *plan.get('profile_history', [])])
-    L = [f'# Pipeline report: {pipe.name}', '', f'Generated {time.strftime("%Y-%m-%d %H:%M:%S")}. Folder: `{pipe}`', '']
+    L = [f'# Pipeline report: {pipe.name}', '', f'Generated {time.strftime("%Y-%m-%d %H:%M:%S")}. Folder: `{shown_folder(pipe)}`', '']
     if smoke:
         L += ['> **REHEARSAL (smoke profile).** Tiny networks, a few hundred crystals, a few epochs. This run only checks that the machinery works; '
               'its accuracy numbers and verdicts mean nothing. Run `--profile standard` for real results.', '']
@@ -612,22 +624,68 @@ def build(pipe):
                           'integrity': integ}
 
 
+def _local_path_patterns(roots=None):
+    """(pattern, replacement) pairs that take this computer's paths out of shared files: the repo folder becomes <repo>
+    and the home folder ~. Both usually hold the user name. Covers the plain, forward-slash and JSON-escaped spellings,
+    in any letter case. roots: [(path string, label)] instead of this computer's (for tests)."""
+    if roots is None:
+        roots = []
+        for path, label in ((REPO, '<repo>'), (Path.home(), '~')):
+            try:
+                roots.append((str(path.resolve()), label))
+            except (OSError, RuntimeError):
+                pass
+    out = []
+    for s, label in roots:
+        if len([x for x in s.replace('\\', '/').split('/') if x and not x.endswith(':')]) < 1:
+            continue  # '/' or 'C:\\': nothing to hide, and replacing it would mangle every path
+        for v in {s, s.replace('\\', '/'), s.replace('\\', '\\\\')}:
+            out.append((len(v), re.compile(re.escape(v) + r'(?![A-Za-z0-9_.-])', re.IGNORECASE), label))
+    return [(rx, label) for _, rx, label in sorted(out, key=lambda t: -t[0])]  # longest first: the repo sits inside home
+
+
+def _copy_without_local_paths(src, dst, patterns):
+    try:
+        with open(src, encoding='utf-8', newline='') as f:
+            text = f.read()
+    except (UnicodeDecodeError, OSError):
+        shutil.copy2(src, dst)
+        return
+    for rx, label in patterns:
+        text = rx.sub(lambda m: label, text)
+    with open(dst, 'w', encoding='utf-8', newline='') as f:
+        f.write(text)
+    shutil.copystat(src, dst)
+
+
 def share_bundle(pipe):
+    """share/ and share.zip: the report, summary, plan, state, telemetry, logs and every result file, with this computer's
+    paths replaced (see _local_path_patterns). The zip holds only the files copied by this call."""
     pipe = Path(pipe)
     share = pipe / 'share'
     share.mkdir(exist_ok=True)
+    patterns = _local_path_patterns()
+    written = []
+
+    def put(src, dst):
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        _copy_without_local_paths(src, dst, patterns)
+        written.append(dst)
+
     for name in ('REPORT.md', 'summary.json', 'plan.json', 'state.json', 'telemetry.csv', 'pipeline.log'):
         if (pipe / name).exists():
-            shutil.copy2(pipe / name, share / name)
-    (share / 'logs').mkdir(exist_ok=True)
+            put(pipe / name, share / name)
     for f in (pipe / 'logs').glob('*.log'):
-        shutil.copy2(f, share / 'logs' / f.name)
+        put(f, share / 'logs' / f.name)
     for pat in ('jobs/*/**/result.json', 'jobs/*/baselines.json', 'jobs/*/trees.json'):
         for f in pipe.glob(pat):
-            dst = share / 'results' / f.relative_to(pipe / 'jobs')
-            dst.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(f, dst)
-    return shutil.make_archive(str(pipe / 'share'), 'zip', root_dir=str(share))
+            put(f, share / 'results' / f.relative_to(pipe / 'jobs'))
+    zpath, tmp = pipe / 'share.zip', pipe / 'share.zip.tmp'
+    with zipfile.ZipFile(tmp, 'w', zipfile.ZIP_DEFLATED) as z:
+        for f in written:
+            z.write(f, f.relative_to(share).as_posix())
+    tmp.replace(zpath)
+    return str(zpath)
 
 
 def generate(pipe):
