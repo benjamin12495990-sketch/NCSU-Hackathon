@@ -1,0 +1,11 @@
+{
+ "rows": 1624,
+ "columns": 690,
+ "rdkit_descriptors_before_dropping_constants": 217,
+ "rdkit": "2026.09.2",
+ "numpy": "2.5.3",
+ "pandas": "3.0.5",
+ "clean_csv_sha256": "649bb430a48bea38ca8ead0121bc80622ac32c848fb1cbed467e37b6d06f0951",
+ "npz_sha256": "b71e00494765dfd0cdb40bd6ecb15e4a5f2e9faab2ff5fa3a37c1386daef8e8f",
+ "missing_values": 2141
+}

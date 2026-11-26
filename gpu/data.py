@@ -9,6 +9,11 @@ CV folds over the training rows, the SHA-256 of the arrays, and the SHA-256 of e
   polymers      public/model/polymers/nn_data.json   (GroupKFold(3) on the training groups)
   chemistry     domains/chemistry/work/prepare.py run on data_curated.csv into gpu/data_cache/chemistry/
   electrolytes  domains/electrolytes/work/data/processed.csv, train_idx.csv rows only (no test rows loaded)
+  cleaning_pcmc, cleaning_tension
+                domains/cleaning/work/cleaned/surfpro_clean.csv + surfpro_features.npz (SURFPRO surfactants; features exported
+                once by domains/cleaning/work/export_features.py, so no RDKit is needed here); paper-held-out GroupKFold(5)
+  corrosion     domains/corrosives/work/cleaned/corrdata_normalized.csv (NIST CORR-DATA; plain point-value rates only);
+                reference-held-out GroupKFold(5)
 """
 import csv
 import io
@@ -274,9 +279,109 @@ def load_electrolytes(k=5):
     return ds
 
 
-LOADERS = {'concrete': load_concrete, 'alloys': load_alloys, 'insulators': load_insulators, 'polymers': load_polymers,
-           'chemistry': load_chemistry, 'electrolytes': load_electrolytes}
+def _fill_missing(X, names):
+    """Label-free handling of missing numbers: fill with the column median over all rows and add a 0/1 "was missing" column for every
+    column that had any. (The trainers standardise on training rows only; this fill uses no target values.)"""
+    X = np.array(X, float)
+    miss = np.isnan(X)
+    cols = np.where(miss.any(axis=0))[0]
+    med = np.nanmedian(X, axis=0)
+    X = np.where(miss, np.where(np.isnan(med), 0.0, med), X)
+    if len(cols):
+        X = np.hstack([X, miss[:, cols].astype(float)])
+        names = list(names) + [f'{names[c]}__missing' for c in cols]
+    return X, list(names)
 
+
+def _load_cleaning(task, target, family):
+    base = REPO / 'domains/cleaning/work/cleaned'
+    pcsv, pnpz = base / 'surfpro_clean.csv', base / 'surfpro_features.npz'
+    rows = list(csv.DictReader(io.StringIO(read_bytes(pcsv).decode('utf-8'))))
+    guard_path(pnpz)
+    z = np.load(io.BytesIO(read_bytes(pnpz)), allow_pickle=False)
+    assert [int(r['Index']) for r in rows] == [int(i) for i in z['index']], 'surfpro_features.npz is not row-aligned with surfpro_clean.csv'
+    keep = [i for i, r in enumerate(rows) if r[task] not in ('', None)]
+    X, names = _fill_missing(z['X'][keep].astype(float), [str(f) for f in z['features']])
+    varying = [j for j in range(X.shape[1]) if np.ptp(X[:, j]) > 0]   # drop columns that are constant within this task's rows
+    X, names = X[:, varying], [names[j] for j in varying]
+    y = np.array([float(rows[i][task]) for i in keep])
+    groups = np.array([int(float(rows[i][f'group_meas_{task}'])) for i in keep])
+    ds = Dataset(family, names, X, y, groups, target)
+    for p in (pcsv, pnpz):
+        _src(ds.sources, p)
+    ds.folds, ds.folds_source = group_kfold(groups, 5), f'GroupKFold(5) on measurement-reference groups (group_meas_{task}; rule of domains/cleaning/work/prepare_surfpro.py)'
+    ds.notes.append('SURFPRO single pure surfactants: a physical property, not cleaning performance. RDKit 2D descriptors + 512-bit Morgan counts + '
+                    'type one-hot + CMC temperature; missing values filled with the column median plus a "was missing" flag')
+    return ds
+
+
+def load_cleaning_pcmc():
+    return _load_cleaning('pCMC', 'pCMC = -log10(critical micelle concentration, mol/L); SURFPRO', 'cleaning_pcmc')
+
+
+def load_cleaning_tension():
+    return _load_cleaning('AW_ST_CMC', 'air-water surface tension at the CMC, mN/m; SURFPRO', 'cleaning_tension')
+
+
+def load_corrosion(min_count=10):
+    """NIST CORR-DATA: log10 corrosion rate (mm/yr) for plain point-value rates, the rows and inputs of
+    domains/corrosives/work/baseline_corrdata.py. Categories seen fewer than min_count times are pooled as "infrequent"
+    (counted over all rows; no target values are used)."""
+    pcsv = REPO / 'domains/corrosives/work/cleaned/corrdata_normalized.csv'
+    rows = list(csv.DictReader(io.StringIO(read_bytes(pcsv).decode('utf-8'))))
+
+    def num(v):
+        try:
+            return float(v)
+        except (TypeError, ValueError):
+            return float('nan')
+
+    use = []
+    for r in rows:
+        if r['rate_status'] != 'numeric' or r['rate_qualifier'] != 'exact' or r['rate_columns_consistent'] == 'large_disagreement':
+            continue
+        rate = num(r['rate_mm_y'])
+        if not rate > 0 or not r['reference_number'].strip():
+            continue
+        use.append((r, rate))
+    cats = ['material_class', 'material_family', 'material', 'environment', 'conc_qualifier', 'temp_qualifier']
+    cols, names = [], []
+    for c in cats:
+        vals = [(r[c].strip() or 'none') for r, _ in use]
+        counts = {}
+        for v in vals:
+            counts[v] = counts.get(v, 0) + 1
+        levels = sorted(v for v, n in counts.items() if n >= min_count)
+        pos = {v: j for j, v in enumerate(levels)}
+        M = np.zeros((len(use), len(levels) + 1))
+        for i, v in enumerate(vals):
+            M[i, pos.get(v, len(levels))] = 1.0
+        cols.append(M)
+        names += [f'{c}={v}' for v in levels] + [f'{c}=(infrequent)']
+    conc = np.array([num(r['conc_value']) if r['conc_unit'] == 'vol% (column default)' else float('nan') for r, _ in use])
+    tv, tl, th = (np.array([num(r[k]) for r, _ in use]) for k in ('temp_C_value', 'temp_C_low', 'temp_C_high'))
+    temp = np.where(np.isnan(tv), (tl + th) / 2, tv)
+    dl, dh = (np.array([num(r[k]) for r, _ in use]) for k in ('duration_h_low', 'duration_h_high'))
+    hours = np.log10(np.clip((dl + dh) / 2, 0.1, None))
+    Xn, nn = _fill_missing(np.column_stack([conc, temp, hours]), ['conc_vol_pct', 'temp_C_mid', 'log10_hours'])
+    X = np.hstack(cols + [Xn])
+    names += nn
+    varying = [j for j in range(X.shape[1]) if np.ptp(X[:, j]) > 0]
+    X, names = X[:, varying], [names[j] for j in varying]
+    y = np.log10(np.array([rate for _, rate in use]))
+    refs = [r['reference_number'].strip() for r, _ in use]
+    relabel = {g: j for j, g in enumerate(dict.fromkeys(refs))}
+    groups = np.array([relabel[g] for g in refs])
+    ds = Dataset('corrosion', names, X, y, groups, 'log10 corrosion rate, log10(mm/yr); NIST CORR-DATA point values')
+    _src(ds.sources, pcsv)
+    ds.folds, ds.folds_source = group_kfold(groups, 5), 'GroupKFold(5) on Reference # (rule of domains/corrosives/work/baseline_corrdata.py)'
+    ds.notes.append('historical observations, not safety advice; bounds, ranges, zero rates and letter ratings are excluded; exploratory')
+    return ds
+
+
+LOADERS = {'concrete': load_concrete, 'alloys': load_alloys, 'insulators': load_insulators, 'polymers': load_polymers,
+           'chemistry': load_chemistry, 'electrolytes': load_electrolytes, 'cleaning_pcmc': load_cleaning_pcmc,
+           'cleaning_tension': load_cleaning_tension, 'corrosion': load_corrosion}
 
 def load(family):
     if family not in LOADERS:

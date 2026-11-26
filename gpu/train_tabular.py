@@ -38,6 +38,10 @@ FAMILY_DEFAULTS = {  # the settings each family agent chose (domains/<family>/wo
     'polymers': dict(hidden=[128, 64], epochs=200, lr=0.004, decay=0.01, loss='huber'),
     'chemistry': dict(hidden=[96, 48], epochs=30, lr=0.004, decay=1e-4, loss='huber', inputClip=5, log1pAuto=True),
     'electrolytes': dict(hidden=[32, 16], epochs=300, lr=0.004, decay=0.01, loss='huber', inputClip=3),  # no agent choice yet
+    # added 2026-11-26, no agent choice yet: wide, partly sparse inputs (descriptors + fingerprint counts / one-hot categories)
+    'cleaning_pcmc': dict(hidden=[128, 64], epochs=200, lr=0.002, decay=0.01, loss='huber', inputClip=5),
+    'cleaning_tension': dict(hidden=[128, 64], epochs=200, lr=0.002, decay=0.01, loss='huber', inputClip=5),
+    'corrosion': dict(hidden=[128, 64], epochs=60, lr=0.002, decay=0.01, loss='huber', inputClip=5),
 }
 BANK_KEYS = ('hidden', 'epochs', 'batch', 'inputClip', 'clampOutput', 'logTarget', 'log1pAuto')
 MEMBER_KEYS = ('lr', 'decay', 'loss')

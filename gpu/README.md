@@ -330,6 +330,11 @@ git pull
 .\gpu\run_overnight.ps1 -Cycle3 -Rehearsal    # a few minutes (extends the newest rehearsal folder)
 .\gpu\run_overnight.ps1 -Cycle3               # the real thing: ADDS to your newest real run folder; default budget 12 h
 ```
+0. **Every simulation gets a network.** Cycle 3 also adds the network sweep + tree/linear baselines for the table families the folder had never trained:
+   `cleaning_pcmc` and `cleaning_tension` (SURFPRO surfactants: critical micelle concentration and surface tension; 1,395 and 972 rows, paper-held-out folds) and
+   `corrosion` (NIST CORR-DATA point-value corrosion rates; 5,761 rows, reference-held-out folds; exploratory, not safety advice). With the six families from the first run
+   and the four crystal properties, one folder and one report then cover all 13 simulations. The surfactant features (RDKit descriptors + fingerprint counts) were exported once
+   to `domains/cleaning/work/cleaned/surfpro_features.npz` by `domains/cleaning/work/export_features.py`, so the training machine needs no extra package.
 1. **Held-out elements** (`--split element`, `structure/element_split.json`): every crystal containing Pu, Pa, Hf, I, He, Ce or Cr is test (10% of crystals),
    every crystal containing Tb, Tm, Yb, Pr, Ag or Mo (and none of those) is validation; neither set appears in training. Two network variants:
    the default (one learned vector per element: an unseen element keeps its random start, so it is expected to fail) and `--atom-input both`
@@ -343,6 +348,7 @@ git pull
 
 ## 8. Nightly
 
+Run these when no other pipeline is running (a nightly started beside a cycle refuses to start, without pulling new code):
 ```
 .\gpu\run_overnight.ps1 -Nightly -Rehearsal   # a few minutes: proves it works
 .\gpu\schedule_nightly.ps1                    # then: a Windows scheduled task runs -Nightly every day at 01:17 (-Time to change, -Remove to stop)
@@ -351,6 +357,6 @@ Each night (own folder `gpu\runs\pipeline\<time>_nightly`): `git pull --ff-only`
 a task is retrained only if its key changed since its last nightly (`gpu\runs\pipeline\registry.json`), `--force` retrains all. Table families: the standard sweep + baselines
 (the report shows the recommended trees or blend). Crystal properties: the recipe's settings and seeds on the held-out-systems split + tree baselines. The report starts with a table
 of the current model, test error and 90% interval for every task. The first night trains everything (about 2-3 h on the RTX 5070 Laptop); a night with nothing new trains nothing.
-A pipeline refuses to start while another is running (`RUNNING.lock`), so the nightly task never collides with a long cycle.
+A pipeline refuses to start while another is running (`RUNNING.lock`), so the nightly task never collides with a long cycle. `-Resume` always continues the main run (`LAST_PIPELINE.txt`); the nightly and the rehearsals keep their own pointers (`-Resume -Nightly`, `-Resume -Rehearsal`), so a nightly can never hide an unfinished cycle.
 **Recipes change only by a reviewed commit**: a cycle that finds a better model is evidence for editing `gpu/recipes.json`, never an automatic promotion,
 and no decision is ever made on test rows.

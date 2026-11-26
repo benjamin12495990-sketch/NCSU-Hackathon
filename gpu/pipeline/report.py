@@ -17,7 +17,8 @@ from gpu.pipeline.orchestrator import atomic_write, telemetry_summary
 
 TAB_NAMES = {'alloys': 'Alloys (hardness)', 'polymers': 'Polymers (glass transition)', 'electrolytes': 'Solid electrolytes (conductivity)',
              'insulators': 'Insulators (dielectric constant, calculated)', 'concrete': 'Concrete (strength, ages 14-28 d from 1-7 d)',
-             'chemistry': 'Chemistry (water solubility)'}
+             'chemistry': 'Chemistry (water solubility)', 'cleaning_pcmc': 'Surfactants (critical micelle concentration)',
+             'cleaning_tension': 'Surfactants (surface tension at the CMC)', 'corrosion': 'Corrosion (rate, NIST CORR-DATA, exploratory)'}
 STRUCT_NAMES = {'bulk_modulus_kv': 'Bulk modulus (log10 GPa)', 'shear_modulus_gv': 'Shear modulus (log10 GPa)',
                 'formation_energy_peratom': 'Formation energy (eV/atom)', 'optb88vdw_bandgap': 'Band gap (eV)'}
 
@@ -206,6 +207,11 @@ def evolution_section(items):
         else:
             gain = (e['default_val_mae'] - e['best_val_mae']) / e['default_val_mae'] * 100 if e['default_val_mae'] else None
             L.append(f'- Best individual {e["best_id"]}: {e["best_changes"]} (validation MAE {g(e["best_val_mae"])}' + (f', {gain:.1f}% below the starting settings' if gain is not None else '') + ').')
+        if e.get('finalist_differs_from_best'):
+            L.append(f'- **Note:** the finalists below were trained with {e.get("finalist_changes")} (the best when they were chosen). A later individual now has a lower '
+                     'validation error; it was not retrained, so the finalist numbers are NOT for the "best individual" named above.')
+        elif e.get('finalist_changes') and not e['default_won']:
+            L.append(f'- Finalist settings: {e["finalist_changes"]}.')
         fi = e.get('finalists')
         if fi:
             d = fi['evolved_vs_default']

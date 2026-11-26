@@ -319,6 +319,11 @@ def analyze_evolution(pipe, plan):
                  'best_id': best['id'] if best else None, 'best_changes': E.describe_genes(best['genes']) if best else None,
                  'default_won': bool(best and E.gkey(best['genes']) == E.gkey(base)), 'status': 'ok' if done else 'missing',
                  'final_epochs': cyc.get('final_epochs'), 'compare_label': cyc.get('compare_label', 'the default settings')}
+            fjobs = [j for j in plan['jobs'] if j.get('group') == 'evolve_final' and j.get('round') == rnd and j.get('target') == t]
+            if fjobs:  # what the finalists really are: their own stored settings, not whatever the archive's best is now
+                e['finalist_changes'] = E.describe_genes(fjobs[0]['genes'])
+                e['finalist_winner_id'] = fjobs[0].get('winner_id')
+                e['finalist_differs_from_best'] = bool(best and E.gkey(fjobs[0]['genes']) != E.gkey(best['genes']))
             finals = _runs(pipe, (f'evof_{t}_s[0-9]*' if rnd is None else f'evof_{rnd}_{t}_s[0-9]*'))
             olds = _runs(pipe, cyc.get('compare_to', 'struct_{t}_sys_s[0-9]*').format(t=t))
             tree_file = _first(pipe, f'trees_{t}_sys', 'trees_predictions.npz')

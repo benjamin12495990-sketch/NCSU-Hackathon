@@ -1,23 +1,101 @@
 {
  "about": "What the nightly pipeline trains for each task, and which model is recommended. Changed only by a reviewed commit, never automatically: a cycle that finds something better is evidence for changing this file, not a change. Evidence column = the report section that justified the entry.",
- "version": 1,
+ "version": 2,
  "tabular": {
-  "alloys": {"recommended": "trees", "evidence": "overnight 2026-11-22: network not clearly better than trees; blend no clear gain"},
-  "polymers": {"recommended": "blend", "evidence": "overnight 2026-11-22: half network average + half trees beat trees -2.02 [-2.87, -1.25] K"},
-  "electrolytes": {"recommended": "trees", "evidence": "overnight 2026-11-22: trees clearly better than every single network"},
-  "insulators": {"recommended": "blend", "evidence": "overnight 2026-11-22: blend beat trees -0.0059 [-0.0087, -0.0031]"},
-  "concrete": {"recommended": "trees", "evidence": "overnight 2026-11-22: single networks unstable (2 of 5 clearly worse than trees); exploratory family", "exploratory": true},
-  "chemistry": {"recommended": "blend", "evidence": "overnight 2026-11-22: blend beat trees -0.0438 [-0.0499, -0.0377] logS"}
+  "alloys": {
+   "recommended": "trees",
+   "evidence": "overnight 2026-11-22: network not clearly better than trees; blend no clear gain"
+  },
+  "polymers": {
+   "recommended": "blend",
+   "evidence": "overnight 2026-11-22: half network average + half trees beat trees -2.02 [-2.87, -1.25] K"
+  },
+  "electrolytes": {
+   "recommended": "trees",
+   "evidence": "overnight 2026-11-22: trees clearly better than every single network"
+  },
+  "insulators": {
+   "recommended": "blend",
+   "evidence": "overnight 2026-11-22: blend beat trees -0.0059 [-0.0087, -0.0031]"
+  },
+  "concrete": {
+   "recommended": "trees",
+   "evidence": "overnight 2026-11-22: single networks unstable (2 of 5 clearly worse than trees); exploratory family",
+   "exploratory": true
+  },
+  "chemistry": {
+   "recommended": "blend",
+   "evidence": "overnight 2026-11-22: blend beat trees -0.0438 [-0.0499, -0.0377] logS"
+  },
+  "cleaning_pcmc": {
+   "recommended": "trees",
+   "evidence": "added 2026-11-26 (SURFPRO pCMC); no GPU network result yet, so trees until a report says otherwise",
+   "exploratory": false
+  },
+  "cleaning_tension": {
+   "recommended": "trees",
+   "evidence": "added 2026-11-26 (SURFPRO surface tension at the CMC); no GPU network result yet, so trees until a report says otherwise",
+   "exploratory": false
+  },
+  "corrosion": {
+   "recommended": "trees",
+   "evidence": "added 2026-11-26 (NIST CORR-DATA point-value rates); no GPU network result yet, so trees until a report says otherwise",
+   "exploratory": true
+  }
  },
  "crystal": {
-  "bulk_modulus_kv": {"recommended": "blend", "split": "system", "seeds": [11, 12, 13], "epochs": 100, "genes": "default",
-                      "evidence": "cycle 2: on held-out systems the 3-run network average ties structure-feature trees; their blend beats both"},
-  "shear_modulus_gv": {"recommended": "blend", "split": "system", "seeds": [11, 12, 13], "epochs": 100, "genes": "default",
-                       "evidence": "cycle 2: structure-feature trees beat the networks on held-out systems; the blend beats the trees -0.0052 [-0.0078, -0.0025]"},
-  "formation_energy_peratom": {"recommended": "network", "split": "system", "seeds": [21, 22], "epochs": 100,
-                               "genes": {"atom_features": 128, "conv": 5, "hidden": 192, "lr": 0.004, "weight_decay": 1e-05, "batch": 64},
-                               "evidence": "cycle 2 search: evolved settings beat the defaults on fresh seeds and test systems, -0.00535 [-0.00699, -0.00366] eV/atom"},
-  "optb88vdw_bandgap": {"recommended": "network", "split": "system", "seeds": [11, 12], "epochs": 100, "genes": "default",
-                        "evidence": "cycle 2: network clearly better than structure-feature trees on held-out systems; the evolved settings were not clearly better"}
+  "bulk_modulus_kv": {
+   "recommended": "blend",
+   "split": "system",
+   "seeds": [
+    11,
+    12,
+    13
+   ],
+   "epochs": 100,
+   "genes": "default",
+   "evidence": "cycle 2: on held-out systems the 3-run network average ties structure-feature trees; their blend beats both"
+  },
+  "shear_modulus_gv": {
+   "recommended": "blend",
+   "split": "system",
+   "seeds": [
+    11,
+    12,
+    13
+   ],
+   "epochs": 100,
+   "genes": "default",
+   "evidence": "cycle 2: structure-feature trees beat the networks on held-out systems; the blend beats the trees -0.0052 [-0.0078, -0.0025]"
+  },
+  "formation_energy_peratom": {
+   "recommended": "network",
+   "split": "system",
+   "seeds": [
+    21,
+    22
+   ],
+   "epochs": 100,
+   "genes": {
+    "atom_features": 128,
+    "conv": 5,
+    "hidden": 192,
+    "lr": 0.004,
+    "weight_decay": 1e-05,
+    "batch": 64
+   },
+   "evidence": "cycle 2 search: evolved settings beat the defaults on fresh seeds and test systems, -0.00535 [-0.00699, -0.00366] eV/atom"
+  },
+  "optb88vdw_bandgap": {
+   "recommended": "network",
+   "split": "system",
+   "seeds": [
+    11,
+    12
+   ],
+   "epochs": 100,
+   "genes": "default",
+   "evidence": "cycle 2: network clearly better than structure-feature trees on held-out systems; the evolved settings were not clearly better"
+  }
  }
 }

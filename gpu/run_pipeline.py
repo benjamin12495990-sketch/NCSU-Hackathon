@@ -45,15 +45,15 @@ def plan_is_smoke(plan):
 
 
 def find_pipeline(root, smoke):
-    """The newest pipeline folder under root that has run and is (or is not) a rehearsal. Used by --extend latest / latest-smoke so a
-    rehearsal can never be mistaken for the real run: their job ids are the same."""
+    """The newest pipeline folder under root that has run, is (or is not) a rehearsal, and is not a nightly folder. Used by
+    --extend latest / latest-smoke so a rehearsal or a nightly can never be mistaken for the main run: their job ids are the same."""
     import json
     for d in sorted(Path(root).glob('*/'), reverse=True):
         try:
             plan = json.loads((d / 'plan.json').read_text())
         except (OSError, ValueError):
             continue
-        if (d / 'state.json').exists() and plan_is_smoke(plan) == smoke:
+        if (d / 'state.json').exists() and plan_is_smoke(plan) == smoke and not plan.get('nightly'):
             return d
     return None
 
@@ -164,27 +164,59 @@ class LockBusy(Exception):
 
 class RunLock:
     """gpu/runs/pipeline/RUNNING.lock while a pipeline runs: a second one (say, the nightly task while a cycle is still going) refuses to start.
-    A lock left by a process that is no longer running is taken over. On exit the lock is marked released (overwritten, not deleted)."""
+    The holder rewrites a "beat" time every 30 s. A lock counts as held only if its process is alive AND its beat is fresh, so a lock
+    left by a crash or reboot is taken over even if Windows has since given the same process id to something else.
+    On exit the lock is marked released (overwritten, not deleted)."""
+    BEAT_S, STALE_S = 30.0, 180.0
 
     def __init__(self, root):
         self.path = Path(root) / 'RUNNING.lock'
+        self._stop = None
+
+    def _read(self):
+        import json
+        try:
+            return json.loads(self.path.read_text())
+        except (OSError, ValueError):
+            return {}
+
+    def _held(self, old):
+        if not old.get('pid') or old.get('pid') == os.getpid() or not pid_alive(int(old['pid'])):
+            return False
+        return (time.time() - float(old.get('beat', 0))) < self.STALE_S
+
+    def _write(self):
+        import json
+        atomic_write(self.path, json.dumps({'pid': os.getpid(), 'started': self.started, 'beat': time.time()}))
 
     def __enter__(self):
-        import json
-        if self.path.exists():
-            try:
-                old = json.loads(self.path.read_text())
-            except (OSError, ValueError):
-                old = {}
-            if old.get('pid') and old.get('pid') != os.getpid() and pid_alive(int(old['pid'])):
-                raise LockBusy(f'another pipeline is running (process {old["pid"]}, started {old.get("started")}); not starting a second one on the same GPU. '
-                               f'Wait for it to finish, or stop it with a STOP file in its folder.')
+        import threading
+        old = self._read()
+        if not self._held(old) and old.get('pid') and old.get('pid') != os.getpid() and pid_alive(int(old['pid'])):
+            # alive but silent: a laptop that just woke up may not have beaten yet. Give it one beat before taking over.
+            time.sleep(self.BEAT_S + 15)
+            old = self._read()
+        if self._held(old):
+            raise LockBusy(f'another pipeline is running (process {old["pid"]}, started {old.get("started")}); not starting a second one on the same GPU. '
+                           f'Wait for it to finish, or stop it with a STOP file in its folder. (Lock file: {self.path})')
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        atomic_write(self.path, json.dumps({'pid': os.getpid(), 'started': now_iso()}))
+        self.started = now_iso()
+        self._write()
+        self._stop = threading.Event()
+
+        def beat():
+            while not self._stop.wait(self.BEAT_S):
+                try:
+                    self._write()
+                except OSError:
+                    pass
+        threading.Thread(target=beat, daemon=True).start()
         return self
 
     def __exit__(self, *exc):
         import json
+        if self._stop is not None:
+            self._stop.set()
         try:
             atomic_write(self.path, json.dumps({'pid': None, 'released': now_iso()}))
         except OSError:
@@ -264,6 +296,9 @@ def run(argv=None):
     elif a.extend:
         pipe = Path(a.extend)
         plan = json.loads((pipe / 'plan.json').read_text())
+        if plan.get('nightly'):
+            print(f'refusing: {pipe} is a nightly folder; cycles extend the main run folder. Use --extend latest, or give the main folder.')
+            return 4
         if plan_is_smoke(plan) != smoke_run:
             print(f'refusing: {pipe} is {"a rehearsal" if plan_is_smoke(plan) else "a real run"} but --profile {a.profile} is {"a rehearsal" if smoke_run else "real"}. '
                   'Their job names are the same, so mixing them would pass rehearsal results off as real ones.')
@@ -300,6 +335,12 @@ def run(argv=None):
         have = {j['id'] for j in plan['jobs']}
         plan['jobs'] += [j for j in new['jobs'] if j['id'] not in have]
         plan['notes'] = list(plan.get('notes', [])) + new['notes']
+        for fam, grid in (new.get('grids') or {}).items():   # sweeps added by this extension need their grid files
+            plan.setdefault('grids', {})[fam] = grid
+            if not (pipe / 'grids' / f'{fam}.json').exists():
+                write_json_new(pipe / 'grids' / f'{fam}.json', grid)
+        if new.get('members') and not plan.get('members'):
+            plan['members'] = new['members']
         plan['profile_history'] = list(plan.get('profile_history', [plan['profile']])) + [a.profile]
         if cycle:
             small_ram = (total_ram_gb() or 99) < 24
@@ -347,7 +388,12 @@ def run(argv=None):
         for fam, grid in plan['grids'].items():
             write_json_new(pipe / 'grids' / f'{fam}.json', grid)
         print(describe(plan))
-    atomic_write(Path(a.runs_root) / 'LAST_PIPELINE.txt', str(pipe.resolve()))  # a pointer, so launchers can find the folder to resume
+    # Pointers, so launchers can find the folder to resume. One per kind, so a nightly or a rehearsal never hides the main run:
+    #   LAST_PIPELINE.txt  the main run (standard / cycle folders)     LAST_NIGHTLY.txt, LAST_REHEARSAL.txt  the newest of those
+    #   LAST_SESSION.txt   whatever ran last (used only to resume the same folder after a crash of the pipeline program)
+    kind = 'LAST_NIGHTLY.txt' if plan.get('nightly') else 'LAST_REHEARSAL.txt' if plan_is_smoke(plan) else 'LAST_PIPELINE.txt'
+    atomic_write(Path(a.runs_root) / kind, str(pipe.resolve()))
+    atomic_write(Path(a.runs_root) / 'LAST_SESSION.txt', str(pipe.resolve()))
     print(f'\npipeline folder: {pipe}\nstatus file:     {pipe / "STATUS.txt"}   (refreshed every 30 s)\nstop: create a file named STOP in that folder (or press Ctrl+C)\n', flush=True)
 
     before = vault_snapshot()

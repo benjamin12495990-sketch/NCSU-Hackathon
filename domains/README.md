@@ -6,7 +6,8 @@
 > `chemistry` (solubility) has its AqSolDB source data, preparation/training code, and a model trained
 > and checked offline (reproduced exactly on 2026-11-21); it is not on the site. `cleaning` (SURFPRO),
 > `corrosives` (NIST CORR-DATA) and `electrolytes` (OBELiX) have source data, a cleaned table and a first
-> grouped-cross-validation baseline each; none of them is in the product.** Sources were not checked again through MCPs (see docs/AGENTS.md), and the
+> grouped-cross-validation baseline each; none of them is in the product. Since 2026-11-26 all three also have loaders in `gpu/data.py`
+> (`cleaning_pcmc`, `cleaning_tension`, `corrosion`, `electrolytes`), so the GPU pipeline trains network sweeps for them.** Sources were not checked again through MCPs (see docs/AGENTS.md), and the
 > insulator element table was typed from memory by its agent and is uncited.
 
 Scope beyond concrete. Each subfolder is one domain that reuses the project's method

@@ -106,23 +106,33 @@ def test_nightly_retrains_only_what_changed():
         assert {j['id'] for j in forced['jobs']} == first
 
 
-def test_run_lock_refuses_while_another_pipeline_runs_and_takes_over_a_dead_one():
+def test_run_lock_refuses_a_live_beating_holder_and_takes_over_a_dead_or_silent_one():
+    import time
     from gpu.run_pipeline import LockBusy, RunLock
     with tempfile.TemporaryDirectory() as d:
-        p = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(30)'])
+        lock = Path(d) / 'RUNNING.lock'
+        p = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'])
         try:
-            (Path(d) / 'RUNNING.lock').write_text(json.dumps({'pid': p.pid, 'started': 'x'}))
+            lock.write_text(json.dumps({'pid': p.pid, 'started': 'x', 'beat': time.time()}))
             try:
                 with RunLock(d):
                     raise AssertionError('started beside a running pipeline')
             except LockBusy:
                 pass
+            # the same process id, alive, but the beat stopped long ago (a recycled pid after a reboot): taken over
+            lock.write_text(json.dumps({'pid': p.pid, 'started': 'x', 'beat': time.time() - 3600}))
+            RunLock.BEAT_S = 0.2
+            try:
+                with RunLock(d):
+                    assert json.loads(lock.read_text())['pid'] is not None
+            finally:
+                RunLock.BEAT_S = 30.0
         finally:
             p.kill()
             p.wait()
         with RunLock(d):                                   # the holder is gone: taken over
-            assert json.loads((Path(d) / 'RUNNING.lock').read_text())['pid'] is not None
-        assert json.loads((Path(d) / 'RUNNING.lock').read_text())['pid'] is None   # released, not deleted
+            assert json.loads(lock.read_text())['pid'] is not None
+        assert json.loads(lock.read_text())['pid'] is None   # released, not deleted
 
 
 if __name__ == '__main__':

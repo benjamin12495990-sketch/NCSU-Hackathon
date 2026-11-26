@@ -126,13 +126,13 @@ def search_job(target, gen, idx, genes, parent, *, device, epochs, limit, thread
             'timeout_s': 3 * 3600, 'est_minutes': 1 if smoke else 5}
 
 
-def final_job(target, seed, genes, *, device, epochs, limit, threads, smoke, rnd=None, split='system'):
+def final_job(target, seed, genes, *, device, epochs, limit, threads, smoke, rnd=None, split='system', winner_id=None):
     jid = f'evof_{target}_s{seed}' if rnd is None else f'evof_{rnd}_{target}_s{seed}'
     argv = ['-m', 'gpu.structure.train_structure', '--device', device, '--target', target, '--split', split, '--epochs', str(epochs),
             '--seed', str(seed), '--runs-root', '{JOB_DIR}', '--tag', jid, *genes_args(genes), *limit]
     if threads:
         argv += ['--threads', str(threads)]
-    return {'id': jid, 'queue': 'gpu', 'group': 'evolve_final', 'target': target, 'split': split, 'genes': genes, 'argv': argv, 'round': rnd,
+    return {'id': jid, 'queue': 'gpu', 'group': 'evolve_final', 'target': target, 'split': split, 'genes': genes, 'argv': argv, 'round': rnd, 'winner_id': winner_id,
             'expect': ['structure/*/result.json', 'structure/*/predictions.npz'], 'resumable': True, 'resume_glob': 'structure/*/run_config.json',
             'timeout_s': 6 * 3600, 'est_minutes': 1 if smoke else 15}
 
@@ -213,10 +213,20 @@ def run_cycle(pipe, plan, *, make_orch, targets, cfg, elapsed_hours, budget_hour
     def _lineage():
         write_lineage(pipe, plan['jobs'], targets, rnd, {t: base_of(t) for t in targets})
 
+    def has_finals(t):
+        return any(j.get('group') == 'evolve_final' and j.get('round') == rnd and j.get('target') == t for j in plan['jobs'])
+
+    search_targets = [t for t in targets if not has_finals(t)]
+    if len(search_targets) < len(targets):
+        # The finalists of a round are chosen once. A later session (resume, --retry-failed, a fresh time budget) must not add
+        # individuals afterwards: the report would then name a "best individual" that the finalist numbers do not belong to.
+        say('finalists already chosen for: ' + ', '.join(t for t in targets if has_finals(t)) + '; no further generations for them')
     for g in range(cfg['generations']):
+        if not search_targets:
+            break
         if g > 0 and budget_hours is not None:  # would one more generation plus the finalists still fit?
             est = 0.0
-            for t in targets:
+            for t in search_targets:
                 ids = [a['id'] for a in archive(pipe, plan['jobs'], t, rnd)]
                 m = _avg_minutes(pipe, ids)
                 if m is None:
@@ -227,7 +237,7 @@ def run_cycle(pipe, plan, *, make_orch, targets, cfg, elapsed_hours, budget_hour
                 say(f'time budget: another generation plus the finalists would need about {est:.1f} h and {left():.1f} h are left; going straight to the finalists')
                 break
         new = []
-        for t in targets:
+        for t in search_targets:
             arch = archive(pipe, plan['jobs'], t, rnd)
             if any(a['gen'] == g for a in arch):
                 continue  # this generation was created before an interruption; its pending jobs run below
@@ -239,7 +249,7 @@ def run_cycle(pipe, plan, *, make_orch, targets, cfg, elapsed_hours, budget_hour
         if run_pending() == 2 or stop_requested(pipe):
             return 2
     finals = []
-    for t in targets:
+    for t in search_targets:
         best = best_of(archive(pipe, plan['jobs'], t, rnd))
         if best is None:
             say(f'{t}: no finished individual; no finalist')
@@ -250,7 +260,7 @@ def run_cycle(pipe, plan, *, make_orch, targets, cfg, elapsed_hours, budget_hour
             seeds = [21, 22] if cfg['smoke'] else final_seeds[t]
             for sd in seeds:
                 finals.append(final_job(t, sd, best['genes'], device=cfg['device'], epochs=cfg['final_epochs'], limit=lim(t), threads=cfg['threads'],
-                                        smoke=cfg['smoke'], rnd=rnd, split=split))
+                                        smoke=cfg['smoke'], rnd=rnd, split=split, winner_id=best['id']))
     added = extend_plan(pipe, plan, finals)
     if added or any(j['group'] == 'evolve_final' and j.get('round') == rnd for j in plan['jobs']):
         run_pending()

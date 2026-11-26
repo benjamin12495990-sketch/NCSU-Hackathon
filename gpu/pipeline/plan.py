@@ -11,9 +11,10 @@ the report lists what each job actually took.
 """
 from gpu.train_tabular import BASE, FAMILY_DEFAULTS
 
-TAB_ORDER = ['alloys', 'polymers', 'electrolytes', 'insulators', 'concrete', 'chemistry']
+TAB_ORDER = ['alloys', 'polymers', 'electrolytes', 'insulators', 'concrete', 'chemistry', 'cleaning_pcmc', 'cleaning_tension', 'corrosion']
 # minutes MEASURED on an RTX 5070 Laptop GPU (the first overnight run); other machines will differ
-TAB_EST_MIN = {'alloys': 6, 'polymers': 5, 'electrolytes': 14, 'insulators': 6, 'concrete': 2, 'chemistry': 10}
+TAB_EST_MIN = {'alloys': 6, 'polymers': 5, 'electrolytes': 14, 'insulators': 6, 'concrete': 2, 'chemistry': 10,
+               'cleaning_pcmc': 12, 'cleaning_tension': 10, 'corrosion': 15}  # the last three are guesses (never run on the GPU yet)
 STRUCT_SEEDS = {'bulk_modulus_kv': [11, 12, 13], 'shear_modulus_gv': [11, 12, 13], 'formation_energy_peratom': [11, 12], 'optb88vdw_bandgap': [11, 12]}
 STRUCT_ORDER_EARLY = ['bulk_modulus_kv', 'shear_modulus_gv']
 STRUCT_ORDER_LATE = ['formation_energy_peratom', 'optb88vdw_bandgap']
@@ -86,9 +87,10 @@ def build_plan(profile='standard', *, device='cuda', families=None, targets=None
                cpu_threads=2, members=None, existing=None):
     if profile in ('cycle3', 'cycle3-smoke'):
         smoke = profile == 'cycle3-smoke'
-        jobs = cycle3_jobs(device=device, smoke=smoke, small_ram=ram_gb is not None and ram_gb < 24, cpu_threads=cpu_threads, existing=existing)
-        return {'profile': profile, 'device': device, 'members': 0, 'jobs': jobs, 'grids': {},
-                'notes': ['Cycle 3: leave-out-elements split (with and without element-property atom inputs), bulk and shear moduli fine-tuned from the '
+        tab_jobs, grids = new_family_jobs(device=device, smoke=smoke, cpu_threads=cpu_threads, existing=existing, members=members)
+        jobs = tab_jobs + cycle3_jobs(device=device, smoke=smoke, small_ram=ram_gb is not None and ram_gb < 24, cpu_threads=cpu_threads, existing=existing)
+        return {'profile': profile, 'device': device, 'members': members or (2 if smoke else 5), 'jobs': jobs, 'grids': grids,
+                'notes': ['Cycle 3: network sweeps for the table families this folder had not trained yet (surfactants, corrosion), the leave-out-elements split (with and without element-property atom inputs), bulk and shear moduli fine-tuned from the '
                           'formation-energy network, and a wider formation-energy search.' + (' Smoke sizes: the numbers mean nothing.' if smoke else '')]}
     if profile in ('holdout', 'holdout-smoke'):
         smoke = profile == 'holdout-smoke'
@@ -185,6 +187,18 @@ def _struct_job(jid, t, split, seed, *, device, epochs, lim, smoke, extra=(), af
     if after:
         job['after'] = list(after)
     return job
+
+
+def new_family_jobs(*, device, smoke, cpu_threads, existing, members):
+    """Sweep + baseline jobs for every table family the folder has never trained (so one folder covers every simulation)."""
+    have = {j['id'] for j in (existing or [])}
+    todo = [f for f in TAB_ORDER if f'tab_{f}' not in have]
+    if smoke:
+        todo = [f for f in todo if f in ('cleaning_tension', 'corrosion')][:2] or todo[:1]
+    if not todo:
+        return [], {}
+    tab = build_plan('smoke' if smoke else 'standard', device=device, families=todo, structure=False, cpu_threads=cpu_threads, members=members)
+    return tab['jobs'], tab['grids']
 
 
 def cycle3_jobs(*, device, smoke, small_ram, cpu_threads, existing):
