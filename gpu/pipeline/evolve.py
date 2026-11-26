@@ -115,10 +115,11 @@ def propose(arch, target, gen, population, children, *, space=SPACE, base=DEFAUL
     return out
 
 
-def search_job(target, gen, idx, genes, parent, *, device, epochs, limit, threads, smoke, rnd=None, split='system'):
+def search_job(target, gen, idx, genes, parent, *, device, epochs, limit, threads, smoke, rnd=None, split='system', ties='first'):
+    """ties: the round's neighbour rule (cfg['neighbor_ties']; rounds begun before the fix have 'first'), so a round never changes rule midway."""
     jid = f'{prefix(rnd)}_{target}_g{gen}_c{idx}'
     argv = ['-m', 'gpu.structure.train_structure', '--device', device, '--target', target, '--split', split, '--epochs', str(epochs),
-            '--seed', str(SEARCH_SEED), '--runs-root', '{JOB_DIR}', '--tag', jid, *genes_args(genes), *limit]
+            '--seed', str(SEARCH_SEED), '--runs-root', '{JOB_DIR}', '--tag', jid, *genes_args(genes), '--neighbor-ties', ties, *limit]
     if threads:
         argv += ['--threads', str(threads)]
     return {'id': jid, 'queue': 'gpu', 'group': 'evolve', 'target': target, 'split': split, 'gen': gen, 'parent': parent, 'genes': genes, 'argv': argv, 'round': rnd,
@@ -126,10 +127,10 @@ def search_job(target, gen, idx, genes, parent, *, device, epochs, limit, thread
             'timeout_s': 3 * 3600, 'est_minutes': 1 if smoke else 5}
 
 
-def final_job(target, seed, genes, *, device, epochs, limit, threads, smoke, rnd=None, split='system', winner_id=None):
+def final_job(target, seed, genes, *, device, epochs, limit, threads, smoke, rnd=None, split='system', winner_id=None, ties='first'):
     jid = f'evof_{target}_s{seed}' if rnd is None else f'evof_{rnd}_{target}_s{seed}'
     argv = ['-m', 'gpu.structure.train_structure', '--device', device, '--target', target, '--split', split, '--epochs', str(epochs),
-            '--seed', str(seed), '--runs-root', '{JOB_DIR}', '--tag', jid, *genes_args(genes), *limit]
+            '--seed', str(seed), '--runs-root', '{JOB_DIR}', '--tag', jid, *genes_args(genes), '--neighbor-ties', ties, *limit]
     if threads:
         argv += ['--threads', str(threads)]
     return {'id': jid, 'queue': 'gpu', 'group': 'evolve_final', 'target': target, 'split': split, 'genes': genes, 'argv': argv, 'round': rnd, 'winner_id': winner_id,
@@ -196,6 +197,7 @@ def run_cycle(pipe, plan, *, make_orch, targets, cfg, elapsed_hours, budget_hour
     bases = cfg.get('bases') or {}
     base_of = lambda t: bases.get(t, DEFAULT)  # noqa: E731
     final_seeds = cfg.get('final_seeds') or FINAL_SEEDS
+    ties = cfg.get('neighbor_ties', 'first')   # recorded when the round was created; a round from before the fix has none
 
     def left():
         return None if budget_hours is None else max(0.0, budget_hours - elapsed_hours())
@@ -243,7 +245,7 @@ def run_cycle(pipe, plan, *, make_orch, targets, cfg, elapsed_hours, budget_hour
                 continue  # this generation was created before an interruption; its pending jobs run below
             for i, (genes, parent) in enumerate(propose(arch, t, g, cfg['population'], cfg['children'], space=space, base=base_of(t), seed_mode=seed_mode, rnd=rnd)):
                 new.append(search_job(t, g, i, genes, parent, device=cfg['device'], epochs=cfg['search_epochs'], limit=lim(t), threads=cfg['threads'],
-                                      smoke=cfg['smoke'], rnd=rnd, split=split))
+                                      smoke=cfg['smoke'], rnd=rnd, split=split, ties=ties))
         added = extend_plan(pipe, plan, new)
         say(f'{"" if rnd is None else rnd + " "}generation {g}: {len(added)} new individuals' + ''.join(f' ({t}: {sum(1 for j in added if j["target"] == t)})' for t in targets))
         if run_pending() == 2 or stop_requested(pipe):
@@ -260,7 +262,7 @@ def run_cycle(pipe, plan, *, make_orch, targets, cfg, elapsed_hours, budget_hour
             seeds = [21, 22] if cfg['smoke'] else final_seeds[t]
             for sd in seeds:
                 finals.append(final_job(t, sd, best['genes'], device=cfg['device'], epochs=cfg['final_epochs'], limit=lim(t), threads=cfg['threads'],
-                                        smoke=cfg['smoke'], rnd=rnd, split=split, winner_id=best['id']))
+                                        smoke=cfg['smoke'], rnd=rnd, split=split, winner_id=best['id'], ties=ties))
     added = extend_plan(pipe, plan, finals)
     if added or any(j['group'] == 'evolve_final' and j.get('round') == rnd for j in plan['jobs']):
         run_pending()

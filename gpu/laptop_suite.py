@@ -55,10 +55,13 @@ def main(argv=None):
                                                 '--runs-root', str(runs), '--tag', 'alloys_cpu'] + ep))
     steps.append(('fetch_jarvis', ['gpu.structure.fetch_jarvis', '--download']))
     sub = ['--limit', '300', '--epochs', '2'] if q else ['--limit', '3000', '--epochs', '15']
-    steps.append(('structure_3000', ['gpu.structure.train_structure', '--device', a.device, '--runs-root', str(runs), '--tag', 's3000'] + sub))
+    # The structure steps exist to be compared with gpu/reference_cpu/, which was made with the original neighbour rule (docs/DECISIONS.md DEC-020),
+    # so they ask for that rule; without it they would train on different graphs and the comparison would mix the rule change with the hardware.
+    steps.append(('structure_3000', ['gpu.structure.train_structure', '--device', a.device, '--runs-root', str(runs), '--tag', 's3000',
+                                     '--neighbor-ties', 'first'] + sub))
     if a.full_structure:
         steps.append(('structure_full', ['gpu.structure.train_structure', '--device', a.device, '--runs-root', str(runs),
-                                         '--tag', 'sfull', '--epochs', '2' if q else '100']))
+                                         '--tag', 'sfull', '--epochs', '2' if q else '100', '--neighbor-ties', 'first']))
 
     log = []
     for name, cmd in steps:
@@ -111,7 +114,10 @@ def compare(share):
         out['structure_3000'] = {'test_mae_reference_cpu': r['cgcnn']['test']['mae'], 'test_mae_this_run': n['cgcnn']['test']['mae'],
                                  'split_sha256_matches': r['split']['sha256'] == n['split']['sha256'],
                                  'structures_per_second_reference_cpu': r['timing']['train_structures_per_second'],
-                                 'structures_per_second_this_run': n['timing']['train_structures_per_second'], 'device': n['device']}
+                                 'structures_per_second_this_run': n['timing']['train_structures_per_second'], 'device': n['device'],
+                                 'neighbor_rule_reference_cpu': r['graphs'].get('neighbor_ties', 'first'), 'neighbor_rule_this_run': n['graphs'].get('neighbor_ties', 'first')}
+        if out['structure_3000']['neighbor_rule_reference_cpu'] != out['structure_3000']['neighbor_rule_this_run']:
+            out['structure_3000']['warning'] = 'different neighbour rules: the accuracy difference includes the rule change, not only the hardware'
     r = _load(ref / 'profile_cpu.json')
     for p in share.glob('profile_*.json'):
         n = _load(p)

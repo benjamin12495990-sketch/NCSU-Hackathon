@@ -180,7 +180,27 @@ SPLIT_SPECS = {  # (network job glob, tree jobs) per split; elementP = leave-out
     'system': ('struct_{t}_sys_s[0-9]*', ['trees_{t}_sys']),
     'element': ('struct_{t}_elem_s[0-9]*', ['trees_{t}_elem']),
     'elementP': ('struct_{t}_elemP_s[0-9]*', ['trees_{t}_elem']),
+    'systemT': ('struct_{t}_sysT_s[0-9]*', ['trees_{t}_sysT']),   # held-out systems again, under the invariant neighbour rule
 }
+
+
+def rule_of_run(run_dir):
+    """The neighbour-cut rule a crystal-network run was trained with ('first' for runs made before the rule was recorded)."""
+    try:
+        return json.loads((Path(run_dir) / 'run_config.json').read_text())['config'].get('neighbor_ties', 'first')
+    except (OSError, ValueError, KeyError):
+        return 'unknown'
+
+
+def rule_of_trees(tree_file):
+    """The rule behind a tree run's structure features: 'first' for files made before it was recorded, None if it built no such features."""
+    try:
+        tj = json.loads(Path(tree_file).with_name('trees.json').read_text())
+    except (OSError, ValueError):
+        return 'unknown'
+    if 'rich' not in tj.get('feature_sets', {}):
+        return None
+    return tj.get('neighbor_ties') or 'first'
 
 
 def analyze_structure(pipe, target, split='formula'):
@@ -215,6 +235,8 @@ def analyze_structure(pipe, target, split='formula'):
            'network_runs': [{'seed': r['config']['seed'], 'best_epoch': r['cgcnn']['best_epoch_by_val'], 'test': r['cgcnn']['test'], 'val': r['cgcnn']['val'],
                              'train_seconds': r['timing']['train_seconds'], 'structures_per_second': r['timing']['train_structures_per_second']} for r in res],
            'trees': trees, 'strongest_trees': strongest, 'strongest_trees_key': key,
+           'neighbor_rules': {'networks': sorted({rule_of_run(r) for r in run_dirs}),
+                              'trees': sorted({x for x in (rule_of_trees(f) for f in tree_files) if x})},
            'compare': cmp_out, 'compare_lines': lines}
     try:
         from gpu.structure.compare_structure import align
@@ -233,6 +255,12 @@ def analyze_structure(pipe, target, split='formula'):
         avg = [v for kk, v in comps.items() if kk.startswith('network average')] or list(comps.values())[:1]
         out.setdefault('verdicts', {})[k] = {'diff': avg[0]['diff'], 'ci95': avg[0]['ci95'], 'verdict': verdict(*avg[0]['ci95'])}
     return out
+
+
+def _job_rule(pipe, jid):
+    """The rule of a network job's finished run, or None if it has none yet."""
+    r = _runs(pipe, jid)
+    return rule_of_run(r[0]) if r else None
 
 
 def _runs(pipe, pattern):
@@ -262,7 +290,11 @@ def compare_run_sets(new_runs, old_runs, tree_file, new_name, old_name):
     _, _, _, old = align(old_runs, [tree_file])
     strongest, tr = _strongest_trees(tree_file, tz)
     na, oa = np.mean(new, axis=0), np.mean(old, axis=0)
+    rn, ro = sorted({rule_of_run(r) for r in new_runs}), sorted({rule_of_run(r) for r in old_runs})
+    rt = rule_of_trees(tree_file)   # None: the trees used no structure features, so no rule is involved on their side
     return {'n_new_runs': len(new), 'n_old_runs': len(old), 'strongest_trees': strongest,
+            'neighbor_rules': {'new': rn, 'old': ro, 'trees': rt}, 'mixed_neighbor_rules': rn != ro,
+            'mixed_new_vs_trees': rt is not None and rn != [rt], 'mixed_old_vs_trees': rt is not None and ro != [rt],
             'new_single_mae_mean': float(np.mean([np.abs(p - y).mean() for p in new])), 'new_average_mae': float(np.abs(na - y).mean()),
             'old_single_mae_mean': float(np.mean([np.abs(p - y).mean() for p in old])), 'old_average_mae': float(np.abs(oa - y).mean()),
             'trees_mae': float(np.abs(tr - y).mean()),
@@ -313,12 +345,14 @@ def analyze_evolution(pipe, plan):
             gens = max([x['gen'] for x in arch] or [-1]) + 1
             e = {'target': t, 'round': rnd or 'r1', 'n_individuals': len(arch), 'n_finished': len(done), 'generations': gens,
                  'start_label': 'the defaults' if E.gkey(base) == E.gkey(E.DEFAULT) else 'the previous winner', 'start_changes': E.describe_genes(base),
-                 'individuals': [{**x, 'changes': E.describe_genes(x['genes'])} for x in sorted(arch, key=lambda x: (x['gen'], x['id']))],
+                 'individuals': [{**x, 'changes': E.describe_genes(x['genes']), 'neighbor_rule': _job_rule(pipe, x['id'])} for x in sorted(arch, key=lambda x: (x['gen'], x['id']))],
                  'best_by_generation': [min([x['val_mae'] for x in done if x['gen'] <= g] or [None]) for g in range(gens)],
                  'default_val_mae': start['val_mae'] if start else None, 'best_val_mae': best['val_mae'] if best else None,
                  'best_id': best['id'] if best else None, 'best_changes': E.describe_genes(best['genes']) if best else None,
                  'default_won': bool(best and E.gkey(best['genes']) == E.gkey(base)), 'status': 'ok' if done else 'missing',
-                 'final_epochs': cyc.get('final_epochs'), 'compare_label': cyc.get('compare_label', 'the default settings')}
+                 'final_epochs': cyc.get('final_epochs'), 'compare_label': cyc.get('compare_label', 'the default settings'),
+                 'round_rule': cyc.get('neighbor_ties', 'first')}
+            e['search_rules'] = sorted({x['neighbor_rule'] for x in e['individuals'] if x['neighbor_rule'] is not None})
             fjobs = [j for j in plan['jobs'] if j.get('group') == 'evolve_final' and j.get('round') == rnd and j.get('target') == t]
             if fjobs:  # what the finalists really are: their own stored settings, not whatever the archive's best is now
                 e['finalist_changes'] = E.describe_genes(fjobs[0]['genes'])
@@ -335,11 +369,99 @@ def analyze_evolution(pipe, plan):
                     e['finalists'] = {'n_evolved_runs': c['n_new_runs'], 'n_default_runs': c['n_old_runs'], 'strongest_trees': c['strongest_trees'],
                                       'evolved_single_mae_mean': c['new_single_mae_mean'], 'evolved_average_mae': c['new_average_mae'],
                                       'default_single_mae_mean': c['old_single_mae_mean'], 'default_average_mae': c['old_average_mae'], 'trees_mae': c['trees_mae'],
-                                      'evolved_vs_default': c['new_vs_old'], 'evolved_vs_trees': c['new_vs_trees'], 'default_vs_trees': c['old_vs_trees']}
+                                      'evolved_vs_default': c['new_vs_old'], 'evolved_vs_trees': c['new_vs_trees'], 'default_vs_trees': c['old_vs_trees'],
+                                      'neighbor_rules': c['neighbor_rules'], 'mixed_neighbor_rules': c['mixed_neighbor_rules']}
                 except Exception as ex:  # noqa: BLE001
                     e['finalists_error'] = repr(ex)
             res.append(e)
     return res
+
+
+def analyze_tiefix(pipe, plan):
+    """The neighbour-rule fix measured: the held-out-systems networks and trees trained again under the invariant rule, against the
+    originals on the same test crystals (same seeds, settings and rows), and how much one network of each kind changes its predictions
+    when a crystal is only rewritten (gpu/structure/invariance.py).
+    Each side is chosen by the rule its runs RECORDED, not by job name: the original side keeps only runs made with 'first', the fixed side
+    only runs made with 'all'; anything else is listed as excluded. If one side is left empty, the status says so and nothing is compared.
+    The interval of "fixed minus original" resamples test crystals with the trained networks held fixed. It does not include which seeds
+    happened to be trained, so the per-seed differences and the seed-to-seed spread are reported beside it."""
+    pipe = Path(pipe)
+    targets = []
+    for j in plan['jobs']:
+        if j.get('target') and fnmatch.fnmatch(j['id'], f'struct_{j["target"]}_sysT_s[0-9]*') and j['target'] not in targets:
+            targets.append(j['target'])
+    out = []
+    seed = lambda r: json.loads((r / 'run_config.json').read_text())['config']['seed']  # noqa: E731
+    for t in targets:
+        new_all, old_all = _runs(pipe, f'struct_{t}_sysT_s[0-9]*'), _runs(pipe, f'struct_{t}_sys_s[0-9]*')
+        new_ok = [r for r in new_all if rule_of_run(r) == 'all']
+        old_ok = [r for r in old_all if rule_of_run(r) == 'first']
+        excluded = [f'{r.parent.parent.name} ({rule_of_run(r)})' for r in new_all + old_all if r not in new_ok + old_ok]
+        both = sorted({seed(r) for r in new_ok} & {seed(r) for r in old_ok})
+        new = sorted((r for r in new_ok if seed(r) in both), key=seed)
+        old = sorted((r for r in old_ok if seed(r) in both), key=seed)   # the same seeds on both sides, in the same order
+        tf_new, tf_old = _first(pipe, f'trees_{t}_sysT', 'trees_predictions.npz'), _first(pipe, f'trees_{t}_sys', 'trees_predictions.npz')
+        e = {'target': t, 'status': 'missing', 'seeds': both, 'n_new_runs_finished': len(new_all), 'n_old_runs_finished': len(old_all), 'excluded_runs': excluded}
+        for rule in ('first', 'all'):
+            f = pipe / 'jobs' / f'inv_{t}_{rule}' / 'invariance.json'
+            try:
+                e.setdefault('invariance', {})[rule] = json.loads(f.read_text())
+            except (OSError, ValueError):
+                pass
+        if old_all and not old_ok:
+            e['status'], e['reason'] = 'error', ('the held-out-systems runs of this folder were not made with the original rule (' + ', '.join(excluded)
+                                                 + '), so there is no original set to compare with')
+        elif new_all and not new_ok:
+            e['status'], e['reason'] = 'error', 'the retrained runs did not record the fixed rule (' + ', '.join(excluded) + ')'
+        elif new and old and (tf_new or tf_old) is not None:   # the network comparison needs a tree file only to align rows
+            try:
+                e.update(compare_run_sets(new, old, tf_new or tf_old, 'fixed rule', 'original rule'))
+                e['status'] = 'ok'
+                from gpu.structure.compare_structure import align
+                _, y, _, pn_runs = align(new, [tf_new or tf_old])
+                _, _, _, po_runs = align(old, [tf_new or tf_old])
+                ps = [{'seed': seed(rn_), 'fixed_mae': float(np.abs(a_ - y).mean()), 'original_mae': float(np.abs(b_ - y).mean())} for rn_, a_, b_ in zip(new, pn_runs, po_runs)]
+                for x in ps:
+                    x['diff'] = x['fixed_mae'] - x['original_mae']
+                e['per_seed'] = ps
+                e['seeds_lower_fixed'] = sum(x['diff'] < 0 for x in ps)
+                e['seed_sd'] = {'fixed': float(np.std([x['fixed_mae'] for x in ps], ddof=1)) if len(ps) > 1 else None,
+                                'original': float(np.std([x['original_mae'] for x in ps], ddof=1)) if len(ps) > 1 else None}
+                rn, ro = [json.loads((r / 'result.json').read_text()) for r in new], [json.loads((r / 'result.json').read_text()) for r in old]
+                e['label'] = rn[0]['target']
+                e['edges_ratio'] = float(np.mean([r['graphs']['edges'] for r in rn]) / np.mean([r['graphs']['edges'] for r in ro]))
+                e['edges_per_atom_fixed'] = rn[0]['graphs'].get('edges_per_atom')
+                e['train_seconds_ratio'] = float(np.mean([r['timing']['train_seconds'] for r in rn]) / np.mean([r['timing']['train_seconds'] for r in ro]))
+                e['devices'] = sorted({r['device'] for r in rn + ro})
+                rules_t = {'fixed': rule_of_trees(tf_new) if tf_new is not None else None, 'original': rule_of_trees(tf_old) if tf_old is not None else None}
+                if tf_new is None or tf_old is None:
+                    e['trees_missing'] = ' and '.join(x for x, f in ((f'the fixed-rule trees (trees_{t}_sysT)', tf_new), (f'the original trees (trees_{t}_sys)', tf_old)) if f is None) + ' did not finish'
+                elif rules_t['fixed'] != 'all' or rules_t['original'] != 'first':
+                    e['trees_missing'] = f'the tree files did not record the expected rules (fixed side {rules_t["fixed"]}, original side {rules_t["original"]})'
+                else:
+                    tzn, y, grp, _ = align(new[:1], [tf_new])
+                    tzo, yo, _, _ = align(new[:1], [tf_old])       # raises if the old trees are on other rows
+                    ix = np.array([{j: i for i, j in enumerate(tzo['jid'])}[j] for j in tzn['jid']])   # old rows in the new file's order
+                    if not np.allclose(y, yo[ix]):
+                        raise ValueError('the two tree runs disagree about the test labels')
+                    kn, pn = _strongest_trees(tf_new, tzn)
+                    ko, po = _strongest_trees(tf_old, tzo)
+                    po = po[ix]
+                    tjn = json.loads(tf_new.with_name('trees.json').read_text())['feature_sets']
+                    tjo = json.loads(tf_old.with_name('trees.json').read_text())['feature_sets']
+                    # The rule effect on the trees is the SAME feature set under both rules: only the structure features ('rich') depend on it.
+                    # Each side's strongest set is shown too, but comparing two different sets would report a feature-set difference as a rule effect.
+                    same = 'rich' if ('rich' in tjn and 'rich' in tjo and TREE_KEYS['rich'] in tzn.files and TREE_KEYS['rich'] in tzo.files) else None
+                    e['trees'] = {'fixed_strongest': kn, 'original_strongest': ko, 'fixed_mae': float(np.abs(pn - y).mean()), 'original_mae': float(np.abs(po - y).mean()),
+                                  'rules': rules_t, 'compared_set': same}
+                    if same:
+                        rn_p, ro_p = tzn[TREE_KEYS[same]], tzo[TREE_KEYS[same]][ix]
+                        e['trees']['fixed_vs_original'] = _vs(rn_p, ro_p, y, grp, 'fixed rule', 'original rule')
+                        e['trees']['same_set_mae'] = {'fixed': float(np.abs(rn_p - y).mean()), 'original': float(np.abs(ro_p - y).mean())}
+            except Exception as ex:  # noqa: BLE001
+                e['status'], e['reason'] = 'error', repr(ex)
+        out.append(e)
+    return out
 
 
 # ---- prediction intervals ------------------------------------------------------------------------------------------------------
@@ -433,7 +555,8 @@ def analyze_intervals(pipe, plan, res):
                                        'models': {k: conformal_split(v[0] - y_sel, v[1] - y_ev) for k, v in models.items()}})
         except Exception as e:  # noqa: BLE001
             out['tabular'].append({'task': fam, 'error': repr(e)})
-    for key, split in (('structure', 'formula'), ('structure_system', 'system'), ('structure_element', 'element'), ('structure_elementP', 'elementP')):
+    for key, split in (('structure', 'formula'), ('structure_system', 'system'), ('structure_element', 'element'), ('structure_elementP', 'elementP'),
+                       ('structure_systemT', 'systemT')):
         for s in res.get(key, []):
             if s.get('status') != 'ok':
                 continue
@@ -457,7 +580,7 @@ def analyze_intervals(pipe, plan, res):
                     models['trees'] = conformal_split(tv - vy, tt - ty)
                     models['blend'] = conformal_split(0.5 * (vp + tv) - vy, 0.5 * (tp + tt) - ty)
                     break
-                out['crystal'].append({'task': s['target'], 'split': split, 'n_runs': len(runs), 'unit': s['label'],
+                out['crystal'].append({'task': s['target'], 'split': split, 'n_runs': len(runs), 'unit': s['label'], 'neighbor_rules': sorted({rule_of_run(r) for r in runs}),
                                        'method': 'split conformal on the validation crystals (same kind of hold-out as test)', 'models': models})
             except Exception as e:  # noqa: BLE001
                 out['crystal'].append({'task': s['target'], 'split': split, 'error': repr(e)})
@@ -473,7 +596,7 @@ def analyze_all(pipe, plan):
             res['tabular'].append(analyze_tabular(pipe, f))
         except Exception as e:  # one broken family must not stop the report
             res['tabular'].append({'family': f, 'status': 'error', 'reason': repr(e)})
-    keys = {'formula': 'structure', 'system': 'structure_system', 'element': 'structure_element', 'elementP': 'structure_elementP'}
+    keys = {'formula': 'structure', 'system': 'structure_system', 'element': 'structure_element', 'elementP': 'structure_elementP', 'systemT': 'structure_systemT'}
     for split, key in keys.items():
         pat = SPLIT_SPECS[split][0]
         targets = sorted({j['target'] for j in plan['jobs'] if j.get('target') and fnmatch.fnmatch(j['id'], pat.format(t=j['target']))}, key=order.index)
@@ -491,6 +614,10 @@ def analyze_all(pipe, plan):
         res['evolution'] = analyze_evolution(pipe, plan)
     except Exception as e:  # noqa: BLE001
         res['evolution'] = [{'status': 'error', 'target': '-', 'reason': repr(e)}]
+    try:
+        res['tiefix'] = analyze_tiefix(pipe, plan)
+    except Exception as e:  # noqa: BLE001
+        res['tiefix'] = [{'status': 'error', 'target': '-', 'reason': repr(e)}]
     try:
         res['intervals'] = analyze_intervals(pipe, plan, res)
     except Exception as e:  # noqa: BLE001

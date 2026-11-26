@@ -1,6 +1,7 @@
 {
  "about": "What the nightly pipeline trains for each task, and which model is recommended. Changed only by a reviewed commit, never automatically: a cycle that finds something better is evidence for changing this file, not a change. Evidence column = the report section that justified the entry.",
- "version": 2,
+ "version": 3,
+ "crystal_neighbor_rule": "all: every nightly crystal network and structure-feature tree run is built with --neighbor-ties all (a prediction no longer depends on how the crystal is written down). The evidence lines under 'crystal' were measured in cycle 2 with the original rule. A report from the tiefix profile re-measures the default-settings networks, the trees and their comparison on held-out systems (the bulk-modulus, shear-modulus and band-gap entries); it does not retrain the formation-energy entry's evolved settings, so 'evolved settings beat the defaults' stays an original-rule measurement until a new search or finalist run.",
  "tabular": {
   "alloys": {
    "recommended": "trees",

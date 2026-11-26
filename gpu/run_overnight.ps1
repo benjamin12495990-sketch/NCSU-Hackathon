@@ -8,6 +8,9 @@
 #   .\gpu\run_overnight.ps1 -Cycle3 -Rehearsal # a few minutes: the third cycle in miniature (extends the newest rehearsal folder)
 #   .\gpu\run_overnight.ps1 -Cycle3            # the third cycle: held-out elements, fine-tuning from formation energy, wider search;
 #                                              # ADDS to the newest real run folder; default budget 12 h
+#   .\gpu\run_overnight.ps1 -TieFix -Rehearsal # a few minutes: the neighbour-rule check in miniature (needs a rehearsal folder whose -Cycle2 ran before the fix)
+#   .\gpu\run_overnight.ps1 -TieFix            # the held-out-systems networks and trees again under the fixed neighbour rule, compared with
+#                                              # the originals; ADDS to the newest real run folder; about 2-3 hours
 #   .\gpu\run_overnight.ps1 -Nightly           # git pull --ff-only, then retrain whatever changed (gpu\schedule_nightly.ps1 runs this every night)
 #   .\gpu\run_overnight.ps1 -Resume            # continue the MAIN run (standard or cycle) after a reboot, power cut or stop
 #   .\gpu\run_overnight.ps1 -Resume -Nightly   # continue the newest nightly instead (-Resume -Rehearsal: the newest rehearsal)
@@ -21,6 +24,7 @@ param(
     [switch]$Rehearsal,
     [switch]$Cycle2,
     [switch]$Cycle3,
+    [switch]$TieFix,
     [switch]$Nightly,
     [Parameter(ValueFromRemainingArguments = $true)]$Rest
 )
@@ -67,6 +71,12 @@ elseif ($Nightly) {
     }
     $prof = 'nightly'; if ($Rehearsal) { $prof = 'nightly-smoke' }
     & $py -m gpu.run_pipeline --profile $prof --device cuda @extra
+}
+elseif ($TieFix -and $Rehearsal) {
+    & $py -m gpu.run_pipeline --profile tiefix-smoke --device cuda --extend latest-smoke @extra
+}
+elseif ($TieFix) {
+    & $py -m gpu.run_pipeline --profile tiefix --device cuda --extend latest @extra
 }
 elseif ($Cycle3 -and $Rehearsal) {
     & $py -m gpu.run_pipeline --profile cycle3-smoke --device cuda --extend latest-smoke @extra

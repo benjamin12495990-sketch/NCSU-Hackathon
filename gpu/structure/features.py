@@ -17,8 +17,11 @@ Features are cached per record list in gpu/data_cache/jarvis/features/ (the neig
 import hashlib
 import json
 import math
+import os
 import time
+import uuid
 from concurrent.futures import ProcessPoolExecutor
+from functools import partial
 from pathlib import Path
 
 import numpy as np
@@ -44,7 +47,7 @@ NAMES = ([f'{s}_{p}' for p in PROPS for s in ('mean', 'range', 'std')]
          + ['en_diff_mean', 'en_diff_max'] + [f'lat_len_{i}' for i in range(3)] + [f'lat_ang_{i}' for i in range(3)] + ['density', 'packing'])
 
 
-def one(atoms, cutoff=8.0, k=12):
+def one(atoms, cutoff=8.0, k=12, ties='first'):
     L, frac, Z = atoms_arrays(atoms)
     n = len(Z)
     p = _P[Z - 1]
@@ -54,7 +57,7 @@ def one(atoms, cutoff=8.0, k=12):
     mean = w @ Pe
     comp = np.empty(3 * len(PROPS))
     comp[0::3], comp[1::3], comp[2::3] = mean, Pe.max(0) - Pe.min(0), np.sqrt(w @ (Pe - mean) ** 2)
-    src, dst, dist = neighbor_graph(L, frac, cutoff, k)
+    src, dst, dist = neighbor_graph(L, frac, cutoff, k, ties)
     dist = dist.astype(float)
     rsum = (p[src, RAD] + p[dst, RAD]) / 100.0
     ratio = dist / rsum
@@ -84,13 +87,16 @@ def one(atoms, cutoff=8.0, k=12):
     return np.concatenate([comp, st, rdf, [de.mean(), de.max()], np.sort(lengths), ang, [dens, pack]]).astype(np.float32)
 
 
-def _chunk(args):
-    return np.stack([one(a) for a in args])
+def _chunk(args, ties='first'):
+    return np.stack([one(a, ties=ties) for a in args])
 
 
-def build(recs, threads=1, cache_dir=None, log=print):
-    """Feature matrix [len(recs), len(NAMES)] for records with 'jid' and 'atoms'; cached on disk."""
-    key = hashlib.sha256(json.dumps([VERSION, [r['jid'] for r in recs]]).encode()).hexdigest()[:24]
+def build(recs, threads=1, cache_dir=None, log=print, ties='first'):
+    """Feature matrix [len(recs), len(NAMES)] for records with 'jid' and 'atoms'; cached on disk.
+    ties: the neighbour-cut rule of gpu/structure/graph.py ('all' = whole shells, invariant; 'first' = the original rule).
+    The cache key includes the rule, so features built under one rule are never reused for the other."""
+    tag = VERSION if ties == 'first' else f'{VERSION}+ties-{ties}'   # the original key is unchanged, so older caches stay valid
+    key = hashlib.sha256(json.dumps([tag, [r['jid'] for r in recs]]).encode()).hexdigest()[:24]
     path = Path(cache_dir or (CACHE / 'jarvis' / 'features')) / f'{key}.npy'
     if path.exists():
         return np.load(path)
@@ -103,7 +109,7 @@ def build(recs, threads=1, cache_dir=None, log=print):
             chunks = [atoms[i:i + size] for i in range(0, len(atoms), size)]
             with ProcessPoolExecutor(max_workers=threads) as ex:
                 parts = []
-                for j, part in enumerate(ex.map(_chunk, chunks)):
+                for j, part in enumerate(ex.map(partial(_chunk, ties=ties), chunks)):
                     parts.append(part)
                     if (j + 1) % 20 == 0:
                         log(f'  structure features {min(len(atoms), (j + 1) * size)}/{len(atoms)} ({time.perf_counter() - t0:.0f} s)')
@@ -113,15 +119,20 @@ def build(recs, threads=1, cache_dir=None, log=print):
     if X is None:
         rows = []
         for i, a in enumerate(atoms):
-            rows.append(one(a))
+            rows.append(one(a, ties=ties))
             if (i + 1) % 10000 == 0:
                 log(f'  structure features {i + 1}/{len(atoms)} ({time.perf_counter() - t0:.0f} s)')
         X = np.stack(rows)
     assert X.shape[1] == len(NAMES), (X.shape, len(NAMES))
     assert np.isfinite(X).all(), 'non-finite structure feature'
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix('.tmp.npy')
+    tmp = path.with_name(f'{path.stem}.{os.getpid()}.{uuid.uuid4().hex[:8]}.tmp.npy')   # this process's own name: two jobs may build the same set at once
     np.save(tmp, X)
-    tmp.replace(path)
+    try:
+        tmp.replace(path)
+    except OSError as e:   # Windows: the other job's identical file is open; keep using the features built here
+        if not path.exists():
+            raise
+        log(f'  feature cache was written by another job at the same time ({e.__class__.__name__}); the unused copy is left at {tmp.name}')
     log(f'  structure features: {X.shape[0]} crystals x {X.shape[1]} in {time.perf_counter() - t0:.0f} s')
     return X

@@ -14,8 +14,8 @@ from types import SimpleNamespace
 
 import numpy as np
 
-from gpu.common import pick_device, sha256_bytes
-from gpu.structure.train_structure import DEFAULT_ZIP, graphs_for, load_records, metrics, parts_of, run_model, save_predictions
+from gpu.common import pick_device
+from gpu.structure.train_structure import DEFAULT_ZIP, graph_key, graphs_for, load_records, metrics, parts_of, run_model, save_predictions
 
 
 def main(argv=None):
@@ -35,6 +35,7 @@ def main(argv=None):
     cfg = dict(old['config'])
     cfg.setdefault('target', 'bulk_modulus_kv')  # runs made before --target existed
     cfg.setdefault('split', 'formula')           # runs made before --split existed
+    cfg.setdefault('neighbor_ties', 'first')     # runs made before the invariant neighbour cut existed
     args = SimpleNamespace(**cfg, data=a.data)
     recs, source, counts = load_records(args)
     if not cfg.get('synthetic') and source['zip_sha256'] != old['source']['zip_sha256']:
@@ -45,7 +46,7 @@ def main(argv=None):
     ytr = y[idx['train']]
     ym, ys = float(ytr.mean()), float(ytr.std() or 1.0)
     ident_src = {k: v for k, v in source.items() if k != 'zip'}
-    gkey = sha256_bytes(json.dumps(ident_src, sort_keys=True), json.dumps([r['jid'] for r in recs]), args.cutoff, args.max_neighbors)[:24]
+    gkey = graph_key(ident_src, recs, args.cutoff, args.max_neighbors, args.neighbor_ties)
     graphs, _, _ = graphs_for(recs, args, gkey)
     device = pick_device(a.device)
     model = CGCNN(cfg['atom_features'], cfg['conv'], cfg['hidden'], cfg['cutoff'], atom_input=cfg.get('atom_input', 'embedding')).to(device)

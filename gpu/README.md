@@ -158,7 +158,7 @@ The run is refused if the configuration or the data hash differs, and a finished
 ```bash
 python -m gpu.structure.fetch_jarvis                  # prints the URL and Content-Length (46.2 MiB) and stops
 python -m gpu.structure.fetch_jarvis --download       # gpu/data_cache/jarvis/ + provenance JSON (URL, size, SHA-256, date)
-python -m gpu.structure.train_structure --device cpu  --limit 3000 --epochs 15 --tag laptop_cpu_3000   # same as reference_cpu
+python -m gpu.structure.train_structure --device cpu  --limit 3000 --epochs 15 --neighbor-ties first --tag laptop_cpu_3000   # same as reference_cpu (original neighbour rule, section 9)
 python -m gpu.structure.train_structure --device cuda --limit 3000 --epochs 15 --tag cuda_3000
 python -m gpu.structure.train_structure --device cuda --epochs 100 --tag cuda_full                      # all 31,897 records
 python -m gpu.structure.train_structure --device cuda --epochs 100 --batch 128 --amp --tag cuda_full_bf16 # optional
@@ -176,7 +176,7 @@ compare its numbers directly with `reference_cpu/`.
   and its hash. This split is the kit's own, not the JARVIS leaderboard split.
 - Baselines on the same split: the training mean, and ridge regression on element fractions (alpha chosen
   on val). The val set picks the best epoch. The test set is scored once at the end.
-- Graphs (8 A cutoff, 12 neighbours) are built once per subset and cached in `gpu/data_cache/jarvis/graphs/`.
+- Graphs (8 A cutoff, 12 neighbours; from 2026-11-26 every neighbour tied with the 12th is kept too, see section 9) are built once per subset and cached in `gpu/data_cache/jarvis/graphs/`.
   All 31,897 took 20.6 s here. Loading the 254 MB JSON takes about 6 s and 1.2 GB of RAM.
 - Checkpoints are written after every epoch (`<run>/ckpt/last.pt`). Resume with `--resume <run>` on the
   same command. On CPU a resumed run matches an uninterrupted one exactly. On CUDA, `index_add_` uses atomic
@@ -197,7 +197,9 @@ Copy the compact JSONs, not checkpoints or `predictions.npz`, into a new folder 
 `gpu/reference_gpu/`. Commit it on a branch together with a short note of the hardware and commands.
 Do not commit `gpu/runs/` or `gpu/data_cache/`. Compare the laptop's numbers with `gpu/reference_cpu/`:
 
-- Accuracy on the same command should agree within seed noise. CPU and CUDA are not bit-identical.
+- Accuracy on the same command should agree within seed noise. CPU and CUDA are not bit-identical. The structure numbers in
+  `reference_cpu/` were made with the original neighbour rule, so compare them with runs made with `--neighbor-ties first`
+  (`gpu.laptop_suite` does this). Without the flag the run uses the fixed rule and different graphs (on CPU: test MAE 0.144 instead of 0.135).
 - Speed: compare `train_seconds` and model-rows/s (tabular) or structures/s (structure).
 
 ## CPU reference numbers (build machine)
@@ -216,9 +218,9 @@ with Python 3.13 and torch 2.15.0+cu132 running on CPU, in float32.
 | `train_tabular --family polymers --mode cv` (GroupKFold 3, 5 seeds) | ensemble MAE 15.18 K, R2 0.926; train mean 65.7. JavaScript single network 15.1 (its folds recompute the Fox features, which these do not) | 11.4 s |
 | `train_tabular --family chemistry --mode cv` (prepare.py folds, 5 seeds) | ensemble MAE 0.765 LogS, R2 0.778; members 0.793; train mean 1.884. JavaScript single seed 0.8025 | 13.7 s |
 | `train_tabular --family concrete --mode fixed` (TRAIN -> REWARD; MONITOR) | REWARD ensemble MAE 13.33 MPa, MONITOR 12.35 MPa; train mean 14.99 / 15.80. Exploratory; the lab README's plain nn.js network scored 12.47 on SELECT, with other inputs | 1.8 s |
-| `structure.train_structure --limit 3000 --epochs 15` (JARVIS bulk modulus, split 2,375 / 286 / 339) | test MAE in log10(GPa): mean 0.320, ridge on element fractions 0.175 (R2 0.590), CGCNN 0.135 (R2 0.686; best val epoch 7) | 74.1 s training, 481 structures/s; graphs 2.0 s; peak RSS 1.9 GB (includes the 254 MB JSON) |
+| `structure.train_structure --limit 3000 --epochs 15` (JARVIS bulk modulus, split 2,375 / 286 / 339; original neighbour rule, now `--neighbor-ties first`) | test MAE in log10(GPa): mean 0.320, ridge on element fractions 0.175 (R2 0.590), CGCNN 0.135 (R2 0.686; best val epoch 7) | 74.1 s training, 481 structures/s; graphs 2.0 s; peak RSS 1.9 GB (includes the 254 MB JSON) |
 
-| `structure.train_structure --epochs 2` (all 31,897 records, split 25,432 / 3,174 / 3,291) | test MAE in log10(GPa): mean 0.324, ridge 0.171 (R2 0.520), CGCNN after 2 epochs 0.126 (R2 0.678) | 55 s per epoch, 459 structures/s; graphs 20.6 s; JSON load 6.5 s; peak RSS 1.9 GB |
+| `structure.train_structure --epochs 2` (all 31,897 records, split 25,432 / 3,174 / 3,291; original neighbour rule) | test MAE in log10(GPa): mean 0.324, ridge 0.171 (R2 0.520), CGCNN after 2 epochs 0.126 (R2 0.678) | 55 s per epoch, 459 structures/s; graphs 20.6 s; JSON load 6.5 s; peak RSS 1.9 GB |
 
 A test MAE of 0.135 in log10 means a typical error of a factor of 10^0.135, about 1.36, against the DFT
 value. On 3,000 records the CGCNN beats both baselines. On the full set, 2 epochs already beat both. The
@@ -360,3 +362,47 @@ of the current model, test error and 90% interval for every task. The first nigh
 A pipeline refuses to start while another is running (`RUNNING.lock`), so the nightly task never collides with a long cycle. `-Resume` always continues the main run (`LAST_PIPELINE.txt`); the nightly and the rehearsals keep their own pointers (`-Resume -Nightly`, `-Resume -Rehearsal`), so a nightly can never hide an unfinished cycle.
 **Recipes change only by a reviewed commit**: a cycle that finds a better model is evidence for editing `gpu/recipes.json`, never an automatic promotion,
 and no decision is ever made on test rows.
+
+## 9. The neighbour rule (fixed 2026-11-26) and how to measure what the fix changed
+
+Each atom's neighbour list is cut at 12. Until this fix, when several neighbours sat at the same distance as the 12th (equal to within rounding), the
+ones kept were whichever came first in the file, so **the same crystal written two ways (atoms in another order, cell shifted, rotated or doubled) could
+get two predictions**. How many crystals this touches depends on what is counted (3,000 crystals each for bulk modulus and formation energy):
+- About three in four (76% and 72%) have another neighbour within 0.001 angstrom of the 12th, so the fix gives them a slightly different graph.
+- About four in ten (49% and 40%) have neighbours equally far to within rounding, the only case where the original rule depended on the order.
+- The order matters for the prediction mostly when the tied neighbours are different elements: under 1 in 10 crystals (8.5% and 7.4%). In a review
+  check with random rewrites, the original-rule prediction moved (by more than 0.0001) for about 3-4% of crystals.
+
+- **The fix** (`gpu/structure/graph.py`, `--neighbor-ties all`): keep every neighbour within 0.001 angstrom of the 12th. A whole shell of equally distant
+  neighbours is kept together, so the graph depends on the geometry only. Graphs get 6-9% more edges (13.1 per atom instead of 12.0 for bulk modulus).
+- **New runs use the fixed rule** (networks and the structure-feature trees). Runs made before the fix are untouched; resuming one, or fine-tuning from
+  one (`--init-from`), keeps the rule it was made with, and asking for the other rule is refused. `--neighbor-ties first` reproduces an old run.
+  The two rules never share a graph or feature cache.
+- **Continuing a folder made before the fix keeps its rule.** `-Resume`, `-TieFix` and a new cycle all start a folder's unfinished jobs again
+  (never started, skipped, retried from scratch, new generations of an unfinished search). The runner first adds `--neighbor-ties first` to
+  every crystal job of the folder that states no rule and records the search round's rule, so those jobs train like their finished siblings
+  (a copy of the old plan.json is kept; finished runs are unchanged). Every crystal job planned from now on states its rule.
+- **Nothing measured earlier is deleted or rewritten.** Reports say which rule the networks and trees of each crystal section used (a line
+  under each network-versus-trees section, a column in the fine-tuning table, a line per search round, the split label in the intervals
+  table) and flag comparisons that mix the two.
+- `python -m gpu.tests.test_invariance` proves the property on four test crystals (worst change of a prediction: 0.00001 under the fixed rule, 0.35 under
+  the original one, untrained networks). `python -m gpu.structure.invariance --run <run folder> --output inv.json` measures it for any finished run.
+
+What the fix does to **accuracy** is not known until it is measured, because three in four crystals now give the network a slightly different graph:
+```
+git pull
+.\gpu\run_overnight.ps1 -TieFix -Rehearsal   # a few minutes (extends the newest rehearsal folder; its second cycle must have run BEFORE the fix)
+.\gpu\run_overnight.ps1 -TieFix              # the real thing: ADDS to your newest real run folder
+```
+It trains the held-out-systems networks again (same seeds, epochs, settings and crystals; 10 network runs) and the trees on the same split, all under
+the fixed rule. Any unfinished jobs of the folder run in the same session, under the rule they were planned with. It adds two sections to the report:
+the fixed-rule numbers, and "Neighbour-rule fix", which compares fixed against original seed by seed on the same test crystals and shows how much one
+network of each kind changes its predictions when a crystal is only rewritten. The comparison uses only runs whose recorded rule matches their side, so a
+folder whose held-out-systems runs were made after the fix (a rehearsal made after the pull, say) has nothing to compare and the run says so instead
+of starting. Expect about 2-3 hours with two GPU jobs at a time (a guess from the cycle-2 times plus the larger graphs; the report records the real
+times). What it re-measures for `gpu/recipes.json`: the default-settings networks, the trees and their comparison on held-out systems, which covers the
+bulk-modulus, shear-modulus and band-gap entries. It does not retrain the formation-energy entry's evolved settings (seeds 21/22), so the evidence that
+they beat the defaults stays an original-rule measurement until a new search or finalist run. The nightly retrains every crystal task once under the
+fixed rule by itself.
+
+The fix is not a smooth cutoff: a neighbour just outside the 0.001 angstrom tolerance is still dropped whole.

@@ -13,7 +13,8 @@ that family. Recipes change only by a reviewed commit: a cycle that finds a bett
 Table families are retrained with the standard sweep and baselines (about 2-14 GPU minutes each on the RTX 5070 Laptop); the report
 then shows the recommended model (trees or the no-fit blend of networks and trees). Crystal properties are trained on the
 held-out-chemical-systems split with the recipe's settings and seeds, beside the tree baselines on the same split, so every night's
-numbers are honest test numbers and come with conformal prediction intervals.
+numbers are honest test numbers and come with conformal prediction intervals. Crystal graphs and structure features use the invariant
+neighbour rule (--neighbor-ties all), so a prediction does not depend on how a crystal is written down.
 """
 import hashlib
 import json
@@ -23,7 +24,10 @@ from pathlib import Path
 from gpu.common import REPO
 
 RECIPES = REPO / 'gpu' / 'recipes.json'
-CODE_VERSION = {'tabular': 'tab-v1', 'crystal': 'crystal-v1'}
+# crystal-v2 (2026-11-26): neighbour lists are cut by the invariant rule (gpu/structure/graph.py, ties='all'), which changes every crystal
+# network and the structure-feature trees, so each crystal task is retrained once under the new rule.
+CODE_VERSION = {'tabular': 'tab-v1', 'crystal': 'crystal-v2'}
+NEIGHBOR_TIES = 'all'   # stated in every nightly crystal job, so a night's folder never depends on a default
 
 
 def load_recipes():
@@ -56,7 +60,7 @@ def crystal_jobs(t, recipe, *, device, smoke, small_ram, cpu_threads):
     from gpu.pipeline.plan import BIG_TARGETS, STRUCT_EST_MIN, TREES_EST_MIN, _struct_job
     lim = ['--limit', '800'] if smoke else (['--limit', '40000'] if (t in BIG_TARGETS and small_ram) else [])
     genes = recipe.get('genes', 'default')
-    extra = [] if genes == 'default' else genes_args(genes)
+    extra = ([] if genes == 'default' else genes_args(genes)) + ['--neighbor-ties', NEIGHBOR_TIES]
     seeds = [11, 12] if smoke else recipe['seeds']
     epochs = 3 if smoke else recipe.get('epochs', 100)
     big = genes != 'default' and (genes.get('conv', 3) > 3 or genes.get('atom_features', 64) > 64)
@@ -64,7 +68,7 @@ def crystal_jobs(t, recipe, *, device, smoke, small_ram, cpu_threads):
                         est=int(STRUCT_EST_MIN[t] * (1.8 if big else 1.0))) for sd in seeds]
     jobs.append({'id': f'trees_{t}_sys', 'queue': 'cpu', 'group': 'baseline', 'target': t, 'split': 'system',
                  'argv': ['-m', 'gpu.structure.baseline_trees', '--target', t, '--threads', str(cpu_threads), '--split', 'system',
-                          '--feature-sets', 'composition,comp+cell,rich', '--output', '{JOB_DIR}/trees.json', *lim],
+                          '--feature-sets', 'composition,comp+cell,rich', '--neighbor-ties', NEIGHBOR_TIES, '--output', '{JOB_DIR}/trees.json', *lim],
                  'expect': ['trees.json', 'trees_predictions.npz'], 'env': {'OMP_NUM_THREADS': str(cpu_threads)}, 'timeout_s': 5 * 3600,
                  'est_minutes': 1 if smoke else TREES_EST_MIN[t] + 5})
     return jobs

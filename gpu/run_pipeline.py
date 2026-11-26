@@ -34,7 +34,7 @@ def write_json_atomic(path, obj):
     import json as _json
     atomic_write(path, _json.dumps(obj, indent=1))
 
-from gpu.pipeline.plan import STRUCT_ORDER_EARLY, STRUCT_ORDER_LATE, build_plan, describe, limit_for
+from gpu.pipeline.plan import STRUCT_ORDER_EARLY, STRUCT_ORDER_LATE, build_plan, describe, limit_for, pin_original_rule
 
 VAULT = REPO / 'lab' / 'vault'
 JARVIS_ZIP = REPO / 'gpu' / 'data_cache' / 'jarvis' / 'jdft_3d-9-24-2025.json.zip'
@@ -42,6 +42,19 @@ JARVIS_ZIP = REPO / 'gpu' / 'data_cache' / 'jarvis' / 'jdft_3d-9-24-2025.json.zi
 
 def plan_is_smoke(plan):
     return any(str(x).endswith('smoke') for x in [plan.get('profile'), *plan.get('profile_history', [])])
+
+
+def say_pins(pinned):
+    if pinned:
+        print(f'this folder was planned before the neighbour-rule fix: {len(pinned)} of its crystal jobs or search rounds did not state a rule, so they keep '
+              "the original one ('first') if they start again (" + ', '.join(pinned[:6]) + (', ...' if len(pinned) > 6 else '') + '). Finished runs are unchanged.')
+
+
+def round_rule(plan, cfg):
+    """The neighbour rule of the search round cfg describes: a round this folder already has (now or in cycle_history) is being continued
+    and keeps the rule it began with ('first' for a round from before the fix); a round new to the folder uses cfg's own ('all')."""
+    prev = next((c for c in [plan.get('cycle')] + list(plan.get('cycle_history') or []) if c and c.get('round') == cfg.get('round')), None)
+    return prev.get('neighbor_ties', 'first') if prev is not None else cfg.get('neighbor_ties', 'all')
 
 
 def find_pipeline(root, smoke):
@@ -226,8 +239,10 @@ class RunLock:
 
 def run(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--profile', default='standard', choices=['smoke', 'standard', 'holdout', 'holdout-smoke', 'cycle2', 'cycle2-smoke', 'cycle3', 'cycle3-smoke', 'nightly', 'nightly-smoke'],
-                    help='cycle2 = the holdout jobs plus generations of crystal networks; needs --extend <an earlier pipeline folder>')
+    ap.add_argument('--profile', default='standard', choices=['smoke', 'standard', 'holdout', 'holdout-smoke', 'cycle2', 'cycle2-smoke', 'cycle3', 'cycle3-smoke', 'tiefix', 'tiefix-smoke',
+                                                           'nightly', 'nightly-smoke'],
+                    help='cycle2 = the holdout jobs plus generations of crystal networks; tiefix = the held-out-systems networks and trees again under the fixed '
+                         'neighbour rule. Both need --extend <an earlier pipeline folder>')
     ap.add_argument('--device', default='cuda')
     ap.add_argument('--tag', default='')
     ap.add_argument('--budget-hours', type=float, default=None, help='stop starting new jobs after this many hours (default 10 for standard)')
@@ -255,15 +270,16 @@ def run(argv=None):
     import json
 
     cycle = a.profile.startswith(('cycle2', 'cycle3'))
+    tiefix = a.profile.startswith('tiefix')
     smoke_run = a.profile.endswith('smoke') or a.profile == 'smoke'
     ram = total_ram_gb()
     if a.gpu_slots is not None:
         gpu_slots = a.gpu_slots
-    elif cycle and ram is not None and ram >= 28:
+    elif (cycle or tiefix) and ram is not None and ram >= 28:
         gpu_slots = 2
     else:
         gpu_slots = 1
-        if cycle:
+        if cycle or tiefix:
             print(f'using 1 GPU job at a time: this computer reports {"an unknown amount of" if ram is None else f"{ram:.0f} GB of"} memory, and two full-size crystal jobs each hold several GB '
                   'of graphs. Pass --gpu-slots 2 to run two at once if you have the memory to spare.')
     plan_profile = {'cycle2': 'holdout', 'cycle2-smoke': 'holdout-smoke'}.get(a.profile, a.profile)  # cycle3 has its own plan
@@ -279,14 +295,19 @@ def run(argv=None):
                   + ('; run the rehearsal first: .\\gpu\\run_overnight.ps1 -Rehearsal' if a.extend == 'latest-smoke' else '.'))
             return 4
         a.extend = str(found)
-    if cycle and not (a.extend or a.resume):
-        print('--profile cycle2 adds to an earlier pipeline folder (it compares against that folder\'s formula-split results): '
+    if (cycle or tiefix) and not (a.extend or a.resume):
+        print(f'--profile {a.profile} adds to an earlier pipeline folder (it compares against that folder\'s results): '
               'use --extend <folder>, for example the folder in gpu\\runs\\pipeline\\LAST_PIPELINE.txt.')
         return 4
 
     if a.resume:
         pipe = Path(a.resume)
         plan = json.loads((pipe / 'plan.json').read_text())
+        pinned = pin_original_rule(plan)   # jobs planned before the fix keep the rule they were planned under
+        if pinned and not a.dry_run:
+            shutil.copy2(pipe / 'plan.json', pipe / f'plan.before_rule_pin_{time.strftime("%Y%m%dT%H%M%S")}.json')  # the old plan is kept
+            write_json_atomic(pipe / 'plan.json', plan)
+        say_pins(pinned)
         if plan.get('cycle'):  # a cycle remembers its own settings; the budget clock restarts with each session
             if a.gpu_slots is None:
                 gpu_slots = plan['cycle'].get('gpu_slots', gpu_slots)
@@ -303,7 +324,18 @@ def run(argv=None):
             print(f'refusing: {pipe} is {"a rehearsal" if plan_is_smoke(plan) else "a real run"} but --profile {a.profile} is {"a rehearsal" if smoke_run else "real"}. '
                   'Their job names are the same, so mixing them would pass rehearsal results off as real ones.')
             return 4
-        new = build_plan(**plan_args, existing=plan['jobs'])
+        say_pins(pin_original_rule(plan))   # in memory; written below together with the new jobs (a copy of the old plan is kept)
+        new = build_plan(**plan_args, existing=plan['jobs'], pipe=pipe)
+        for s_ in new.get('skipped', []):
+            print('left out:', s_)
+        if tiefix and not new['jobs']:
+            if new.get('skipped'):
+                print(f'nothing to compare: the held-out-systems runs in {pipe} were not made with the original rule (see "left out" above), so there is no '
+                      'original-rule set to compare them with; runs made with the fixed rule already give fixed-rule numbers. Nothing was started.')
+            else:
+                print(f'nothing to compare: {pipe} has no held-out-systems networks with their trees (jobs struct_<property>_sys_s<seed> and trees_<property>_sys). '
+                      'The comparison needs a folder whose second cycle ran before the fix; a folder made after the fix already uses the fixed rule.')
+            return 4
         if a.dry_run:
             print(describe(new))
             return 0
@@ -350,7 +382,8 @@ def run(argv=None):
         if cycle:
             small_ram = (total_ram_gb() or 99) < 24
             threads = max(1, min(4, ((os.cpu_count() or 8) - a.cpu_threads) // gpu_slots))
-            common = {'device': a.device, 'budget_hours': budget, 'smoke': smoke_run, 'gpu_slots': gpu_slots, 'threads': threads}
+            common = {'device': a.device, 'budget_hours': budget, 'smoke': smoke_run, 'gpu_slots': gpu_slots, 'threads': threads,
+                      'neighbor_ties': 'all'}   # a round begun now uses the fixed rule; evolve.py passes it to every individual and finalist
             if a.profile.startswith('cycle3'):
                 from gpu.pipeline import evolve as E
                 from gpu.pipeline.plan import PRETRAIN, SPACE_WIDE
@@ -374,6 +407,7 @@ def run(argv=None):
                        'compare_to': 'struct_{t}_sys_s[0-9]*', 'compare_label': 'the default settings', **common}
             if plan.get('cycle') and plan['cycle'].get('round') != cfg.get('round'):
                 plan['cycle_history'] = list(plan.get('cycle_history', [])) + [plan['cycle']]  # the earlier round's settings are kept
+            cfg['neighbor_ties'] = round_rule(plan, cfg)
             plan['cycle'] = cfg
         write_json_atomic(pipe / 'plan.json', plan)
         print(describe(new))
@@ -411,13 +445,19 @@ def run(argv=None):
         return Orchestrator(pipe, plan_['jobs'], budget_hours=hours_left, cpu_workers=a.cpu_workers, gpu_slots=gpu_slots, telemetry=tel, hot_c=a.hot_c,
                             max_attempts=a.max_attempts, retry_failed=a.retry_failed, log=lambda m: print(m, flush=True))
 
-    if plan.get('cycle'):
+    last_profile = str((plan.get('profile_history') or [plan.get('profile')])[-1])
+    if plan.get('cycle') and not last_profile.startswith('tiefix'):   # a tiefix session (and its resumes) only runs the plan's jobs: it never grows a search
         from gpu.pipeline.evolve import run_cycle
         c = plan['cycle']
         gpu_slots = max(gpu_slots, 1)
         rc = run_cycle(pipe, plan, make_orch=make_orch, targets=c['targets'], cfg={**c, 'gpu_slots': gpu_slots}, budget_hours=budget,
                        elapsed_hours=lambda: (time.time() - t_session) / 3600.0, say=lambda m: print(m, flush=True))
     else:
+        if plan.get('cycle') and last_profile.startswith('tiefix'):
+            c = plan['cycle']
+            if not any(j.get('group') == 'evolve_final' and j.get('round') == c.get('round') for j in plan['jobs']):
+                print('note: this folder has a search round without finalists; a tiefix session does not grow it. To continue it (under the rule it began with), '
+                      'run its cycle again: .\\gpu\\run_overnight.ps1 ' + ('-Cycle3' if c.get('round') else '-Cycle2') + (' -Rehearsal' if plan_is_smoke(plan) else ''), flush=True)
         rc = make_orch(plan, budget).run()
     tel.stop()
     after = vault_snapshot()

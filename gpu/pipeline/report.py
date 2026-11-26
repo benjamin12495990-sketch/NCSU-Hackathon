@@ -129,7 +129,137 @@ def primary(t):
     return t['verdicts'].get(t.get('strongest_trees_key')) or next(iter(t['verdicts'].values()))
 
 
-def structure_section(items, split='formula'):
+RULE_WORDS = {'first': 'the original rule (ties among the 12 nearest neighbours broken by listing order; not invariant)',
+              'all': 'the fixed rule (every neighbour tied with the 12th is kept; invariant)', 'unknown': 'an unrecorded rule'}
+
+
+RULE_SHORT = {'first': 'original rule', 'all': 'fixed rule', 'unknown': 'unrecorded rule', 'mixed': 'both rules', None: 'no rule (no structure features)'}
+
+
+def rules_text(rs):
+    return ' and '.join(RULE_SHORT.get(r, str(r)) for r in rs) if rs else '-'
+
+
+def rule_note(ok):
+    """One line saying which neighbour rule the networks and the structure-feature trees of a section were built with."""
+    nets = sorted({r for t in ok for r in (t.get('neighbor_rules') or {}).get('networks', [])})
+    trees = sorted({r for t in ok for r in (t.get('neighbor_rules') or {}).get('trees', [])})
+    if not nets:
+        return []
+    txt = 'Neighbour rule: networks built with ' + ' and '.join(RULE_WORDS.get(r, r) for r in nets)
+    if trees:
+        txt += '; structure-feature trees with ' + ('the same' if trees == nets else ' and '.join(RULE_WORDS.get(r, r) for r in trees))
+    warn = ''
+    if len(nets) > 1 or (trees and trees != nets):
+        warn = ' **The rules differ inside this section, so its comparisons include the effect of the rule change.**'
+    elif 'first' in nets:
+        warn = ' Under this rule the same crystal written two ways can get two predictions (`docs/DECISIONS.md`, LES-017).'
+    return [txt + '.' + warn, '']
+
+
+def mixed_rule_warning(c, names=('the first set', 'the second set')):
+    """A sentence for a comparison whose sides were built under different neighbour rules ('' if they were not): the two sets of
+    networks, or either set against structure-feature trees made with the other rule."""
+    c = c or {}
+    r = c.get('neighbor_rules') or {}
+    parts = []
+    if c.get('mixed_neighbor_rules'):
+        parts.append(f'{names[0]} used the {rules_text(r.get("new"))}, {names[1]} the {rules_text(r.get("old"))}')
+    if c.get('mixed_new_vs_trees') or c.get('mixed_old_vs_trees'):
+        parts.append(f'the structure-feature trees used the {RULE_SHORT.get(r.get("trees"), r.get("trees"))}')
+    if not parts:
+        return ''
+    return (' **Different neighbour rules: ' + '; '.join(parts) + ', so the comparisons that mix them include the effect of the rule change, '
+            'not only what the row says it compares.**')
+
+
+def tiefix_section(items):
+    ok = [e for e in items if e.get('status') == 'ok']
+    L = ['## Neighbour-rule fix: did it change accuracy, and did it remove the defect?', '',
+         'Until this fix each atom kept exactly its 12 nearest neighbours; when several neighbours sat at the same distance (to within rounding), which ones were kept '
+         'depended on the order the atoms were listed in. The same crystal written two ways could then get two different predictions. The fixed rule keeps every '
+         'neighbour within 0.001 angstrom of the 12th, so the graph depends on the geometry only. Here the held-out-systems networks and trees are trained again under '
+         'the fixed rule, with the same seeds, settings, crystals and split, and compared with the originals on the same test crystals. Each side is chosen by the rule '
+         'its runs recorded, not by job name. Negative differences mean the fixed rule has the lower error.', '']
+    if ok:
+        L += ['| Property | Seeds on both sides | Original rule: single / average | Fixed rule: single / average | Fixed minus original, average of runs (95%, test crystals only) | On these networks | Per seed: fixed minus original | Trees, strongest set: original / fixed | Trees, same set under both rules: fixed minus original (95%) | Fixed network average minus fixed trees | Edges vs original | Training time vs original |',
+              '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |']
+        for e in ok:
+            tr = e.get('trees')
+            tr1 = f'{g(tr["original_mae"])} ({tr["original_strongest"]}) / {g(tr["fixed_mae"])} ({tr["fixed_strongest"]})' if tr else '-'
+            if tr and tr.get('fixed_vs_original'):
+                tr2 = f'{tr["compared_set"]}: {ci(tr["fixed_vs_original"])}, {tr["fixed_vs_original"]["verdict"]}'
+            elif tr:
+                tr2 = 'no feature set on both sides that uses the rule'
+            else:
+                tr2 = e.get('trees_missing') or 'trees missing'
+            nt = f'{ci(e["new_vs_trees"])}: {e["new_vs_trees"]["verdict"].replace("fixed rule", "network")}' if tr else '-'
+            ps = e.get('per_seed') or []
+            pst = ', '.join(f's{x["seed"]} {x["diff"]:+.3g}' for x in ps) + (f' ({e["seeds_lower_fixed"]} of {len(ps)} lower under the fixed rule)' if ps else '')
+            L.append(f'| {STRUCT_NAMES.get(e["target"], e["target"])} | {", ".join(str(x) for x in e["seeds"])} | {g(e["old_single_mae_mean"])} / {g(e["old_average_mae"])} | '
+                     f'{g(e["new_single_mae_mean"])} / {g(e["new_average_mae"])} | {ci(e["new_vs_old"])} | **{e["new_vs_old"]["verdict"]}** | {pst or "-"} | {tr1} | {tr2} | {nt} | '
+                     f'x{e["edges_ratio"]:.2f} ({g(e.get("edges_per_atom_fixed"), 3)} per atom) | x{e["train_seconds_ratio"]:.2f}' + (' (different devices: not comparable)' if len(e.get('devices', [])) > 1 else '') + ' |')
+        sds = [f'{STRUCT_NAMES.get(e["target"], e["target"]).split(" (")[0]}: original {g(e["seed_sd"]["original"], 2)}, fixed {g(e["seed_sd"]["fixed"], 2)}'
+               for e in ok if (e.get('seed_sd') or {}).get('original') is not None]
+        L += ['', '**How far this goes.** The 95% interval resamples test crystals with these particular trained networks held fixed. It does not include which seeds happened '
+              'to be trained, and with two or three seeds per side that is the larger uncertainty: a "clearly better" here is a statement about these networks on these '
+              'test crystals, not proof that the rule itself makes networks more accurate. The per-seed column shows whether every seed moved the same way'
+              + ('; for scale, the seed-to-seed spread (standard deviation) of single-run test error is ' + '; '.join(sds) if sds else '') + '. '
+              '"No clear difference" means the fix did not move the error by more than the interval can resolve, not that the two sets of networks are identical. '
+              'Training time is each run\'s own training clock and depends on what else the GPU was doing. Every column compares like with like: fixed '
+              'against original is the rule change itself, and the network-against-trees column uses the fixed-rule trees.', '']
+    for e in items:
+        if e.get('excluded_runs'):
+            L.append(f'- {STRUCT_NAMES.get(e.get("target"), e.get("target"))}: left out because their recorded rule does not match their side: ' + ', '.join(e['excluded_runs']) + '.')
+        if e.get('status') != 'ok':
+            L.append(f'- {STRUCT_NAMES.get(e.get("target"), e.get("target"))}: no accuracy comparison ({e.get("reason") or "the fixed-rule runs, the original runs or the trees did not finish"}; '
+                     f'{e.get("n_new_runs_finished", 0)} retrained and {e.get("n_old_runs_finished", 0)} held-out-systems runs found).')
+    inv = [(e, r, e['invariance'][r]) for e in items for r in ('first', 'all') if r in (e.get('invariance') or {})]
+    if inv:
+        L += ['', '**Does a prediction change when the crystal is only rewritten?** One network of each kind predicts test crystals four ways besides the original: atoms relisted, '
+              'origin shifted, crystal rotated, and (small cells) the cell doubled in every direction. Nothing physical changes, so every change below is error from the method. '
+              'Each row is labelled with the rule the measured run recorded.', '',
+              '| Property | Network | Test crystals | Rewrites that move the prediction by more than 1% of the spread of predictions | Largest change | Average change, as a share of the run\'s test error |',
+              '| --- | --- | --- | --- | --- | --- |']
+        for e, r, v in inv:
+            o = v['overall']
+            share = '-' if o.get('mean_change_as_share_of_test_mae') is None else f'{o["mean_change_as_share_of_test_mae"]:.2%}'
+            rec = v.get('neighbor_ties', 'unknown')
+            label = RULE_SHORT.get(rec, rec) + ('' if rec == r else f' (**planned as the {RULE_SHORT.get(r, r)}**)')
+            L.append(f'| {STRUCT_NAMES.get(e["target"], e["target"])} | {label} (seed {v.get("seed", "?")}) | {v["crystals"]} | '
+                     f'{o["share_changed_over_1pct_of_spread"]:.1%} | {g(o["max_change"], 3)} {v["unit"]} | {share} |')
+        L += ['', 'Under the fixed rule the remaining changes should be rounding noise (around 0.00001 of the unit). The fix does not make the cut smooth: a neighbour sitting '
+              'just outside the 0.001 angstrom tolerance is still dropped whole, so two crystals that differ by a tiny real distortion can still get slightly different graphs.', '']
+    L.append('')
+    return L
+
+
+def rule_caveat(A, smoke=False, nightly=False):
+    """A bullet for 'what this does and does not show' when crystal results in the folder were made with the original neighbour rule."""
+    rules = {r for k in ('structure', 'structure_system', 'structure_element', 'structure_elementP', 'structure_systemT') for t in A.get(k, [])
+             if t.get('status') == 'ok' for r in (t.get('neighbor_rules') or {}).get('networks', [])}
+    if 'first' not in rules:
+        return []
+    return ['- Crystal networks marked "original rule" were trained before the neighbour-rule fix: when several neighbours are equally far, which ones the network sees depends on '
+            'how the crystal is written down, so the same crystal can get slightly different predictions. Their test errors are real measurements of those networks, but a '
+            'comparison between an original-rule set and a fixed-rule set also contains the rule change' + tiefix_advice(A, smoke, nightly)]
+
+
+def tiefix_advice(A, smoke, nightly):
+    """How the rule change is (or can be) measured for this folder. -TieFix is suggested only where it can run: the folder has finished
+    held-out-systems networks made with the original rule (the only thing it can retrain) and no finished comparison yet."""
+    if any(e.get('status') == 'ok' for e in A.get('tiefix') or []):
+        return '; the "Neighbour-rule fix" section measures it.'
+    can = any(t.get('status') == 'ok' and (t.get('neighbor_rules') or {}).get('networks') == ['first'] for t in A.get('structure_system', []))
+    if can and not nightly:
+        return '. Run `.\\gpu\\run_overnight.ps1 -TieFix' + (' -Rehearsal' if smoke else '') + '` to measure it.'
+    return ('. This folder has no original-rule held-out-systems runs to retrain, so the rule change is not measured here; runs made with the fixed rule '
+            '(a new run, or the nightly) give fixed-rule numbers.')
+
+
+def structure_section(items, split='formula', ref=None, tiefix=None):
+    """ref: for split 'systemT', the original held-out-systems items, so the header can say whether the seeds really are the same;
+    tiefix: the 'Neighbour-rule fix' items, so it mentions the seed-by-seed comparison only where that comparison exists."""
     ok = [t for t in items if t['status'] == 'ok']
     if split == 'formula':
         head = ['## Crystal-structure networks against trees (split by exact formula)', '',
@@ -146,12 +276,31 @@ def structure_section(items, split='formula'):
                 f'The hardest test here. Every crystal containing {", ".join(es["test_elements"])} is test ({es["share_test"]:.0%} of crystals); every crystal containing '
                 f'{", ".join(es["val_elements"])} (and none of those) is validation; neither set of elements appears in training. This section shows {what}. '
                 'Trees on element fractions cannot use an unseen element either; trees on element-property statistics can. All labels are **DFT calculations**.', '']
+    elif split == 'systemT':
+        seeds = lambda t: sorted(r['seed'] for r in t.get('network_runs', []))  # noqa: E731
+        ref_ok = {t['target']: t for t in (ref or []) if t.get('status') == 'ok'}
+        short = lambda t: STRUCT_NAMES.get(t['target'], t['target']).split(' (')[0]  # noqa: E731
+        differ = [short(t) + f' (seeds {seeds(t)} here, {seeds(ref_ok[t["target"]])} there)' for t in ok if t['target'] in ref_ok and seeds(t) != seeds(ref_ok[t['target']])]
+        noref = [short(t) for t in ok if t['target'] not in ref_ok]
+        compared = {e['target'] for e in (tiefix or []) if e.get('status') == 'ok'}
+        notcmp = [short(t) for t in ok if t['target'] not in compared]
+        rich = any((t.get('neighbor_rules') or {}).get('trees') for t in ok)
+        head = ['## Crystal-structure networks on HELD-OUT CHEMICAL SYSTEMS, fixed neighbour rule', '',
+                'The same test as the held-out-systems section (same crystals, split and settings), with networks' + (' and structure-feature trees' if rich else '')
+                + ' built under the fixed neighbour rule, which keeps every neighbour tied with the 12th so a prediction no longer depends on how the crystal is written down. '
+                + ('Not every seed finished on both sides: ' + '; '.join(differ) + ', so the two sections are not exactly the same set of runs. ' if differ else '')
+                + ('No held-out-systems result to compare with for: ' + ', '.join(noref) + '. ' if noref else '')
+                + ('Same seeds as there. ' if ok and not differ and not noref else '')
+                + 'These are the numbers to carry forward' + ('; the section "Neighbour-rule fix" compares them with the originals seed by seed' if compared else '')
+                + (' (not for ' + ', '.join(notcmp) + ': see that section)' if compared and notcmp else '; that comparison did not finish, see "Neighbour-rule fix"' if not compared else '')
+                + '. All labels are **DFT calculations**.', '']
     else:
         head = ['## Crystal-structure networks on HELD-OUT CHEMICAL SYSTEMS', '',
                 'The harder test. Every crystal whose element combination (Fe-O, Li-Fe-P-O, ...) lands in the test set is absent from training, so the test error says how the '
                 'models do on element combinations they have never seen. Same models, same trees, same verdict rules as above. Expect larger errors than the formula split; '
                 'what matters is the comparison. All labels are **DFT calculations**.', '']
     L = list(head)
+    L += rule_note(ok)
     if ok:
         L += ['| Property | Crystals (train / test) | Guess the average | Linear | Trees: fractions | Trees: + cell | Trees: + structure features | Network: mean of single runs | Network: average of runs | Average minus the strongest trees (95% interval) | Verdict: average | Verdict: single runs | Speed |',
               '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |']
@@ -171,7 +320,7 @@ def structure_section(items, split='formula'):
         if t['status'] != 'ok':
             L.append(f'- **{STRUCT_NAMES.get(t["target"], t["target"])}**: no result ({t["reason"]}).')
     for t in ok:
-        L += [f'### {STRUCT_NAMES.get(t["target"], t["target"])}' + {'formula': '', 'system': ' (held-out systems)', 'element': ' (held-out elements, learned vectors)', 'elementP': ' (held-out elements, element properties)'}[split], '', '```'] + t['compare_lines'] + ['```', '']
+        L += [f'### {STRUCT_NAMES.get(t["target"], t["target"])}' + {'formula': '', 'system': ' (held-out systems)', 'element': ' (held-out elements, learned vectors)', 'elementP': ' (held-out elements, element properties)', 'systemT': ' (held-out systems, fixed neighbour rule)'}[split], '', '```'] + t['compare_lines'] + ['```', '']
         vals = ', '.join(f'{k}: validation MAE {g(v["val"]["mae"])}' for k, v in t['trees'].items())
         L.append(f'- Strongest trees by validation error: {t["strongest_trees"]} ({vals}).')
         if t.get('fairness'):
@@ -199,8 +348,12 @@ def evolution_section(items):
         name = STRUCT_NAMES.get(e['target'], e['target'])
         curve = ' -> '.join(g(v) for v in e['best_by_generation'])
         start = 'The default settings' if e.get('round', 'r1') == 'r1' else f'The starting point ({e.get("start_label")}: {e.get("start_changes")})'
+        sr = e.get('search_rules') or []
+        fr = (e.get('finalists') or {}).get('neighbor_rules') or {}
+        rule_line = (f'- Neighbour rule: search individuals {rules_text(sr)}' + (f'; finalists {rules_text(fr.get("new"))}; compared runs {rules_text(fr.get("old"))}' if fr else '')
+                     + ('. **This round mixes rules, so its ranking and comparisons include the effect of the rule change.**' if len(sr) > 1 or (fr and (fr.get('new') != fr.get('old') or (sr and fr.get('new') != sr))) else '.'))
         L += [f'### {name}' + ('' if e.get('round', 'r1') == 'r1' else f' — search round {e["round"]} (wider settings, starting from the round-1 winner; finalists trained {e.get("final_epochs")} epochs, the same as the runs they are compared with)'), '',
-              f'- {e["n_finished"]} of {e["n_individuals"]} individuals finished over {e["generations"]} generations.',
+              f'- {e["n_finished"]} of {e["n_individuals"]} individuals finished over {e["generations"]} generations.', rule_line,
               f'- Best validation MAE so far, generation by generation: {curve}. {start} scored {g(e["default_val_mae"])} in the same protocol.']
         if e['default_won']:
             L.append('- The starting settings were still the best by validation error: the search found nothing better, so there is no finalist retrain.')
@@ -218,7 +371,7 @@ def evolution_section(items):
             old = 'default' if e.get('round', 'r1') == 'r1' else 'previous winner'
             L += [f'- **Finalists on test systems** ({fi["n_evolved_runs"]} evolved runs on fresh seeds vs {fi["n_default_runs"]} runs of {e.get("compare_label", "the default settings")}): single-run MAE evolved {g(fi["evolved_single_mae_mean"])} vs {old} {g(fi["default_single_mae_mean"])}; '
                   f'average of runs evolved {g(fi["evolved_average_mae"])} vs {old} {g(fi["default_average_mae"])}; strongest trees ({fi["strongest_trees"]}) {g(fi["trees_mae"])}.',
-                  f'  - Evolved minus {old} (average of runs): {ci(d)}, **{d["verdict"]}**.',
+                  f'  - Evolved minus {old} (average of runs): {ci(d)}, **{d["verdict"]}**.' + mixed_rule_warning(fi, ('the evolved runs', f'the {old} runs')),
                   f'  - Evolved against the strongest trees: {ci(fi["evolved_vs_trees"])}, {fi["evolved_vs_trees"]["verdict"]}; {old} against the strongest trees: {ci(fi["default_vs_trees"])}, {fi["default_vs_trees"]["verdict"]}.']
         elif not e['default_won']:
             L.append('- Finalist runs are missing or did not finish' + (f' ({e["finalists_error"]})' if e.get('finalists_error') else '') + '.')
@@ -240,14 +393,19 @@ def finetune_section(items):
          '(from-scratch runs 2e-3), and every fine-tuned seed of a split starts from the same formation-energy network (seed 11), so their average is an average of less '
          'independent networks than the from-scratch average.', '']
     if ok:
-        L += ['| Property | Split | Fine-tuned: single / average | From scratch: single / average | Fine-tuned minus scratch (95%) | Verdict | Fine-tuned minus strongest trees | Verdict vs trees | Single fine-tuned runs vs trees |',
-              '| --- | --- | --- | --- | --- | --- | --- | --- | --- |']
+        L += ['| Property | Split | Neighbour rule: fine-tuned / scratch / trees | Fine-tuned: single / average | From scratch: single / average | Fine-tuned minus scratch (95%) | Verdict | Fine-tuned minus strongest trees | Verdict vs trees | Single fine-tuned runs vs trees |',
+              '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |']
         for e in ok:
             sv = e['single_new_vs_trees']
             single = f'{sum(v.endswith("fine-tuned clearly better") for v in sv)} of {len(sv)} clearly better, {sum(v == "trees clearly better" for v in sv)} clearly worse'
-            L.append(f'| {STRUCT_NAMES.get(e["target"], e["target"])} | {e["split"]} | {g(e["new_single_mae_mean"])} / {g(e["new_average_mae"])} | {g(e["old_single_mae_mean"])} / {g(e["old_average_mae"])} | '
+            nr = e.get('neighbor_rules') or {}
+            L.append(f'| {STRUCT_NAMES.get(e["target"], e["target"])} | {e["split"]} | {rules_text(nr.get("new"))} / {rules_text(nr.get("old"))} / {RULE_SHORT.get(nr.get("trees"), nr.get("trees"))} | {g(e["new_single_mae_mean"])} / {g(e["new_average_mae"])} | {g(e["old_single_mae_mean"])} / {g(e["old_average_mae"])} | '
                      f'{ci(e["new_vs_old"])} | **{e["new_vs_old"]["verdict"]}** | {ci(e["new_vs_trees"])} ({e["strongest_trees"]}, MAE {g(e["trees_mae"])}) | {e["new_vs_trees"]["verdict"]} | {single} |')
         L.append('')
+        for e in ok:
+            w = mixed_rule_warning(e, ('the fine-tuned runs', 'the from-scratch runs'))
+            if w:
+                L.append(f'- {STRUCT_NAMES.get(e["target"], e["target"])} ({e["split"]}):' + w)
     for e in items:
         if e.get('status') != 'ok':
             L.append(f'- {STRUCT_NAMES.get(e.get("target"), e.get("target"))} ({e.get("split", "-")}): no result ({e.get("reason", "runs missing")}).')
@@ -269,7 +427,8 @@ def intervals_section(iv):
             rows.append((TAB_NAMES.get(x['task'], x['task']), '-', m, v))
     for x in iv.get('crystal', []):
         for m, v in (x.get('models') or {}).items():
-            rows.append((STRUCT_NAMES.get(x['task'], x['task']), x['split'], m + (f' ({x["n_runs"]} network runs)' if x.get('n_runs') and m != 'trees' else ''), v))
+            sp = {'systemT': 'system'}.get(x['split'], x['split']) + (f', {rules_text(x["neighbor_rules"])}' if x.get('neighbor_rules') else '')
+            rows.append((STRUCT_NAMES.get(x['task'], x['task']), sp, m + (f' ({x["n_runs"]} network runs)' if x.get('n_runs') and m != 'trees' else ''), v))
     if rows:
         L += ['| Task | Split | Model | 90% half-width | 90% coverage | 80% coverage | 95% coverage | Scaled 90%: median half-width / coverage |', '| --- | --- | --- | --- | --- | --- | --- | --- |']
         for task, split, m, v in rows:
@@ -283,6 +442,18 @@ def intervals_section(iv):
     L += ['', '- These are **marginal** guarantees (true on average over rows like the test rows), not a promise for each single material. A material unlike anything in the '
           'data (a new element, a far-off composition) can be outside its interval more often; the held-out-elements rows show how much.', '']
     return L
+
+
+def held_out_systems_summary(sys_orig, sys_fixed):
+    """(items to quote, rule text, whether the held-out-systems networks are all original-rule). Property by property: the fixed-rule result
+    where it finished, else the held-out-systems one, so a property whose retrain failed is still counted, under the rule it recorded."""
+    fixed_by = {t['target']: t for t in sys_fixed}
+    items = [fixed_by.get(t['target'], t) for t in sys_orig] + [t for t in sys_fixed if t['target'] not in {x['target'] for x in sys_orig}]
+    by_rule = {}
+    for t in items:
+        by_rule.setdefault(rules_text((t.get('neighbor_rules') or {}).get('networks', [])), []).append(t)
+    text = '; '.join(f'{k} {len(v)}' for k, v in by_rule.items()) if len(by_rule) > 1 else next(iter(by_rule), '-')
+    return items, text, bool(sys_orig) and all((t.get('neighbor_rules') or {}).get('networks') == ['first'] for t in sys_orig)
 
 
 def build(pipe):
@@ -299,7 +470,11 @@ def build(pipe):
     gpu_h = sum(st[j['id']].get('seconds', 0) for j in done if j['queue'] == 'gpu') / 3600
     tab_ok = [t for t in A['tabular'] if t['status'] == 'ok']
     str_ok = [t for t in A['structure'] if t['status'] == 'ok']
-    sys_ok = [t for t in A.get('structure_system', []) if t['status'] == 'ok']
+    sys_orig = [t for t in A.get('structure_system', []) if t['status'] == 'ok']
+    sys_fixed = [t for t in A.get('structure_systemT', []) if t['status'] == 'ok']
+    # The held-out-systems numbers to quote, property by property: the fixed-rule result where it finished, else the held-out-systems one,
+    # each named with the rule its networks recorded (so a property whose retrain failed is still counted, under its own rule)
+    sys_ok, sys_rules, orig_is_first = held_out_systems_summary(sys_orig, sys_fixed)
     yv = [primary(t)['verdict'] for t in sys_ok]
     yb = [single_bucket(t['fairness']) if t.get('fairness') else 'unclear' for t in sys_ok]
     tv = [t['network_vs_trees']['verdict'] for t in tab_ok]
@@ -349,6 +524,12 @@ def build(pipe):
     if ft_ok:
         L.append('- **Fine-tuning from formation energy** (fine-tuned vs from scratch, average of runs): ' + '; '.join(
             f'{STRUCT_NAMES.get(e["target"], e["target"]).split(" (")[0]} {e["split"]}: {e["new_vs_old"]["verdict"]}' for e in ft_ok) + '.')
+    tf_ok = [e for e in (A.get('tiefix') or []) if e.get('status') == 'ok']
+    if tf_ok:
+        L.append('- **Neighbour-rule fix** (same seeds retrained under the fixed rule; fixed minus original test MAE, average of runs, 95% interval over test crystals '
+                 'only, not over which seeds were trained): ' + '; '.join(
+            f'{STRUCT_NAMES.get(e["target"], e["target"]).split(" (")[0]} {ci(e["new_vs_old"])}, lower in {e.get("seeds_lower_fixed", "?")} of {len(e.get("per_seed") or e["seeds"])} seeds'
+            for e in tf_ok) + '. See "Neighbour-rule fix".')
     ivs = A.get('intervals') or {}
     if ivs and not ivs.get('error'):
         cov = [v['0.90']['coverage'] for x in ivs.get('tabular', []) + ivs.get('crystal', []) for v in (x.get('models') or {}).values()]
@@ -356,7 +537,8 @@ def build(pipe):
             L.append(f'- **90% prediction intervals**: coverage between 0.87 and 0.93 for {sum(0.87 <= c <= 0.93 for c in cov)} of {len(cov)} task/model rows '
                      f'(lowest {min(cov):.2f}); see "Prediction intervals".')
     if sys_ok:
-        L.append(f'- **Held-out chemical systems** ({len(sys_ok)} properties), against the strongest trees. Average of runs: network clearly better on {yv.count("network clearly better")}, trees clearly better on {yv.count("trees clearly better")}, no clear difference on {yv.count("no clear difference")}. '
+        L.append(f'- **Held-out chemical systems** ({len(sys_ok)} properties; networks by rule: {sys_rules}' + ('; the fixed-rule result is used where it finished, and the original-rule set is in its own section, for reference' if sys_fixed and orig_is_first else '')
+                 + f'), against the strongest trees. Average of runs: network clearly better on {yv.count("network clearly better")}, trees clearly better on {yv.count("trees clearly better")}, no clear difference on {yv.count("no clear difference")}. '
                  f'Single runs: clearly better in every run on {yb.count("network")}, mixed or unclear on {yb.count("unclear")}, trees clearly better in every run on {yb.count("trees")}.')
     if tel['samples']:
         L.append(f'- GPU: peak temperature {g(tel["peak_temp_c"], 3)} C, peak power {g(tel["peak_power_w"], 3)} W, peak memory {g(tel["peak_mem_mib"], 4)} MiB, average utilisation {g(tel["mean_util_pct"], 3)}% ({tel["samples"]} samples).')
@@ -373,6 +555,10 @@ def build(pipe):
     for key, split in (('structure_element', 'element'), ('structure_elementP', 'elementP')):
         if A.get(key):
             L += structure_section(A[key], split)
+    if A.get('structure_systemT'):
+        L += structure_section(A['structure_systemT'], 'systemT', ref=A.get('structure_system'), tiefix=A.get('tiefix'))
+    if A.get('tiefix'):
+        L += tiefix_section(A['tiefix'])
     if A.get('finetune'):
         L += finetune_section(A['finetune'])
     if A.get('evolution'):
@@ -397,6 +583,7 @@ def build(pipe):
           '- Tabular families: the old fixed test splits were already looked at by earlier work, so this report uses cross-validation with cross-fitted selection instead. Concrete is exploratory.',
           '- Crystal properties on the formula split: crystals of the same structure type with different elements can sit on both sides, so expect the real error on genuinely new chemistries to be larger. The held-out-systems section (when present) is the harder test; even it keeps every element and most sub-systems in training, so it is not a "new element" test.',
           '- Each comparison is one of many; with a 95% interval, a few "clear" results are expected by chance. Treat single clear wins as leads to confirm, not as findings.',
+          *rule_caveat(A, smoke, bool(plan.get('nightly'))),
           '- Rows of a family that share a source (paper, alloy system, mix) were always kept together in a fold.', '']
     nxt = []
     if sv.count('network clearly better'):
@@ -406,8 +593,10 @@ def build(pipe):
     elif str_ok:
         nxt.append('On the formula split no crystal property shows a clear win over the strongest trees. Use trees for these properties, or change what the network is given.')
     if sys_ok:
-        nxt.append('Held-out chemical systems: network average clearly better on ' + (', '.join(STRUCT_NAMES.get(t['target'], t['target']) for t, v in zip(sys_ok, yv) if v == 'network clearly better') or 'none')
-                   + '; trees clearly better on ' + (', '.join(STRUCT_NAMES.get(t['target'], t['target']) for t, v in zip(sys_ok, yv) if v == 'trees clearly better') or 'none') + '. This is the comparison to quote.')
+        nxt.append(f'Held-out chemical systems (networks by rule: {sys_rules}): network average clearly better on ' + (', '.join(STRUCT_NAMES.get(t['target'], t['target']) for t, v in zip(sys_ok, yv) if v == 'network clearly better') or 'none')
+                   + '; trees clearly better on ' + (', '.join(STRUCT_NAMES.get(t['target'], t['target']) for t, v in zip(sys_ok, yv) if v == 'trees clearly better') or 'none')
+                   + '. This is the comparison to quote' + ('; the original-rule section is kept for reference' if sys_fixed and orig_is_first else '')
+                   + ('. Properties marked original rule have no finished fixed-rule retrain in this folder, so their verdict still includes the order-dependent graphs.' if 'original rule' in sys_rules else '.'))
     if tv.count('network clearly better'):
         names = [TAB_NAMES.get(t['family'], t['family']) for t, v in zip(tab_ok, tv) if v == 'network clearly better']
         nxt.append('The average of network seeds clearly beats the tuned trees on: ' + ', '.join(names) + '. Single networks may not; see the "one network at a time" column.')

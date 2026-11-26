@@ -19,9 +19,11 @@ import argparse
 import hashlib
 import json
 import math
+import os
 import random
 import sys
 import time
+import uuid
 import zipfile
 from functools import reduce
 from pathlib import Path
@@ -29,7 +31,7 @@ from pathlib import Path
 import numpy as np
 
 from gpu.common import CACHE, RUNS, git_info, hardware, new_run_dir, now_iso, peak_memory_mb, pick_device, sha256_bytes, sha256_file, sync, write_json_new
-from gpu.structure.graph import SYMBOLS, Z_OF, build_graph, collate
+from gpu.structure.graph import SYMBOLS, TIE_TOL, TIES, Z_OF, build_graph, collate
 
 DEFAULT_ZIP = CACHE / 'jarvis' / 'jdft_3d-9-24-2025.json.zip'
 TARGET = 'bulk_modulus_kv'  # the default target
@@ -139,6 +141,13 @@ def metrics(p, y):
     return {'n': int(len(y)), 'mae': float(np.abs(e).mean()), 'rmse': float(np.sqrt((e ** 2).mean())), 'r2': float(1 - (e ** 2).sum() / sst)}
 
 
+def graph_key(ident_src, recs, cutoff, max_neighbors, ties='first'):
+    """Cache key of the neighbour graphs of a record list. The original rule ('first') keeps its original key, so graphs cached by
+    older runs stay valid for reproducing them; any other rule adds itself and its tolerance, so graphs are never shared between rules."""
+    extra = () if ties == 'first' else (f'ties={ties}', TIE_TOL)
+    return sha256_bytes(json.dumps(ident_src, sort_keys=True), json.dumps([r['jid'] for r in recs]), cutoff, max_neighbors, *extra)[:24]
+
+
 def graphs_for(recs, a, key):
     """Builds (or loads from gpu/data_cache/jarvis/graphs/) the neighbour graphs."""
     import torch
@@ -148,14 +157,22 @@ def graphs_for(recs, a, key):
     t0 = time.perf_counter()
     gs = []
     for i, r in enumerate(recs):
-        gs.append(build_graph(r['atoms'], a.cutoff, a.max_neighbors))
+        gs.append(build_graph(r['atoms'], a.cutoff, a.max_neighbors, getattr(a, 'neighbor_ties', 'first')))
         if (i + 1) % 5000 == 0:
             print(f'  graphs {i + 1}/{len(recs)} ({time.perf_counter() - t0:.0f} s)', flush=True)
     sec = time.perf_counter() - t0
     cache.parent.mkdir(parents=True, exist_ok=True)
-    tmp = cache.with_suffix('.tmp')
+    # A temporary name of this process's own: two runs that start together on a cold cache (two GPU slots) build the same graphs,
+    # and with one shared name one of them crashed at the rename. Whichever finishes last replaces an identical file.
+    tmp = cache.with_name(f'{cache.stem}.{os.getpid()}.{uuid.uuid4().hex[:8]}.tmp')
     torch.save(gs, tmp)
-    tmp.replace(cache)
+    try:
+        tmp.replace(cache)
+    except OSError as e:   # Windows refuses to replace a file another process has open; the other run has written the same graphs
+        if not cache.exists():
+            raise
+        print(f'  graph cache was written by another run at the same time ({e.__class__.__name__}); using the graphs built here. '
+              f'The unused copy is left at {tmp.name}', flush=True)
     return gs, sec, False
 
 
@@ -209,6 +226,10 @@ def main(argv=None):
     ap.add_argument('--hidden', type=int, default=128)
     ap.add_argument('--cutoff', type=float, default=8.0)
     ap.add_argument('--max-neighbors', type=int, default=12)
+    ap.add_argument('--neighbor-ties', choices=TIES, default=None,
+                    help="how the neighbour list is cut at --max-neighbors: 'all' keeps every neighbour tied with the last one, so the graph does not "
+                         "depend on atom order (the default for new runs); 'first' is the original rule (ties broken by order), for reproducing "
+                         "runs made before the fix of 2026-11-26. With --resume or --init-from the rule of that run is used.")
     ap.add_argument('--seed', type=int, default=11)
     ap.add_argument('--amp', action='store_true', help='bfloat16 autocast (CUDA); off by default')
     ap.add_argument('--threads', type=int, default=0)
@@ -225,8 +246,15 @@ def main(argv=None):
         scfg = json.loads((init_src / 'run_config.json').read_text())['config']
         for k, default in (('atom_features', 64), ('conv', 3), ('hidden', 128), ('cutoff', 8.0), ('max_neighbors', 12), ('atom_input', 'embedding')):
             setattr(a, k, scfg.get(k, default))  # the network shape must match the weights it starts from
+        src_ties = scfg.get('neighbor_ties', 'first')  # the weights learned on graphs built by this rule
+        if a.neighbor_ties not in (None, src_ties):
+            sys.exit(f'refusing --init-from: {init_src} was trained on graphs cut by the {src_ties!r} rule, this run asks for {a.neighbor_ties!r}')
+        a.neighbor_ties = src_ties
         if scfg.get('split', 'formula') != a.split:
             sys.exit(f'refusing --init-from: {init_src} used --split {scfg.get("split", "formula")}, this run uses --split {a.split}')
+    if a.neighbor_ties is None:  # not given: a resumed run keeps its own rule, a new run gets the invariant one
+        a.neighbor_ties = (json.loads((Path(a.resume) / 'run_config.json').read_text())['config'].get('neighbor_ties', 'first')
+                           if a.resume else 'all')
     if a.threads:
         torch.set_num_threads(a.threads)
     device = pick_device(a.device)
@@ -246,6 +274,8 @@ def main(argv=None):
         cfg['split'] = a.split  # left out for the default so older runs keep their identity
     if a.atom_input != 'embedding':
         cfg['atom_input'] = a.atom_input
+    if a.neighbor_ties != 'first':
+        cfg['neighbor_ties'] = a.neighbor_ties  # left out for the original rule so older runs keep their identity
     if init_src is not None:
         cfg['init_from'] = {'run': init_src.name, 'best_model_sha256': sha256_file(init_src / 'best_model.pt')}
     ident = sha256_bytes(json.dumps(cfg, sort_keys=True), data_sha)
@@ -289,7 +319,7 @@ def main(argv=None):
     base['ridge_element_fractions'] = {'alpha_chosen_on_val': best[0], 'val': best[1],
                                        'test': metrics(best[2].predict(F[idx['test']]), y[idx['test']])}
 
-    gkey = sha256_bytes(json.dumps(ident_src, sort_keys=True), json.dumps([r['jid'] for r in recs]), a.cutoff, a.max_neighbors)[:24]
+    gkey = graph_key(ident_src, recs, a.cutoff, a.max_neighbors, a.neighbor_ties)
     graphs, t_graph, cached = graphs_for(recs, a, gkey)
     n_edges = sum(len(g['src']) for g in graphs)
     print(f'graphs: {len(graphs)} crystals, {sum(len(g["Z"]) for g in graphs)} atoms, {n_edges} edges, '
@@ -378,7 +408,8 @@ def main(argv=None):
                         'mode': a.split, 'formulas': {p: int(len({recs[i]['formula'] for i in v})) for p, v in idx.items()},
                         'groups': {p: int(len({group_of(recs[i], a.split) for i in v})) for p, v in idx.items()}},
               'graphs': {'crystals': len(graphs), 'edges': n_edges, 'build_seconds': t_graph, 'from_cache': cached,
-                         'cutoff': a.cutoff, 'max_neighbors': a.max_neighbors},
+                         'cutoff': a.cutoff, 'max_neighbors': a.max_neighbors, 'neighbor_ties': a.neighbor_ties,
+                         'edges_per_atom': n_edges / max(1, sum(len(g['Z']) for g in graphs))},
               'baselines': base, 'cgcnn': {'best_epoch_by_val': best_epoch, **res_model,
                                            'parameters': sum(p.numel() for p in model.parameters())},
               'timing': {'load_seconds': t_load, 'train_seconds': train_seconds, 'epochs': len(history),

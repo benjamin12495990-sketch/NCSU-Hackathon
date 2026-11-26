@@ -32,6 +32,8 @@ def main(argv=None):
     ap.add_argument('--target', default='bulk_modulus_kv', choices=sorted(TARGETS))
     ap.add_argument('--split', default='formula', choices=SPLIT_MODES)
     ap.add_argument('--feature-sets', default='composition,comp+cell', help='comma list from: composition, comp+cell, rich')
+    ap.add_argument('--neighbor-ties', choices=['all', 'first'], default='all',
+                    help="neighbour-cut rule for the rich feature set: 'all' (invariant, default) or 'first' (the original rule)")
     ap.add_argument('--threads', type=int, default=2)
     ap.add_argument('--seed', type=int, default=11)
     ap.add_argument('--limit', type=int, default=0, help='first N kept records (same rule as train_structure.py), for small tests')
@@ -52,7 +54,7 @@ def main(argv=None):
     sets = {'composition': F, 'comp+cell': np.hstack([F, cell])}
     if 'rich' in wanted:
         from gpu.structure.features import build as build_rich
-        sets['rich'] = np.hstack([F, cell, build_rich(recs, threads=a.threads)])
+        sets['rich'] = np.hstack([F, cell, build_rich(recs, threads=a.threads, ties=a.neighbor_ties)])
     sets = {k: v for k, v in sets.items() if k in wanted}
     models = {
         'extratrees_300_leaf1': lambda: ExtraTreesRegressor(n_estimators=300, min_samples_leaf=1, max_features=0.5, n_jobs=a.threads, random_state=a.seed),
@@ -67,6 +69,7 @@ def main(argv=None):
     ytr = y[idx['train']]
     out = {'task': TARGETS[a.target]['label'] + ' (DFT-calculated)', 'target': a.target, 'counts': counts, 'source': {k: v for k, v in source.items() if k != 'zip'},
            'split_sizes': {p: int(len(v)) for p, v in idx.items()}, 'split_mode': a.split, 'split_rule': SPLIT_RULES[a.split],
+           'neighbor_ties': a.neighbor_ties if 'rich' in wanted else None,
            'mean': {p: metrics(np.full(len(idx[p]), ytr.mean()), y[idx[p]]) for p in ('val', 'test')}, 'feature_sets': {}, 'created': now_iso(),
            'hardware': hardware(), 'selection': 'by validation MAE within each feature set; test scored once for the selected model'}
     for sname, X in sets.items():
