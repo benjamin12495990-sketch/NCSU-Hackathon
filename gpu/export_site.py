@@ -94,13 +94,25 @@ def tabular_task(pipe, family, cap):
         entry['mae']['blend'] = _r(f['blend']['mae'])
         entry['blend_vs_trees'] = _ci(f['blend'].get('vs_trees'), 'blend', 'trees')
         entry['blend_vs_network'] = _ci(f['blend'].get('vs_network_average'), 'blend', 'network')
-    if t['mode'] != 'cv':   # concrete: numbers only, no rows on the site
-        return entry, None
     ds = load(family)
     sweep, base = _first(pipe, f'tab_{family}', '*/*/result.json'), _first(pipe, f'base_{family}', 'baselines.json')
     P, B = np.load(sweep.parent / 'predictions.npz'), np.load(base.with_name('baselines_predictions.npz'))
     bj = json.loads(base.read_text())
     tree_idx = [i for i, n in enumerate(bj['model_names']) if bj['groups'][n] == 'trees']
+    if t['mode'] != 'cv':
+        # Concrete: numbers only, no rows on the site. Its intervals are computed exactly as the report's intervals section does
+        # (gpu/pipeline/analyze.py analyze_intervals): split conformal, calibrated on the fixed test rows, coverage checked on the
+        # extra split (MONITOR).
+        evl = next(iter(ds.extra))
+        y_sel, y_ev = ds.y_test, ds.extra[evl][1]
+        ens_sel, ens_ev = P['fixed_test'].mean(axis=1), P[f'fixed_{evl}'].mean(axis=1)
+        ci = int(np.argmin([np.abs(e - y_sel).mean() for e in ens_sel]))
+        c = tree_idx[int(np.argmin([np.abs(B['pred_test'][i] - y_sel).mean() for i in tree_idx]))]
+        pairs = {'trees': (B['pred_test'][c], B[f'pred_{evl}'][c]), 'network': (ens_sel[ci], ens_ev[ci])}
+        pairs['blend'] = (0.5 * (pairs['trees'][0] + pairs['network'][0]), 0.5 * (pairs['trees'][1] + pairs['network'][1]))
+        entry['interval90'] = {k: _interval(v[0] - y_sel, v[1] - y_ev) for k, v in pairs.items()}
+        entry['interval_method'] = f'split conformal: calibrated on the fixed test rows, coverage checked on {evl} (exploratory)'
+        return entry, None
     y, folds = ds.y, ds.folds
     preds = {'network': crossfit(P['cv_val'].mean(axis=1), y, folds)[0], 'trees': crossfit(B['oof'][tree_idx], y, folds)[0]}
     preds['blend'] = 0.5 * (preds['network'] + preds['trees'])
