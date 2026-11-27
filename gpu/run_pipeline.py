@@ -436,6 +436,9 @@ def run(argv=None):
     atomic_write(Path(a.runs_root) / 'LAST_SESSION.txt', str(pipe.resolve()))
     print(f'\npipeline folder: {pipe}\nstatus file:     {pipe / "STATUS.txt"}   (refreshed every 30 s)\nstop: create a file named STOP in that folder (or press Ctrl+C)\n', flush=True)
 
+    if plan.get('carry'):   # a nightly that grows a crystal ensemble: bring last night's runs in first (also on -Resume; it is idempotent)
+        from gpu.pipeline.nightly import carry_runs
+        carry_runs(pipe, plan, log=lambda m: print(m, flush=True))
     before = vault_snapshot()
     tel = Telemetry(pipe / 'telemetry.csv')
     tel.start()

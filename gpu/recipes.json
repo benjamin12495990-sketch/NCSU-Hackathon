@@ -1,6 +1,6 @@
 {
  "about": "What the nightly pipeline trains for each task, and which model is recommended. Changed only by a reviewed commit, never automatically: a cycle that finds something better is evidence for changing this file, not a change. Evidence column = the report section that justified the entry.",
- "version": 4,
+ "version": 5,
  "crystal_neighbor_rule": "all: every nightly crystal network and structure-feature tree run is built with --neighbor-ties all (a prediction no longer depends on how the crystal is written down). The evidence lines under 'crystal' were measured in cycle 2 with the original rule, except shear_modulus_gv, whose entry was changed on the tiefix report's fixed-rule numbers (DEC-021). A report from the tiefix profile re-measures the default-settings networks, the trees and their comparison on held-out systems (the bulk-modulus, shear-modulus and band-gap entries); it does not retrain the formation-energy entry's evolved settings, so 'evolved settings beat the defaults' stays an original-rule measurement until a new search or finalist run.",
  "tabular": {
   "alloys": {
@@ -97,6 +97,18 @@
    "epochs": 100,
    "genes": "default",
    "evidence": "cycle 2: network clearly better than structure-feature trees on held-out systems; the evolved settings were not clearly better"
+  },
+  "mbj_bandgap": {
+   "recommended": "blend",
+   "split": "system",
+   "seeds": [
+    11,
+    12,
+    13
+   ],
+   "epochs": 100,
+   "genes": "default",
+   "evidence": "PROVISIONAL (added 2026-11-27, DEC-022): no result yet, so the no-fit blend stands in. The rule written before training: after the first night, the network average becomes recommended if it is clearly better than the strongest trees on the held-out test systems, the trees if they are clearly better, the blend otherwise; the change is made by a reviewed commit."
   }
  }
 }

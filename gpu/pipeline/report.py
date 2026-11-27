@@ -23,7 +23,8 @@ TAB_NAMES = {'alloys': 'Alloys (hardness)', 'polymers': 'Polymers (glass transit
              'chemistry': 'Chemistry (water solubility)', 'cleaning_pcmc': 'Surfactants (critical micelle concentration)',
              'cleaning_tension': 'Surfactants (surface tension at the CMC)', 'corrosion': 'Corrosion (rate, NIST CORR-DATA, exploratory)'}
 STRUCT_NAMES = {'bulk_modulus_kv': 'Bulk modulus (log10 GPa)', 'shear_modulus_gv': 'Shear modulus (log10 GPa)',
-                'formation_energy_peratom': 'Formation energy (eV/atom)', 'optb88vdw_bandgap': 'Band gap (eV)'}
+                'formation_energy_peratom': 'Formation energy (eV/atom)', 'optb88vdw_bandgap': 'Band gap (eV)',
+                'mbj_bandgap': 'Band gap, TBmBJ (eV)'}
 
 
 

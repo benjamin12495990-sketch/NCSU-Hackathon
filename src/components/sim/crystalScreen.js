@@ -15,7 +15,8 @@ const KNOWN = {
   bulk_modulus_kv: { label: 'Bulk modulus', unit: 'GPa', order: 0, positive: true },
   shear_modulus_gv: { label: 'Shear modulus', unit: 'GPa', order: 1, positive: true },
   formation_energy_peratom: { label: 'Formation energy', unit: 'eV/atom', order: 2 },
-  optb88vdw_bandgap: { label: 'Band gap', unit: 'eV', order: 3, positive: true },
+  optb88vdw_bandgap: { label: 'Band gap (OptB88vdW)', unit: 'eV', order: 3, positive: true },
+  mbj_bandgap: { label: 'Band gap (TBmBJ)', unit: 'eV', order: 4, positive: true },
 }
 
 // The chemical elements, to tell "Li Xe" (two elements, one of them in no crystal here) from text such as "JVASP".

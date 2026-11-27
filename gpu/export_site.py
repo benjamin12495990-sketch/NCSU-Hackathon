@@ -30,11 +30,25 @@ TASK_TITLE = {'alloys': 'Alloy hardness', 'polymers': 'Polymer glass transition'
               'chemistry': 'Water solubility', 'electrolytes': 'Solid-electrolyte ionic conductivity', 'cleaning_pcmc': 'Critical micelle concentration',
               'cleaning_tension': 'Surface tension at the CMC', 'corrosion': 'Corrosion rate', 'concrete': 'Concrete strength (14-28 d from 1-7 d)',
               'bulk_modulus_kv': 'Bulk modulus (DFT)', 'shear_modulus_gv': 'Shear modulus (DFT)', 'formation_energy_peratom': 'Formation energy (DFT)',
-              'optb88vdw_bandgap': 'Band gap (DFT)'}
+              'optb88vdw_bandgap': 'Band gap, OptB88vdW (DFT)', 'mbj_bandgap': 'Band gap, TBmBJ (DFT)'}
 EXPLORATORY = {'concrete': 'these concrete rows already informed project decisions',
                'corrosion': 'historical point values of mixed quality; not safety advice'}
 CRYSTAL_EXPLORATORY = 'the held-out-systems test crystals were scored in earlier cycles'
+# A target added later has its own note (DEC-022): its first night is a clean test; later nights score the same crystals again.
+CRYSTAL_EXPLORATORY_BY = {'mbj_bandgap': 'the TBmBJ band gap was a clean test only on the first night it was trained; each later night scores '
+                                         'the same test crystals again with more seeds'}
 LEVEL = '0.90'
+
+
+def _no_paths(text):
+    """An error reason for the published index.json, with this computer's repo and home folders replaced (gpu/pipeline/report.py), and
+    any other absolute path cut down to its last component."""
+    import re
+    from gpu.pipeline.report import _local_path_patterns
+    s = str(text or '')
+    for rx, label in _local_path_patterns():
+        s = rx.sub(label, s)
+    return re.sub(r'(?:[A-Za-z]:)?[\\/]+(?:[^\s\'"\\/:]+[\\/]+)+([^\s\'"\\/:]+)', r'\1', s)
 
 
 def _r(x, sig=4):
@@ -84,7 +98,7 @@ def tabular_task(pipe, family, cap):
     from gpu.pipeline.analyze import _first, _m, _paired, analyze_tabular, crossfit, verdict
     t = analyze_tabular(pipe, family)
     if t.get('status') != 'ok':
-        return {'status': t.get('status'), 'reason': t.get('reason')}, None
+        return {'status': t.get('status'), 'reason': _no_paths(t.get('reason'))}, None
     entry = {'status': 'ok', 'unit': t['target'], 'rows': t['rows'], 'groups': t['groups'], 'mode': t['mode'],
              'mae': {'network': _r(t['methods']['network']['mae']), 'trees': _r(t['methods']['trees']['mae']), 'mean': _r(t['methods']['mean']['mae'])},
              'network_vs_trees': _ci(t.get('network_vs_trees'), 'network', 'trees'),
@@ -132,7 +146,7 @@ def crystal_task(pipe, target, cap):
     from gpu.pipeline.analyze import SPLIT_SPECS, _first, _run_preds, _runs, analyze_structure, rule_of_run
     s = analyze_structure(pipe, target, 'system')
     if s.get('status') != 'ok':
-        return {'status': s.get('status'), 'reason': s.get('reason')}, None, []
+        return {'status': s.get('status'), 'reason': _no_paths(s.get('reason'))}, None, []
     runs = _runs(pipe, SPLIT_SPECS['system'][0].format(t=target))
     vy, vp, vs, ty, tp, ts = _run_preds(runs)
     z0 = np.load(Path(runs[0]) / 'predictions.npz')
@@ -371,7 +385,7 @@ def main(argv=None):
         pipe = Path(e['folder'])
         base = {'id': k, 'kind': 'table' if kind == 'tab' else 'crystal', 'name': name, 'title': TASK_TITLE.get(name, name),
                 'site': SITE_ID.get(name, 'crystals') if kind == 'tab' else 'crystals', 'trained': e.get('date'), 'folder': pipe.name,
-                'recommended': e.get('recommended'), 'exploratory': EXPLORATORY.get(name) if kind == 'tab' else CRYSTAL_EXPLORATORY}
+                'recommended': e.get('recommended'), 'exploratory': EXPLORATORY.get(name) if kind == 'tab' else CRYSTAL_EXPLORATORY_BY.get(name, CRYSTAL_EXPLORATORY)}
         if not pipe.exists():
             index['tasks'].append({**base, 'status': 'missing', 'reason': 'its run folder is not on this computer'})
             continue
@@ -382,7 +396,7 @@ def main(argv=None):
                 entry, rows, jids = crystal_task(pipe, name, a.max_rows)
                 crystal_jids += jids
         except Exception as ex:  # noqa: BLE001 - one broken task must not stop the export
-            index['tasks'].append({**base, 'status': 'error', 'reason': repr(ex)[:300]})
+            index['tasks'].append({**base, 'status': 'error', 'reason': _no_paths(repr(ex))[:300]})
             continue
         item = {**base, **entry}
         if rows is not None:

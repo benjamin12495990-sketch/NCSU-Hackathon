@@ -20,11 +20,12 @@ TAB_ORDER = ['alloys', 'polymers', 'electrolytes', 'insulators', 'concrete', 'ch
 # minutes MEASURED on an RTX 5070 Laptop GPU (the first overnight run); other machines will differ
 TAB_EST_MIN = {'alloys': 6, 'polymers': 5, 'electrolytes': 14, 'insulators': 6, 'concrete': 2, 'chemistry': 10,
                'cleaning_pcmc': 96, 'cleaning_tension': 75, 'corrosion': 53}  # the last three measured in cycle 3 (2026-11-26 report)
-STRUCT_SEEDS = {'bulk_modulus_kv': [11, 12, 13], 'shear_modulus_gv': [11, 12, 13], 'formation_energy_peratom': [11, 12], 'optb88vdw_bandgap': [11, 12]}
+STRUCT_SEEDS = {'bulk_modulus_kv': [11, 12, 13], 'shear_modulus_gv': [11, 12, 13], 'formation_energy_peratom': [11, 12], 'optb88vdw_bandgap': [11, 12],
+                'mbj_bandgap': [11, 12, 13]}
 STRUCT_ORDER_EARLY = ['bulk_modulus_kv', 'shear_modulus_gv']
 STRUCT_ORDER_LATE = ['formation_energy_peratom', 'optb88vdw_bandgap']
-STRUCT_EST_MIN = {'bulk_modulus_kv': 9, 'shear_modulus_gv': 8, 'formation_energy_peratom': 20, 'optb88vdw_bandgap': 18}
-TREES_EST_MIN = {'bulk_modulus_kv': 3, 'shear_modulus_gv': 2, 'formation_energy_peratom': 16, 'optb88vdw_bandgap': 19}
+STRUCT_EST_MIN = {'bulk_modulus_kv': 9, 'shear_modulus_gv': 8, 'formation_energy_peratom': 20, 'optb88vdw_bandgap': 18, 'mbj_bandgap': 8}
+TREES_EST_MIN = {'bulk_modulus_kv': 3, 'shear_modulus_gv': 2, 'formation_energy_peratom': 16, 'optb88vdw_bandgap': 19, 'mbj_bandgap': 6}
 BIG_TARGETS = ('formation_energy_peratom', 'optb88vdw_bandgap')  # 94,000 crystals; the graphs need several GB of memory
 # Every crystal job a planner writes from now on states its neighbour rule (docs/DECISIONS.md DEC-020). A crystal job WITHOUT the flag can
 # therefore only come from a plan written before the fix, and pin_original_rule() gives it the rule it was planned under.

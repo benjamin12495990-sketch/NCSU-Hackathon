@@ -42,6 +42,10 @@ TARGETS = {
     'shear_modulus_gv': {'transform': 'log10', 'label': 'log10(shear modulus Gv / GPa), Voigt, OptB88vdW', 'unit': 'log10 GPa'},
     'formation_energy_peratom': {'transform': 'identity', 'label': 'formation energy per atom, eV/atom, OptB88vdW', 'unit': 'eV/atom'},
     'optb88vdw_bandgap': {'transform': 'identity', 'label': 'band gap, eV, OptB88vdW (a known underestimate of real gaps)', 'unit': 'eV'},
+    # TBmBJ (meta-GGA) gaps, for the 21,559 crystals JARVIS computed them for: much closer to measured gaps than OptB88vdW (DEC-022).
+    # 'exclude': crystals left out of this task entirely (train, validation AND test), so its models can later be scored against measured gaps.
+    'mbj_bandgap': {'transform': 'identity', 'label': 'band gap, eV, TBmBJ (closer to measured gaps than OptB88vdW)', 'unit': 'eV',
+                    'exclude': 'bandgap_benchmark_holdout.json'},
 }
 
 
@@ -69,9 +73,17 @@ def load_records(a):
     target = getattr(a, 'target', TARGET) or TARGET
     spec = TARGETS[target]
     counts = {'records': len(recs), 'missing_or_non_numeric': 0, 'non_positive': 0, 'target': target}
+    excluded = set()
+    if spec.get('exclude') and not a.synthetic:
+        excluded = set(json.loads(Path(__file__).with_name(spec['exclude']).read_text())['jids'])
+        counts['excluded_benchmark'] = 0
     kept = []
     for r in recs:
         v = r.get(target)
+        if r.get('jid') in excluded:
+            if isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v):
+                counts['excluded_benchmark'] += 1
+            continue
         if not isinstance(v, (int, float)) or isinstance(v, bool) or not math.isfinite(v):
             counts['missing_or_non_numeric'] += 1
             continue

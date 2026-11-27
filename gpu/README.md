@@ -355,13 +355,18 @@ Run these when no other pipeline is running (a nightly started beside a cycle re
 .\gpu\run_overnight.ps1 -Nightly -Rehearsal   # a few minutes: proves it works
 .\gpu\schedule_nightly.ps1                    # then: a Windows scheduled task runs -Nightly every day at 01:17 (-Time to change, -Remove to stop)
 ```
-Each night (own folder `gpu\runs\pipeline\<time>_nightly`): `git pull --ff-only`, then for each of the 13 tasks (9 table families, 4 crystal properties) a key from (data hash, `recipes.json` entry, code version);
+Each night (own folder `gpu\runs\pipeline\<time>_nightly`): `git pull --ff-only`, then for each of the 14 tasks (9 table families, 5 crystal properties: the four of the standard profile plus the TBmBJ band gap, DEC-022) a key from (data hash, `recipes.json` entry, code version);
 a task is retrained only if its key changed since its last nightly (`gpu\runs\pipeline\registry.json`), `--force` retrains all. Table families: the standard sweep + baselines
 (the report shows the recommended trees or blend). Crystal properties: the recipe's settings and seeds on the held-out-systems split + tree baselines. The report starts with a table
 of the current model, test error and 90% interval for every task. The first night trains everything: about 6-7 GPU hours on the RTX 5070 Laptop, one GPU job at a time, judged from the job times in
 the 2026-11-26 report (the three newest table families took 53-96 minutes each, formation energy's evolved settings 36 minutes per seed).
 The nightly stops starting jobs after 8 hours; a task that did not finish is not recorded as done and is retrained the next night (or
-continue it with `.\gpu\run_overnight.ps1 -Resume -Nightly`). A night with nothing new trains nothing.
+continue it with `.\gpu\run_overnight.ps1 -Resume -Nightly`). **A night with nothing new still improves the crystal ensembles** (DEC-023): each crystal
+property whose key did not change gets 2 new network seeds, added to the seeds it already has (carried from the registry's folder, with its
+tree baseline), until it holds 10; that is about 2.7 GPU hours on an unchanged night. Table families with an unchanged key are not retrained:
+their sweep is deterministic, so a retrain would repeat the same numbers (the 2026-11-27 night reproduced the 2026-11-26 table results exactly).
+The TBmBJ task leaves out the 53 crystals of the JARVIS-Leaderboard measured band-gap benchmark that have a TBmBJ value
+(`gpu/structure/bandgap_benchmark_holdout.json`), so its models can later be scored against measured gaps on crystals they never saw.
 **Sleep.** The task can wake a sleeping laptop, but a laptop woken by a timer goes back to sleep after about 2 minutes unless a
 program asks it not to. On 2026-11-27 the first scheduled night froze that way during start-up and was killed by the task's 10-hour limit
 (Task Scheduler result 3221225786). The pipeline now asks Windows to stay awake from its first second, but the safest setting is

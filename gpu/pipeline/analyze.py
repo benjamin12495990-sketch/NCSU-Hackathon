@@ -211,6 +211,8 @@ def analyze_structure(pipe, target, split='formula'):
     tree_files = [p for p in (_first(pipe, j, 'trees_predictions.npz') for j in tree_jobs) if p is not None]
     run_dirs = []
     for job in sorted(glob.glob(str(pipe / 'jobs' / job_globs))):
+        if not Path(job).name.rsplit('_s', 1)[-1].isdigit():
+            continue   # only <job>_s<seed>: never a stray folder whose name merely starts like one
         done = [r.parent for r in map(Path, sorted(glob.glob(str(Path(job) / 'structure' / '*' / 'result.json')))) if (r.parent / 'predictions.npz').exists()]
         if done:
             run_dirs.append(done[-1])  # one run per seed job: the latest complete one, never two copies of the same seed
@@ -243,7 +245,7 @@ def analyze_structure(pipe, target, split='formula'):
         tz, y, forms, preds = align(run_dirs, tree_files)
         out['fairness'] = fairness(y, forms, np.mean(preds, axis=0), preds, tz[key])
         out['fairness']['against'] = key
-        if target == 'optb88vdw_bandgap':
+        if target in ('optb88vdw_bandgap', 'mbj_bandgap'):
             net, tr, zero = np.mean(preds, axis=0), tz[key], y == 0
             out['fairness']['by_zero_gap'] = {'share_exact_zero': float(zero.mean()),
                                               'network_mae_zero': float(np.abs(net - y)[zero].mean()) if zero.any() else None,
@@ -266,6 +268,8 @@ def _job_rule(pipe, jid):
 def _runs(pipe, pattern):
     out = []
     for job in sorted(glob.glob(str(Path(pipe) / 'jobs' / pattern))):
+        if not Path(job).name.rsplit('_s', 1)[-1].isdigit():
+            continue
         done = [r.parent for r in map(Path, sorted(glob.glob(str(Path(job) / 'structure' / '*' / 'result.json')))) if (r.parent / 'predictions.npz').exists()]
         if done:
             out.append(done[-1])
