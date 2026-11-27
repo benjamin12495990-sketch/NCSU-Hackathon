@@ -90,9 +90,14 @@ else also uses (use `.venv-gpu`).
 
 A result far from what was expected is reported as it is, not explained away.
 
-(Adapted from the open-source get-physics-done project, Apache-2.0: the five steps, the idea of matching wording to the
-strength of the test, and the `[UNVERIFIED - ...]` tag follow its reward-hacking self-check. The examples and the table
-rows are this project's.)
+(Adapted from get-physics-done (GPD), https://github.com/psi-oss/get-physics-done, version 1.2.2, commit 0f417695 of its
+main branch; Copyright 2026 Physical Superintelligence PBC; licensed under the Apache License, Version 2.0
+(http://www.apache.org/licenses/LICENSE-2.0). The text here was changed from the original. The five questions adapt "The
+five-item gate", and the wording table adapts "S4. Confidence-to-language mapping", both in
+`src/gpd/specs/references/shared/reward-hacking-self-check.md`. The `[UNVERIFIED - ...]` tag adapts GPD's
+`[UNVERIFIED - training data]` in `src/gpd/agents/gpd-executor.md` and
+`src/gpd/specs/references/execution/executor-numerical-protocol.md`. The examples and the table rows are this project's.
+What else GPD offers: `research/get_physics_done.md`.)
 
 ## Decision log and lessons
 

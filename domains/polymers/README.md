@@ -1,7 +1,9 @@
 # Carbon-based polymers
 
 > **Status: one property is live: glass-transition temperature Tg, measured values (source file
-> experimental_dataset.csv; citation and licence not confirmed).** `prepare.py` and `nn_generic.js` here
+> experimental_dataset.csv). Source confirmed 2026-11-27: the file is byte-identical (same MD5) to
+> experimental_dataset.csv in Zenodo record 10.5281/zenodo.19242815 (Bhati, Afzal, Chew, Browning and Halls,
+> Schrodinger, 2026), licensed CC BY 4.0; see `../../research/references/polymers.md`.** `prepare.py` and `nn_generic.js` here
 > are the agent's files, copied byte-identical; the numbers are in `public/model/polymers/family.json`.
 > Sources were not checked again through MCPs. The rest of this page is the original plan.
 

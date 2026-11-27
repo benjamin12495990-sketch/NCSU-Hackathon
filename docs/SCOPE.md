@@ -58,7 +58,10 @@ sources — **not the method**.
 
 ### Reach domains (same engine, later)
 coatings · adhesives · lubricants · electrolytes & battery chemistries · refrigerants · dyes &
-pigments · catalysts · propellants · sealants · composites · glasses & ceramics.
+pigments · catalysts · sealants · composites · glasses & ceramics. Nine new categories now have
+written plans (none is trained); they, and the categories not planned now, are listed in
+`../domains/README.md`, section "Planned categories". Propellants and other energetic materials are
+out of scope.
 
 ## What stays true across every domain
 

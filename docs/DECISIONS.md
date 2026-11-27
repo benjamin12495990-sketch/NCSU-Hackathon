@@ -3,8 +3,11 @@
 Two append-only tables. **Never edit or remove a row.** A reversed decision, or a row found to be wrong, gets a new row that names the old one.
 Every row points at evidence in this repository (a commit and a file), so a reader who was not there can check it.
 Rows up to 2026-11-26 were backfilled from the git history and documents on that date, then checked row by row against the
-cited commits by a separate reviewer before the file was first committed. The column layout of the first table follows the
-decision-log template of the open-source get-physics-done project (Apache-2.0).
+cited commits by a separate reviewer before the file was first committed. The column layout of the first table follows, with
+changes (Date moved second, Rationale renamed Why, no Phase column, Impact written as prose, an Evidence column added), the
+decision-log template `src/gpd/specs/templates/decisions.md` of get-physics-done (GPD),
+https://github.com/psi-oss/get-physics-done, version 1.2.2, commit 0f417695; Copyright 2026 Physical Superintelligence PBC;
+licensed under the Apache License, Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0).
 
 ## Decisions
 

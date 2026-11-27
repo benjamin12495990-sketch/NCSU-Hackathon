@@ -24,7 +24,12 @@ Open takes its place for checking citations.
 not to spend money. Before it was switched off it was called 10 times (9 page reads, 1 search), all
 while looking for open datasets for the planned families: it read the dataset pages for MPEA, AqSolDB,
 SurfPro, one Zenodo record, one Mendeley Data record, one figshare record and one UCI page. No number
-on the live page comes from it. Every Firecrawl tool is now denied in the agents' settings.
+on the live page comes from it. Every Firecrawl tool is now denied in the agents' settings. The
+Tenjin router can also sell Firecrawl calls, paid from its own wallet, and that deny rule does not
+cover it. A check on 2026-11-27 found that route has never been used. At install, before the
+no-spending rule, Tenjin moved $0.05 into routing credit on its own, and $0.0012 of that has gone on
+routing fees. To close both routes, disconnect Firecrawl in the claude.ai connector settings and
+turn off the Tenjin plugin.
 
 | Connector | Best for | Notes |
 | --- | --- | --- |

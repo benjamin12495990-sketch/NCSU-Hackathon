@@ -393,11 +393,12 @@ number with a different search, one gathered expert objections, and one looked f
 | Consensus | Confirmed the superplasticizer factor from a second source; expert objections. |
 | FastTrack Literature Open | Confirmed the dataset paper and resolved the DOI of the CO2 source. |
 | OpenAlex | Connected late; used to check the project's reference list (6 of 8 references matched). |
-| Wiley Scholar Gateway, Firecrawl | Connected late; not used for anything in this project. |
+| Wiley Scholar Gateway | Connected late; not used for anything in this project. |
+| Firecrawl | Called 10 times on 2026-11-21 (9 page reads, 1 search) while looking for open datasets, then blocked because it is billed. Nothing on the page comes from it (`research/connectors.md`). |
 | alphaXiv | Searched preprints; nothing from it is on the page. |
 | Elicit | Tried; the account's plan has no API access, so nothing came back. |
 | Claude Market and the connector registry | Searched for concrete, cement, life cycle and deployment servers. None exist for concrete. |
-| Tenjin router | Installed. No paid call was made and no number on the page comes from it. |
+| Tenjin router | Installed. At install, before the no-spending rule, it moved $0.05 into routing credit on its own; $0.0012 of that has gone on routing fees. No paid service was called and no number on the page comes from it. |
 
 What the checks changed: water has no CO2 factor because none could be sourced; slag and fly ash
 are labelled as secondary; three densities are labelled as unconfirmed.
