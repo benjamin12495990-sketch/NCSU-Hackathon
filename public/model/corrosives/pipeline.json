@@ -1,0 +1,22 @@
+{
+  "source": "docs/results/20261122T014943Z_overnight_REPORT_20261126T2001.md",
+  "exploratory": true,
+  "exploratoryNote": "This result is exploratory (the report labels it so).",
+  "intro": "A neural network and tuned tree models were trained and scored on measured corrosion rates (point values from NIST CORR-DATA). Scores come from cross-validation in which whole groups of related rows are held out together (5 repeats of the network). Lower error is better.",
+  "tasks": [
+    {
+      "name": "Corrosion rate",
+      "unit": "log10(mm/yr)",
+      "size": "5761 rows in 207 groups",
+      "networkLabel": "average of 5 seeds",
+      "network": "0.768",
+      "trees": "0.7723",
+      "mean": "1.026",
+      "diff": "-0.00428",
+      "ci": ["-0.0221", "+0.0154"],
+      "verdict": "no clear difference",
+      "single": "One network at a time: clearly better than the trees in 0 of 5 runs.",
+      "extra": ""
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "source": "docs/results/20261122T014943Z_overnight_REPORT_20261126T2001.md",
+  "exploratory": false,
+  "exploratoryNote": "",
+  "intro": "A neural network and tuned tree models were trained and scored on two measured surfactant properties (SURFPRO data). Scores come from cross-validation in which whole groups of related rows are held out together (5 repeats of the network). Lower error is better. Cleaning efficacy itself is not covered.",
+  "tasks": [
+    {
+      "name": "Critical micelle concentration",
+      "unit": "pCMC = -log10(CMC, mol/L)",
+      "size": "1395 rows in 115 groups",
+      "networkLabel": "average of 5 seeds",
+      "network": "0.5846",
+      "trees": "0.5266",
+      "mean": "0.8991",
+      "diff": "+0.058",
+      "ci": [
+        "-0.00624",
+        "+0.111"
+      ],
+      "verdict": "no clear difference",
+      "single": "One network at a time: clearly better than the trees in 0 of 5 runs, clearly worse in 3.",
+      "extra": "Against the average of the 3 best tree models (MAE 0.5218), the trees are clearly better than the network average: +0.0628 [+0.00367, +0.112]."
+    },
+    {
+      "name": "Surface tension at the CMC",
+      "unit": "mN/m",
+      "size": "972 rows in 190 groups",
+      "networkLabel": "average of 5 seeds",
+      "network": "5.22",
+      "trees": "4.844",
+      "mean": "5.547",
+      "diff": "+0.376",
+      "ci": [
+        "+0.153",
+        "+0.595"
+      ],
+      "verdict": "trees clearly better",
+      "single": "One network at a time: clearly better than the trees in 0 of 5 runs, clearly worse in 2.",
+      "extra": "Against the average of the 3 best tree models (MAE 4.772), the trees are also clearly better than the network average: +0.447 [+0.232, +0.67]."
+    }
+  ]
+}

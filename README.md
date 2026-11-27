@@ -11,11 +11,14 @@ embodied CO2. Built from scratch at TRIANGULATE, an AI hackathon at NC State.
 ## The page
 
 The page is titled **Formulation Designer**. The three-bar button at the top left opens a menu of
-seven simulations (families of materials). **Four are live: concrete, alloys (hardness), insulators
+eight simulations (families of materials). **Four are live: concrete, alloys (hardness), insulators
 (dielectric constant) and polymers (glass transition).** Each trained family has its own page with a
-"Train the network" button (see "The trained families" below). The other three (corrosive solutions,
-cleaning products, general chemistry) are marked "Planned": choosing one shows what it would predict,
-vary and rank by, and says that nothing is generated for it yet. General chemistry (water solubility)
+"Train the network" button (see "The trained families" below). Corrosive solutions, cleaning
+products and crystals (DFT-calculated) are marked "Trained offline": models for them were trained and scored in the
+GPU pipeline, and their card shows those numbers (from `public/model/<id>/pipeline.json`, taken from
+`docs/results/20261122T014943Z_overnight_REPORT_20261126T2001.md`), says that nothing on the page is generated from them,
+and lists what a design page would predict, vary and rank by; crystals have no plan in `docs/SCOPE.md` yet. General
+chemistry is marked "Planned": choosing it shows what it would predict, vary and rank by. General chemistry (water solubility)
 has a model that was trained and checked offline; its scripts, results and source data (AqSolDB) are in
 `domains/chemistry/`, but it is not on the site. Its card says so and shows
 its verified numbers. The switch at the
@@ -449,9 +452,9 @@ pre-registered champion lost to a straight-line fit on log(age) (RMSE 11.50 agai
 | `public/model/nn_data.json` | The training and held-out rows the network uses, the same split as the trees. |
 | `train/export_nn_data.py` | Writes `nn_data.json` from the same loading, features and split as `train/train.py`. |
 | `src/lib/formula.js` | Estimates the paste's chemical formula per silicon atom from oxide analyses. |
-| `src/lib/domains.js` | The seven families of materials and which ones are live. |
+| `src/lib/domains.js` | The eight families of materials: which ones are live, trained offline (`trainedOffline`, `pipeline`) or planned. |
 | `src/components/Formula.jsx` | Shows the formula with subscripts. |
-| `src/components/Planned.jsx` | The "Planned, not built" card for the three families that are not live. For general chemistry it also shows the verified numbers of the model trained offline, read from `public/model/chemistry/family.json`. |
+| `src/components/Planned.jsx` | The card for the four families that are not live: "Planned, not built" for general chemistry, which also shows the verified numbers of its model trained offline (`public/model/chemistry/family.json`), and "Trained offline, not on this page" for the three families scored in the GPU pipeline, with their numbers from `public/model/<id>/pipeline.json`. |
 | `public/model/oxides.json` | Oxide analyses of cement, slag and fly ash, with an evidence label each. |
 | `src/lib/loadModel.js` | Downloads the JSON files when the page opens. |
 | `public/model/exposure.json` | ACI 318 exposure limits used by the sliders, with an evidence label per class. |

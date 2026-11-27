@@ -1,0 +1,64 @@
+{
+  "source": "docs/results/20261122T014943Z_overnight_REPORT_20261126T2001.md",
+  "exploratory": true,
+  "exploratoryNote": "These results are exploratory: this test split was scored before. Every label is a DFT calculation, not a measurement.",
+  "intro": "Crystal-graph neural networks and tuned tree models were trained on DFT-calculated properties from JARVIS-DFT. The test is on held-out chemical systems: every crystal whose element combination is in the test set is absent from training. The networks use the fixed neighbour rule. Lower error is better.",
+  "tasks": [
+    {
+      "name": "Bulk modulus",
+      "unit": "log10 GPa",
+      "size": "",
+      "networkLabel": "average of 3 runs",
+      "network": "0.0902",
+      "trees": "0.09154",
+      "mean": "0.3258",
+      "diff": "-0.00135",
+      "ci": ["-0.00619", "+0.00335"],
+      "verdict": "no clear difference",
+      "single": "One network at a time: the trees are clearly better than each single run.",
+      "extra": ""
+    },
+    {
+      "name": "Shear modulus",
+      "unit": "log10 GPa",
+      "size": "",
+      "networkLabel": "average of 3 runs",
+      "network": "0.1677",
+      "trees": "0.154",
+      "mean": "0.3639",
+      "diff": "+0.0137",
+      "ci": ["+0.00906", "+0.0187"],
+      "verdict": "trees clearly better",
+      "single": "One network at a time: the trees are also clearly better than each single run.",
+      "extra": ""
+    },
+    {
+      "name": "Formation energy",
+      "unit": "eV/atom",
+      "size": "",
+      "networkLabel": "average of 2 runs",
+      "network": "0.04772",
+      "trees": "0.1295",
+      "mean": "0.8116",
+      "diff": "-0.0818",
+      "ci": ["-0.089", "-0.0752"],
+      "verdict": "network clearly better",
+      "single": "One network at a time: the network is also clearly better in each single run.",
+      "extra": ""
+    },
+    {
+      "name": "Band gap",
+      "unit": "eV",
+      "size": "",
+      "networkLabel": "average of 2 runs",
+      "network": "0.1912",
+      "trees": "0.307",
+      "mean": "0.9454",
+      "diff": "-0.116",
+      "ci": ["-0.134", "-0.0951"],
+      "verdict": "network clearly better",
+      "single": "One network at a time: the network is also clearly better in each single run.",
+      "extra": ""
+    }
+  ]
+}

@@ -47,9 +47,11 @@ it never trained on (R² 0.91). Data: **306** lab-tested mixes, Yeh (1998), UCI.
 
 **Do:** click the three bars at the top left. Point at the list. Press **Escape**.
 
-> This is a menu of simulations. Seven families of materials. Four are live: concrete, alloys,
-> insulators and polymers. The other three are marked Planned, and I'll show you what that looks
-> like at the end. We'd rather show four things that work than seven that don't.
+> This is a menu of simulations. Eight families of materials. Four are live: concrete, alloys,
+> insulators and polymers. Three are marked Trained offline: we trained and scored models for them
+> away from this page, but nothing for them runs here. General chemistry is marked Planned. I'll
+> show you what that looks like at the end. We'd rather show four things that work than eight that
+> don't.
 
 ### Beat 3: design a mix (1:00 to 2:15)
 
@@ -133,8 +135,9 @@ mixes**. Scroll to the result.
 
 **Do:** open the menu, choose **Corrosive solutions**.
 
-> The same method needs a lab dataset to learn from. We haven't built this one, so the page says
-> Planned, not built, and states what it would need first. Alloys, insulators and polymers each
+> We trained and scored models for this family offline, on measured corrosion rates, and the card
+> shows how they did against tuned trees, marked exploratory. Nothing on this page is generated from
+> them, and it says what it would need first. Alloys, insulators and polymers each
 > have a page where you press Train and watch a network learn; the numbers there come from files,
 > with the trees and a guess of the average beside them.
 
