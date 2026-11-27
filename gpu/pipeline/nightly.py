@@ -2,7 +2,7 @@
 
   python -m gpu.run_pipeline --profile nightly          (or .\\gpu\\run_overnight.ps1 -Nightly, which first does git pull --ff-only)
 
-Each night gets its own folder. For every task (6 table families, 4 crystal properties) the nightly computes a key from
+Each night gets its own folder. For every task (9 table families, 4 crystal properties) the nightly computes a key from
   the data       the SHA-256 of the family's data arrays, or of the JARVIS file
   the recipe     its entry in gpu/recipes.json (what to train, which model is recommended)
   the code       a version string below (bump it when training code changes in a way that changes results)

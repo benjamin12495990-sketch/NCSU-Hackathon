@@ -355,10 +355,13 @@ Run these when no other pipeline is running (a nightly started beside a cycle re
 .\gpu\run_overnight.ps1 -Nightly -Rehearsal   # a few minutes: proves it works
 .\gpu\schedule_nightly.ps1                    # then: a Windows scheduled task runs -Nightly every day at 01:17 (-Time to change, -Remove to stop)
 ```
-Each night (own folder `gpu\runs\pipeline\<time>_nightly`): `git pull --ff-only`, then for each of the 10 tasks a key from (data hash, `recipes.json` entry, code version);
+Each night (own folder `gpu\runs\pipeline\<time>_nightly`): `git pull --ff-only`, then for each of the 13 tasks (9 table families, 4 crystal properties) a key from (data hash, `recipes.json` entry, code version);
 a task is retrained only if its key changed since its last nightly (`gpu\runs\pipeline\registry.json`), `--force` retrains all. Table families: the standard sweep + baselines
 (the report shows the recommended trees or blend). Crystal properties: the recipe's settings and seeds on the held-out-systems split + tree baselines. The report starts with a table
-of the current model, test error and 90% interval for every task. The first night trains everything (about 2-3 h on the RTX 5070 Laptop); a night with nothing new trains nothing.
+of the current model, test error and 90% interval for every task. The first night trains everything: about 6-7 GPU hours on the RTX 5070 Laptop, one GPU job at a time, judged from the job times in
+the 2026-11-26 report (the three newest table families took 53-96 minutes each, formation energy's evolved settings 36 minutes per seed).
+The nightly stops starting jobs after 8 hours; a task that did not finish is not recorded as done and is retrained the next night (or
+continue it with `.\gpu\run_overnight.ps1 -Resume -Nightly`). A night with nothing new trains nothing.
 A pipeline refuses to start while another is running (`RUNNING.lock`), so the nightly task never collides with a long cycle. `-Resume` always continues the main run (`LAST_PIPELINE.txt`); the nightly and the rehearsals keep their own pointers (`-Resume -Nightly`, `-Resume -Rehearsal`), so a nightly can never hide an unfinished cycle.
 **Recipes change only by a reviewed commit**: a cycle that finds a better model is evidence for editing `gpu/recipes.json`, never an automatic promotion,
 and no decision is ever made on test rows.

@@ -10,7 +10,7 @@
 #                                              # ADDS to the newest real run folder; default budget 12 h
 #   .\gpu\run_overnight.ps1 -TieFix -Rehearsal # a few minutes: the neighbour-rule check in miniature (needs a rehearsal folder whose -Cycle2 ran before the fix)
 #   .\gpu\run_overnight.ps1 -TieFix            # the held-out-systems networks and trees again under the fixed neighbour rule, compared with
-#                                              # the originals; ADDS to the newest real run folder; about 2-3 hours
+#                                              # the originals; ADDS to the newest real run folder; about 1 hour (measured 2026-11-26)
 #   .\gpu\run_overnight.ps1 -Nightly           # git pull --ff-only, then retrain whatever changed (gpu\schedule_nightly.ps1 runs this every night)
 #   .\gpu\run_overnight.ps1 -Resume            # continue the MAIN run (standard or cycle) after a reboot, power cut or stop
 #   .\gpu\run_overnight.ps1 -Resume -Nightly   # continue the newest nightly instead (-Resume -Rehearsal: the newest rehearsal)
@@ -113,7 +113,11 @@ while ($code -eq 3 -and $tries -lt 3) {
 switch ($code) {
     0 { Write-Host 'All jobs finished. Read REPORT.md in the pipeline folder; send share.zip to whoever needs the results.' }
     1 { Write-Host 'Finished, but some jobs failed. REPORT.md lists them; rerun with -Resume --retry-failed to try them again.' }
-    2 { Write-Host 'Stopped early (STOP file, Ctrl+C, or the time budget). Run  .\gpu\run_overnight.ps1 -Resume  to continue.' }
+    2 {
+        $how = '.\gpu\run_overnight.ps1 -Resume'; if ($Nightly) { $how += ' -Nightly' } elseif ($Rehearsal) { $how += ' -Rehearsal' }
+        Write-Host "Stopped early (STOP file, Ctrl+C, or the time budget). Run  $how  to continue."
+        if ($Nightly) { Write-Host 'Or do nothing: the next night retrains every task that did not finish.' }
+    }
     3 { Write-Host 'The pipeline program kept crashing. Send the last 40 lines of the console and gpu\runs\pipeline\<folder>\pipeline.log.' }
     4 { Write-Host 'Not started: a check failed. The message above says which.' }
     default { Write-Host "Ended with exit code $code." }
