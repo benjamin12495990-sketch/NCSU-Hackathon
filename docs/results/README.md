@@ -90,10 +90,16 @@ seeds or on the rest of the test crystals.
 5. 90% prediction intervals on this split cover 0.868 to 0.893 of test rows for networks, trees and blends. That is
    slightly too narrow, as under the original rule (0.874 to 0.891 for the networks).
 
-**What this means for `gpu/recipes.json` (a lead, not a change; LES-019).**
-- Shear modulus: the entry recommends the blend, with the cycle-2 evidence "the blend beats the trees -0.0052 [-0.0078,
+**What this means for `gpu/recipes.json` (LES-019, DEC-021).**
+- Shear modulus: the entry recommended the blend, with the cycle-2 evidence "the blend beats the trees -0.0052 [-0.0078,
   -0.0025]". Under the fixed rule the same comparison shows no clear difference (-0.00158 [-0.00432, +0.00113]), so that
-  evidence no longer holds.
+  evidence no longer holds. On 2026-11-27 the entry was changed to the trees (DEC-021), by the person's rule: trees if they
+  are proven better, unless the literature supports a third option better than both. The literature check found none in a
+  setting like this one ([shear_third_option_literature_20261127.md](shear_third_option_literature_20261127.md)). The
+  blend's point estimate is 0.00158 lower than the trees', and the interval above allows the trees to be up to 0.00432 log10
+  GPa worse or up to 0.00113 better (exploratory). So the switch may cost a little accuracy, and it saves no GPU time:
+  whenever the nightly run retrains shear (data, recipe or code version changed), the networks are still trained beside the
+  trees for the comparison.
 - Bulk modulus (blend): the entry still holds under the fixed rule (exploratory): the network average shows no clear
   difference from the trees (-0.00135 [-0.00619, +0.00335]), and the blend is clearly better than both.
 - Band gap (network): the network is still clearly better than the strongest trees (-0.116 [-0.134, -0.0951] eV,
@@ -101,7 +107,7 @@ seeds or on the rest of the test crystals.
   comes from the band-gap search, which was not retrained here, so it stays an original-rule measurement.
 - Formation energy: the entry's evolved settings were not retrained here.
 - A recipe changes only by a reviewed commit that a person agrees to (`docs/AGENTS.md`). The nightly run retrains every
-  crystal task under the fixed rule either way.
+  crystal task under the fixed rule.
 
 ### Predictions made before this run
 
@@ -119,26 +125,33 @@ Stated in the working chat before the run, not saved in a file, so this is not a
 two at a time. The first started at 23:56 UTC and the last finished at about 00:58 UTC (run-folder start times plus the
 minutes in the job table).
 
+### Replay check (2026-11-27, one run, outside the pipeline)
+
+The network adds up messages with `index_add_` (`gpu/structure/model.py`), which is not deterministic on a GPU, and the
+trainer does not ask for deterministic kernels, so a per-seed difference could have been partly replay noise. To measure
+it, shear-modulus seed 11 was trained again on the laptop GPU under the original rule with the same command as the
+pipeline job `struct_shear_modulus_gv_sys_s11` (run folder `gpu/runs/structure/20261127T021516Z_shear_sys_s11_replay`, not
+in git). It printed test MAE 0.1756 (validation 0.1730, best epoch 26, R2 0.609), the same to four decimals as the
+original run (0.1756 in the report). For this seed, replay noise is under about 0.0001 log10 GPa (both runs round to 0.1756), against per-seed shear
+differences of 0.00335 to 0.00539 under the rule change, so for this seed the shear difference is not replay noise. This is one repeat
+of one seed; the other seeds and properties were not repeated.
+
 ### What it does not show
 
-- **Replay noise.** The network adds up messages with `index_add_` (`gpu/structure/model.py`), which is not deterministic
-  on a GPU, and the trainer does not ask for deterministic kernels. So the same seed trained twice under the same rule can
-  give a slightly different network. No run here repeated a seed under the same rule, so each per-seed difference mixes the
-  rule change with that noise.
 - **Few runs.** Two or three seeds per property, on one fixed test split that had already been scored, and one network per
-  rule in the invariance check.
+  rule in the invariance check. Replay noise was measured for one seed only (above).
 - **One split only.** Only the default-settings held-out-systems networks and trees were retrained. The formula-split,
   held-out-element, fine-tuning and search numbers are still original-rule numbers.
 
 ### Leads (not decisions)
 
-1. **Shear-modulus recipe.** Decide whether the shear entry stays the blend, given the comparison above; that needs a
-   person's agreement and a reviewed commit.
-2. **Replay check (about 10 GPU minutes).** Retrain one shear-modulus seed under the original rule and compare it with the
-   run it repeats (`struct_shear_modulus_gv_sys_s11`, test MAE 0.1756):
+1. **Shear-modulus recipe: done** (trees, DEC-021). A pretrained-feature hybrid (frozen features from a pretrained graph network
+   or interatomic potential fed to a descriptor model, MatterVial style) is the strongest published option that beat both on
+   random splits; MODNet and a descriptor-hybridized CGCNN (Gong et al.) also did, against tree baselines different from or
+   weaker than ours. None has been tried on the held-out-systems split here.
+2. **Replay check: done** (above; the repeat gave 0.1756 again). The command, for repeating it on another seed:
    `.\.venv-gpu\Scripts\python.exe -m gpu.structure.train_structure --device cuda --target shear_modulus_gv --split system --epochs 100 --seed 11 --neighbor-ties first --tag shear_sys_s11_replay`
    (PowerShell, repo root; the plain `python` on the laptop has no PyTorch).
-   If the repeat moves by about 0.003 to 0.005, the shear difference may be replay noise rather than the rule.
 3. The nightly run retrains every crystal task under the fixed rule (code version crystal-v2), which replaces the
    remaining original-rule numbers over time.
 

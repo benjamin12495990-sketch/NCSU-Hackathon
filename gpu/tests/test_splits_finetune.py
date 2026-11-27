@@ -125,6 +125,48 @@ def test_registry_remembers_a_task_only_when_all_its_jobs_finished():
         assert 'Retrained tonight: tab:alloys' in '\n'.join(N.registry_lines(plan, pipe))
 
 
+def test_shear_modulus_recipe_recommends_trees():
+    """DEC-021. Update this pin when a reviewed commit changes the recipe."""
+    from gpu.pipeline import nightly as N
+    assert N.load_recipes()['crystal']['shear_modulus_gv']['recommended'] == 'trees'
+
+
+def test_a_crystal_recipe_records_the_recommended_models_error_and_interval():
+    """The networks are trained for every crystal recipe; the registry records the recommended model's error and its interval
+    (falling back to the network average's interval, labelled as such, when the recommended model has none). The recipe is
+    patched by hand (no pytest fixture), so the plain-function runner below still works."""
+    import copy
+    from gpu.pipeline import nightly as N
+    t = 'shear_modulus_gv'
+    net = {'0.90': {'half_width': 0.34, 'coverage': 0.893}}
+    full = {'network average': net, 'trees': {'0.90': {'half_width': 0.30, 'coverage': 0.889}}, 'blend': {'0.90': {'half_width': 0.31, 'coverage': 0.90}}}
+    cases = [('trees', full, 0.154, 'trees', 0.30), ('trees', {'network average': net}, 0.154, 'network average', 0.34),
+             ('blend', full, 0.1524, 'blend', 0.31), ('blend', {'network average': net}, 0.1524, 'network average', 0.34),
+             ('network', full, 0.1677, 'network average', 0.34)]
+    real, orig = N.load_recipes(), N.load_recipes
+    try:
+        for rec, mods, mae, imodel, hw in cases:
+            r = copy.deepcopy(real)
+            r['crystal'][t]['recommended'] = rec
+            N.load_recipes = lambda r=r: r
+            with tempfile.TemporaryDirectory() as d:
+                pipe, reg = Path(d) / 'night', Path(d) / 'registry.json'
+                pipe.mkdir()
+                plan = {'jobs': [{'id': f'struct_{t}_sys_s11', 'target': t}, {'id': f'trees_{t}_sys', 'target': t}],
+                        'nightly': {'keys': {f'crystal:{t}': 'K2'}, 'retrain': [f'crystal:{t}'], 'skipped': [], 'registry': str(reg)}}
+                s = {'target': t, 'status': 'ok', 'label': 'shear', 'strongest_trees': 'rich', 'strongest_trees_key': 'pred_rich',
+                     'trees': {'rich': {'test': {'mae': 0.154}}}, 'fairness': {'blend': {'mae': 0.1524}},
+                     'compare': {'comparisons': {'pred_rich': {'network average of 3 runs': {'network_mae': 0.1677}}}}}
+                iv = {'crystal': [{'task': t, 'split': 'system', 'models': mods}]}
+                (pipe / 'state.json').write_text(json.dumps({'jobs': {f'struct_{t}_sys_s11': {'status': 'done'}, f'trees_{t}_sys': {'status': 'done'}}}))
+                N.update_registry(pipe, plan, {'tabular': [], 'structure_system': [s], 'intervals': iv})
+                e = N.load_registry(reg)['tasks'][f'crystal:{t}']
+                assert e['recommended'] == rec and e['mae'] == mae and e['network_average_mae'] == 0.1677, (rec, e)
+                assert e['interval_model'] == imodel and e['interval90_half_width'] == hw, (rec, e)
+    finally:
+        N.load_recipes = orig
+
+
 def test_run_lock_refuses_a_live_beating_holder_and_takes_over_a_dead_or_silent_one():
     import time
     from gpu.run_pipeline import LockBusy, RunLock

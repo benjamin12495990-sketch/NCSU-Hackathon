@@ -11,7 +11,8 @@ So a night with no new data and no recipe change trains nothing and says so; new
 that family. Recipes change only by a reviewed commit: a cycle that finds a better model is evidence for editing recipes.json.
 
 Table families are retrained with the standard sweep and baselines (about 2-14 GPU minutes each on the RTX 5070 Laptop); the report
-then shows the recommended model (trees or the no-fit blend of networks and trees). Crystal properties are trained on the
+then shows the recommended model (trees or the no-fit blend of networks and trees). Crystal properties (recommended: network, trees or the
+blend; the networks are trained either way, for the comparison) are trained on the
 held-out-chemical-systems split with the recipe's settings and seeds, beside the tree baselines on the same split, so every night's
 numbers are honest test numbers and come with conformal prediction intervals. Crystal graphs and structure features use the invariant
 neighbour rule (--neighbor-ties all), so a prediction does not depend on how a crystal is written down.
@@ -158,13 +159,16 @@ def update_registry(pipe, plan, analysis):
         f = s.get('fairness', {})
         avg = [c for kk, c in s['compare']['comparisons'][s['strongest_trees_key']].items() if kk.startswith('network average')]
         net_mae = avg[0]['network_mae'] if avg else f.get('single', {}).get('mean_mae')
-        mae = f.get('blend', {}).get('mae') if rec == 'blend' else net_mae
+        trees_mae = s['trees'][s['strongest_trees']]['test']['mae']
+        # The networks are trained for every crystal recipe (the night's comparison needs them); the recipe only says which model is recommended.
+        mae = f.get('blend', {}).get('mae') if rec == 'blend' else trees_mae if rec == 'trees' else net_mae
         mods = (ivc.get(s['target'], {}).get('models') or {})
-        model_iv = (mods.get('blend') if rec == 'blend' and 'blend' in mods else mods.get('network average', {})).get('0.90', {})
+        imodel = rec if rec in ('blend', 'trees') and rec in mods else 'network average'
+        model_iv = mods.get(imodel, {}).get('0.90', {})
         reg['tasks'][k] = {'key': nightly['keys'][k], 'folder': str(pipe), 'date': stamp, 'recommended': rec, 'mae': mae, 'network_average_mae': net_mae,
-                           'strongest_trees': s['strongest_trees'], 'trees_mae': s['trees'][s['strongest_trees']]['test']['mae'], 'unit': s['label'],
+                           'strongest_trees': s['strongest_trees'], 'trees_mae': trees_mae, 'unit': s['label'],
                            'interval90_half_width': model_iv.get('half_width'), 'interval90_coverage': model_iv.get('coverage'),
-                           'interval_model': 'blend' if rec == 'blend' and 'blend' in mods else 'network average'}
+                           'interval_model': imodel}
     reg['updated'] = stamp
     tmp = path.with_suffix('.tmp')
     path.parent.mkdir(parents=True, exist_ok=True)

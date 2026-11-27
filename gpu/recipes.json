@@ -1,7 +1,7 @@
 {
  "about": "What the nightly pipeline trains for each task, and which model is recommended. Changed only by a reviewed commit, never automatically: a cycle that finds something better is evidence for changing this file, not a change. Evidence column = the report section that justified the entry.",
- "version": 3,
- "crystal_neighbor_rule": "all: every nightly crystal network and structure-feature tree run is built with --neighbor-ties all (a prediction no longer depends on how the crystal is written down). The evidence lines under 'crystal' were measured in cycle 2 with the original rule. A report from the tiefix profile re-measures the default-settings networks, the trees and their comparison on held-out systems (the bulk-modulus, shear-modulus and band-gap entries); it does not retrain the formation-energy entry's evolved settings, so 'evolved settings beat the defaults' stays an original-rule measurement until a new search or finalist run.",
+ "version": 4,
+ "crystal_neighbor_rule": "all: every nightly crystal network and structure-feature tree run is built with --neighbor-ties all (a prediction no longer depends on how the crystal is written down). The evidence lines under 'crystal' were measured in cycle 2 with the original rule, except shear_modulus_gv, whose entry was changed on the tiefix report's fixed-rule numbers (DEC-021). A report from the tiefix profile re-measures the default-settings networks, the trees and their comparison on held-out systems (the bulk-modulus, shear-modulus and band-gap entries); it does not retrain the formation-energy entry's evolved settings, so 'evolved settings beat the defaults' stays an original-rule measurement until a new search or finalist run.",
  "tabular": {
   "alloys": {
    "recommended": "trees",
@@ -58,7 +58,7 @@
    "evidence": "cycle 2: on held-out systems the 3-run network average ties structure-feature trees; their blend beats both"
   },
   "shear_modulus_gv": {
-   "recommended": "blend",
+   "recommended": "trees",
    "split": "system",
    "seeds": [
     11,
@@ -67,7 +67,7 @@
    ],
    "epochs": 100,
    "genes": "default",
-   "evidence": "cycle 2: structure-feature trees beat the networks on held-out systems; the blend beats the trees -0.0052 [-0.0078, -0.0025]"
+   "evidence": "tiefix 2026-11-26 (fixed neighbour rule, held-out systems, exploratory because that test split was scored in cycle 2): the strongest trees are clearly better than the network average, +0.0137 [+0.00906, +0.0187] log10 GPa, and than each of the 3 runs; the no-fit blend shows no clear difference from the trees, -0.00158 [-0.00432, +0.00113]; a literature check (2026-11-27) found no evidence that a third option beats both in a setting like this one. Was 'blend' (cycle 2, original rule: the blend beat the trees, -0.0052 [-0.0078, -0.0025]; DEC-018). DEC-021"
   },
   "formation_energy_peratom": {
    "recommended": "network",
