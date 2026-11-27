@@ -9,6 +9,7 @@ new `REPORT.md`, so each copy is named after the folder and the time its report 
 | Report | Pipeline folder | Generated (laptop clock) | Jobs | Covers |
 | --- | --- | --- | --- | --- |
 | [20261122T014943Z_overnight_REPORT_20261126T0916.md](20261122T014943Z_overnight_REPORT_20261126T0916.md) | `gpu/runs/pipeline/20261122T014943Z_overnight` | 2026-11-26 09:16:58 | 181 finished, 0 failed, 27.56 GPU hours | cycles 1-3: 9 table families; 4 crystal properties on formula, chemical-system and element splits; fine-tuning; evolutionary search (2 rounds for formation energy); conformal intervals |
+| [20261122T014943Z_overnight_REPORT_20261126T2001.md](20261122T014943Z_overnight_REPORT_20261126T2001.md) | `gpu/runs/pipeline/20261122T014943Z_overnight` (the same folder, extended with `-TieFix`) | 2026-11-26 20:01:16 | 203 finished, 0 failed, 29.62 GPU hours | everything above, plus the held-out-systems networks and trees retrained under the fixed neighbour rule and the invariance check |
 
 To add the next one, on the laptop from the repo root (PowerShell). It refuses to replace a copy that is already here:
 
@@ -25,7 +26,123 @@ computer's paths with `<repo>` and `~`. In an older report, replace the full loc
 it with `Get-Content -Raw -Encoding UTF8`: Windows PowerShell 5.1 otherwise reads the file as ANSI and turns characters
 such as the em dash into `â€”`.
 
-## What the 2026-11-26 report shows
+## What the 2026-11-26 20:01 report adds: the neighbour-rule fix, measured
+
+The same pipeline folder, extended with `.\gpu\run_overnight.ps1 -TieFix`: 22 new jobs, all finished. They retrained the
+10 default-settings networks and the 4 tree runs of the held-out-chemical-systems split under the fixed neighbour rule
+(DEC-020), with the same seeds, settings and crystals, and ran 8 invariance checks. Everything else in the report is the
+09:16 report again, apart from the rule labels the new code prints (the diff between the two copies shows nothing else).
+
+The held-out-systems test crystals were already scored in cycle 2, so **every comparison below is exploratory**. Intervals
+are the report's 95% paired-bootstrap intervals, resampling whole test chemical systems (the report's printout calls these
+groups "formulas", e.g. 1588 for bulk modulus). For "fixed minus original" they hold the trained
+networks fixed: they say which test crystals were drawn, not which seeds were trained.
+
+**The defect is gone.** For each property, one network per rule (seed 11) predicted 300 test crystals as written and
+rewritten four ways: atoms relisted, origin shifted, crystal rotated, and for small cells the cell doubled. Under the fixed
+rule 0.0% of rewrites moved a prediction by more than 1% of the spread of predictions, and the largest change was 2.4e-7 to
+1.4e-6 in the property's unit, which is rounding. Under the original rule 0.3% (band gap) to 1.8% (shear modulus) of
+rewrites moved a prediction that much; the largest changes were 0.044 and 0.049 log10 GPa (bulk, shear modulus), 0.098
+eV/atom (formation energy) and 0.025 eV (band gap). The average change was 0.04% to 0.41% of the test error: rewriting a
+crystal moved single predictions of these networks but barely moved their average error. That is not the effect of the fix
+on accuracy: retraining under the fixed rule builds different graphs (6 to 9% more edges), and how the average error moved
+then is in the next table. The check covers one network per property and 300 test crystals; it was not repeated on other
+seeds or on the rest of the test crystals.
+
+**Accuracy, fixed minus original, same seeds (exploratory).** Negative means lower error under the fixed rule.
+
+| Property | Average of runs (95%) | Seeds | Per seed | Seed-to-seed sd of single-run MAE, original / fixed |
+| --- | --- | --- | --- | --- |
+| Bulk modulus (log10 GPa) | -0.00463 [-0.00892, -0.000402]; 0.09483 to 0.0902, about 5% lower | lower in 2 of 3 | s11 -0.00723, s12 -0.00415, s13 +0.000402 | 0.0023 / 0.0016 |
+| Shear modulus (log10 GPa) | +0.00868 [+0.00434, +0.0133]; 0.159 to 0.1677, about 5% higher | higher in all 3 | s11 +0.00335, s12 +0.00404, s13 +0.00539 | 0.00083 / 0.0017 |
+| Formation energy (eV/atom) | no clear difference, +0.00115 [-0.000723, +0.00292] | higher in 2 of 2 | s11 +0.00126, s12 +0.000706 | 0.00029 / 0.00068 |
+| Band gap (eV) | no clear difference, -0.00105 [-0.00891, +0.00607] | lower in 1 of 2 | s11 +0.0061, s12 -0.00481 | 0.0054 / 0.0023 |
+
+- Shear modulus is the only property where the average moved clearly and every seed moved the same way. Each shear
+  difference is 2 to 3 times the larger of the two seed-to-seed standard deviations. Both formation-energy seeds also moved
+  the same way (higher), but their average shows no clear difference (+0.00115 [-0.000723, +0.00292]).
+- Bulk modulus is lower for the average of 3 runs, in 2 of 3 seeds; seed 13 moved the other way.
+- The tree models with structure features ("rich"), compared on the same feature set under both rules, show no clear
+  difference on any property: bulk -0.00151 [-0.00431, +0.00129], shear +0.000479 [-0.000708, +0.00165], formation
+  energy -0.000427 [-0.00132, +0.000469], band gap -0.000673 [-0.00435, +0.00294].
+- The fixed rule gives 6 to 9% more edges (12.7 to 13.1 per atom). The report's training-time ratios (x0.58 to x0.98)
+  depend on what else the GPU was doing and are not a speed result.
+
+**Held-out chemical systems under the fixed rule: the numbers to carry forward (exploratory).**
+
+1. Formation energy and band gap: the networks are clearly better than the strongest trees, for the average of 2 runs and
+   for each run: -0.0818 [-0.089, -0.0752] eV/atom and -0.116 [-0.134, -0.0951] eV. These are the same verdicts as under
+   the original rule.
+2. Shear modulus: the trees are clearly better, for the average of 3 runs and for each run: +0.0137 [+0.00906, +0.0187]
+   log10 GPa. Under the original rule the gap was +0.00548 [+0.000763, +0.0102].
+3. Bulk modulus: no clear difference for the average of 3 runs, -0.00135 [-0.00619, +0.00335]. The trees are clearly
+   better than each single run, as before.
+4. Half network average, half trees (no fitted weight):
+   - Bulk modulus: clearly better than the trees, -0.00823 [-0.0108, -0.00586], and than the network average, -0.00688
+     [-0.00955, -0.00431].
+   - Shear modulus: no clear difference from the trees, -0.00158 [-0.00432, +0.00113]. Under the original rule the blend
+     was clearly better than the trees, -0.00517 [-0.00781, -0.00249].
+   - Formation energy and band gap: clearly worse than the network average, +0.0297 [+0.0267, +0.033] and +0.0342
+     [+0.0242, +0.0423].
+   - The blend uses the average of 3 runs (moduli) or 2 runs (formation energy, band gap), and the report has no
+     single-network check of it, so these verdicts are for the average only. It was not compared with the fine-tuned or
+     evolved networks.
+5. 90% prediction intervals on this split cover 0.868 to 0.893 of test rows for networks, trees and blends. That is
+   slightly too narrow, as under the original rule (0.874 to 0.891 for the networks).
+
+**What this means for `gpu/recipes.json` (a lead, not a change; LES-019).**
+- Shear modulus: the entry recommends the blend, with the cycle-2 evidence "the blend beats the trees -0.0052 [-0.0078,
+  -0.0025]". Under the fixed rule the same comparison shows no clear difference (-0.00158 [-0.00432, +0.00113]), so that
+  evidence no longer holds.
+- Bulk modulus (blend): the entry still holds under the fixed rule (exploratory): the network average shows no clear
+  difference from the trees (-0.00135 [-0.00619, +0.00335]), and the blend is clearly better than both.
+- Band gap (network): the network is still clearly better than the strongest trees (-0.116 [-0.134, -0.0951] eV,
+  exploratory). The entry's other clause, that the evolved settings were not clearly better (-0.00601 [-0.013, +0.00134]),
+  comes from the band-gap search, which was not retrained here, so it stays an original-rule measurement.
+- Formation energy: the entry's evolved settings were not retrained here.
+- A recipe changes only by a reviewed commit that a person agrees to (`docs/AGENTS.md`). The nightly run retrains every
+  crystal task under the fixed rule either way.
+
+### Predictions made before this run
+
+Stated in the working chat before the run, not saved in a file, so this is not a preregistration.
+
+| Prediction | Stated chance | Outcome |
+| --- | --- | --- |
+| The fixed-rule networks show about 0% of predictions moved by a rewrite | 90% | Happened: 0.0% for all four properties |
+| No clear difference on at least 3 of 4 properties | 55% | Did not happen: 2 of 4 (formation energy, band gap) |
+| The fixed rule clearly worse on at least one property | 25% | Happened for the average of 3 runs: shear modulus, +0.00868 [+0.00434, +0.0133]; higher in all 3 seeds (the per-seed differences have no interval) |
+| The fixed rule clearly better on at least one property | 25% | For the average only: bulk modulus, lower in 2 of 3 seeds |
+| The run finishes with no failed jobs | 80% | Happened: 22 of 22 new jobs (203 of 203 in the folder) |
+
+**Time.** The guess beforehand was 2 to 3 hours. The 10 fixed-rule networks took 123.9 GPU-job minutes in total, running
+two at a time. The first started at 23:56 UTC and the last finished at about 00:58 UTC (run-folder start times plus the
+minutes in the job table).
+
+### What it does not show
+
+- **Replay noise.** The network adds up messages with `index_add_` (`gpu/structure/model.py`), which is not deterministic
+  on a GPU, and the trainer does not ask for deterministic kernels. So the same seed trained twice under the same rule can
+  give a slightly different network. No run here repeated a seed under the same rule, so each per-seed difference mixes the
+  rule change with that noise.
+- **Few runs.** Two or three seeds per property, on one fixed test split that had already been scored, and one network per
+  rule in the invariance check.
+- **One split only.** Only the default-settings held-out-systems networks and trees were retrained. The formula-split,
+  held-out-element, fine-tuning and search numbers are still original-rule numbers.
+
+### Leads (not decisions)
+
+1. **Shear-modulus recipe.** Decide whether the shear entry stays the blend, given the comparison above; that needs a
+   person's agreement and a reviewed commit.
+2. **Replay check (about 10 GPU minutes).** Retrain one shear-modulus seed under the original rule and compare it with the
+   run it repeats (`struct_shear_modulus_gv_sys_s11`, test MAE 0.1756):
+   `.\.venv-gpu\Scripts\python.exe -m gpu.structure.train_structure --device cuda --target shear_modulus_gv --split system --epochs 100 --seed 11 --neighbor-ties first --tag shear_sys_s11_replay`
+   (PowerShell, repo root; the plain `python` on the laptop has no PyTorch).
+   If the repeat moves by about 0.003 to 0.005, the shear difference may be replay noise rather than the rule.
+3. The nightly run retrains every crystal task under the fixed rule (code version crystal-v2), which replaces the
+   remaining original-rule numbers over time.
+
+## What the 2026-11-26 09:16 report shows (cycles 1-3)
 
 Read the report for the numbers; this is the short version. Wording follows the table in `docs/AGENTS.md`. Every label is a
 DFT calculation or a historical measurement, so none of this is new evidence about a material.
@@ -34,7 +151,8 @@ DFT calculation or a historical measurement, so none of this is new evidence abo
 neighbour-geometry features with the same 12-nearest-neighbour cut, used the original rule that breaks ties by listing
 order (LES-017). `-TieFix` trains the held-out-systems networks (default settings) and trees again with the fixed rule, so
 it measures the change on that split only. The formula-split, held-out-element, fine-tuning and search numbers stay
-original-rule numbers until they are trained again.
+original-rule numbers until they are trained again. The 20:01 report (section above) has the fixed-rule held-out-systems
+numbers.
 
 **Already-scored test splits.** The formula and chemical-system test crystals were scored in cycles 1 and 2, and those
 scores chose what cycle 3 did (search formation energy further, fine-tune the moduli). Cycle-3 results on those test
@@ -47,7 +165,7 @@ neighbour-geometry features ("rich") in every crystal section.
 
 ### Crystals
 
-1. **Held-out chemical systems (the comparison to quote).** Formation energy and band gap networks are clearly better than
+1. **Held-out chemical systems, original rule** (the fixed-rule numbers to quote are in the 20:01 section above). Formation energy and band gap networks are clearly better than
    the strongest trees, for the average of 2 runs and for each run: formation energy -0.0834 [-0.0909, -0.076] eV/atom,
    band gap -0.115 [-0.135, -0.0934] eV. Shear modulus: trees clearly better, for the average of 3 runs (+0.00548
    [+0.000763, +0.0102] log10 GPa) and for each run. Bulk modulus: no clear difference for the average of 3 runs
@@ -70,7 +188,8 @@ neighbour-geometry features ("rich") in every crystal section.
 5. **Moduli: a half-and-half blend beats the strongest trees on 5 of 6 property/split pairs.** Half the network average
    plus half the strongest trees, no fitted weight, is clearly better than the trees for bulk modulus on the formula split
    (-0.00609 [-0.00813, -0.00393]), held-out systems (-0.00482 [-0.00713, -0.00264]) and held-out elements with property
-   inputs (-0.00802 [-0.0105, -0.00558]), and for shear modulus on held-out systems (-0.00517 [-0.00781, -0.00249]) and
+   inputs (-0.00802 [-0.0105, -0.00558]), and for shear modulus on held-out systems (-0.00517 [-0.00781, -0.00249]; under the fixed rule, exploratory: no clear difference, -0.00158 [-0.00432, +0.00113],
+   see the 20:01 section) and
    held-out elements with property inputs (-0.00512 [-0.00778, -0.00241]). Shear on the formula split: no clear difference
    (-0.00209 [-0.00455, +0.000394]); there the fine-tuned network average has a lower MAE than the blend (0.1487 against
    0.1501, no interval). With learned element vectors on held-out elements the blend is clearly worse than the trees
@@ -143,7 +262,7 @@ few to say anything about calibration.
 
 Changing a default or `gpu/recipes.json` needs a reviewed commit and a row in `docs/DECISIONS.md`.
 
-1. Run `-TieFix` first; it re-measures the held-out-systems comparison with the fixed rule. The other crystal numbers need
+1. Run `-TieFix` first; it re-measures the held-out-systems comparison with the fixed rule (done: the 20:01 report). The other crystal numbers need
    their own retraining before they stop being original-rule numbers.
 2. Run element-property-input networks on the chemical-system split. If they are not worse there, they could be the default,
    since they are the only crystal networks here that work on unseen elements.

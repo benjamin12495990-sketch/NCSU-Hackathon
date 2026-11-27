@@ -388,7 +388,9 @@ get two predictions**. How many crystals this touches depends on what is counted
 - `python -m gpu.tests.test_invariance` proves the property on four test crystals (worst change of a prediction: 0.00001 under the fixed rule, 0.35 under
   the original one, untrained networks). `python -m gpu.structure.invariance --run <run folder> --output inv.json` measures it for any finished run.
 
-What the fix does to **accuracy** is not known until it is measured, because three in four crystals now give the network a slightly different graph:
+What the fix does to **accuracy** has to be measured, because three in four crystals now give the network a slightly different graph. On held-out
+chemical systems it was measured on 2026-11-26 (exploratory, because that test split was scored in cycle 2; read in `docs/results/README.md`). The
+formula-split, held-out-element, fine-tuning and search numbers are still original-rule numbers. The commands:
 ```
 git pull
 .\gpu\run_overnight.ps1 -TieFix -Rehearsal   # a few minutes (extends the newest rehearsal folder; its second cycle must have run BEFORE the fix)
@@ -399,8 +401,8 @@ the fixed rule. Any unfinished jobs of the folder run in the same session, under
 the fixed-rule numbers, and "Neighbour-rule fix", which compares fixed against original seed by seed on the same test crystals and shows how much one
 network of each kind changes its predictions when a crystal is only rewritten. The comparison uses only runs whose recorded rule matches their side, so a
 folder whose held-out-systems runs were made after the fix (a rehearsal made after the pull, say) has nothing to compare and the run says so instead
-of starting. Expect about 2-3 hours with two GPU jobs at a time (a guess from the cycle-2 times plus the larger graphs; the report records the real
-times). What it re-measures for `gpu/recipes.json`: the default-settings networks, the trees and their comparison on held-out systems, which covers the
+of starting. On the laptop (2026-11-26, two GPU jobs at a time) the 10 networks took 124 GPU-job minutes, about an hour
+of wall-clock time; the guess beforehand was 2-3 hours. The results are read in `docs/results/README.md`. What it re-measures for `gpu/recipes.json`: the default-settings networks, the trees and their comparison on held-out systems, which covers the
 bulk-modulus, shear-modulus and band-gap entries. It does not retrain the formation-energy entry's evolved settings (seeds 21/22), so the evidence that
 they beat the defaults stays an original-rule measurement until a new search or finalist run. The nightly retrains every crystal task once under the
 fixed rule by itself.
