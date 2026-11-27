@@ -1,0 +1,82 @@
+/* ElectrolyteDesigner.jsx. Colours only through the variables in src/index.css (taste.md), so both themes work. */
+.ed-form { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: end; }
+.ed-form input, .ed-form select { height: 46px; padding-top: 0; padding-bottom: 0; }
+.ed-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.ed-actions button { min-height: 46px; }
+/* Four fields in a row only where every select has room for its text; two by two below that. */
+@media (max-width: 1180px) { .ed-form { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+@media (max-width: 560px) {
+  .ed-form { grid-template-columns: minmax(0, 1fr); }
+  .ed-actions button { flex: 1 1 100%; }
+}
+
+.ed-formula { font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+/* An element and its number stay together, so a long formula wraps between elements and never inside a number. */
+.ed-formula > span { display: inline-block; }
+.ed-formula sub { font-size: 0.72em; }
+.ed-sigma { position: relative; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ed-sigma sup { font-size: 0.72em; }
+/* Text for copying (the caret in 10^-3) and for screen readers (the spoken form), not for the eye. Positioned inside .ed-sigma,
+   so it scrolls with its table cell and never widens the page. The spoken form is left out of a copy. */
+.ed-hide { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.ed-said { user-select: none; -webkit-user-select: none; }
+
+/* The detail panel sits where the concrete page has its 3D stage. */
+.ed-result { scroll-margin-top: 68px; }
+.ed-result .stagewrap { min-width: 0; }
+.ed-detail { min-width: 0; }
+.ed-detail h2 { margin: 2px 0 6px; font-size: 1.15rem; }
+.ed-detail h3 { margin: 16px 0 6px; font-size: 0.95rem; }
+.ed-detail .stats { gap: 12px 28px; }
+.ed-detail .stats > div { flex: 1 1 150px; }
+.ed-detail .stats .label { overflow-wrap: anywhere; }
+.ed-how { margin: 0 0 10px; font-size: 0.88rem; color: var(--muted); overflow-wrap: anywhere; }
+.ed-how .flag { margin-right: 4px; }
+.ed-result .pick .label { overflow-wrap: anywhere; }
+
+.ed-strip { display: block; width: 100%; max-width: 560px; height: auto; margin: 10px 0 2px; overflow: visible; }
+.ed-strip text { font-size: 11.5px; fill: var(--muted); }
+.ed-strip .ed-exp { font-size: 8.5px; }
+.ed-strip .ed-band { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1; }
+.ed-strip .ed-center { stroke: var(--accent); stroke-width: 2.5; }
+.ed-strip .ed-measured { stroke: var(--ink); stroke-width: 2.5; }
+.ed-strip .ed-target { stroke: var(--ink); stroke-width: 1; stroke-dasharray: 4 3; }
+.ed-strip .ed-rug { fill: none; stroke: var(--muted); stroke-opacity: 0.4; stroke-width: 1; }
+.ed-strip .ed-near { fill: var(--card); stroke: var(--ink); stroke-width: 1.5; }
+.ed-strip .ed-axis { stroke: var(--line); stroke-width: 1; }
+
+/* Tables: the long cells wrap, everything else stays on one line inside the scrolling wrapper. */
+.ed-table td.ed-wrap { white-space: normal; min-width: 200px; max-width: 300px; }
+.ed-table td.ed-wrap .label { overflow-wrap: anywhere; }
+.ed-table td .flag { white-space: nowrap; }
+.ed-detail .sim-table td { white-space: nowrap; }
+.ed-detail .sim-table th { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
+.ed-options { margin: 12px 0; }
+.ed-scrollhint { margin: 0 0 6px; }
+.ed-after { margin: 8px 0 0; max-width: 95ch; }
+/* Shown only on a phone, where the columns marked .ed-wide are folded into the first cell. */
+.ed-table .ed-phone, .ed-detail .ed-phone { display: none; }
+@media (max-width: 560px) {
+  .ed-table .ed-wide, .ed-detail .ed-wide { display: none; }
+  .ed-detail span.ed-phone { display: inline; }
+  .ed-detail .label.ed-phone { display: block; }
+  .ed-detail .sim-table th, .ed-detail .sim-table td { padding: 6px 5px; }
+  .ed-detail .sim-table td.ed-name { white-space: normal; min-width: 108px; }
+  .ed-detail .sim-table td .label { white-space: normal; }
+  .ed-table .ed-phone { display: block; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+  .ed-table .label.ed-phone { font-size: 0.75rem; }
+  .ed-table .ed-phone .flag { margin: 3px 0 2px; white-space: normal; }
+  /* The first two columns fill the phone: the page's and the card's padding and borders take 84px, the # column 36px. */
+  .ed-table td.ed-main { min-width: max(180px, calc(100vw - 122px)); max-width: max(180px, calc(100vw - 122px)); }
+  .ed-table td.ed-name { white-space: normal; min-width: 120px; max-width: 150px; }
+  .ed-table.compact th, .ed-table.compact td { padding: 8px 5px; }
+  /* The strip is drawn 360 units wide and shrinks with the phone, so its text is set larger to stay readable. */
+  .ed-strip text { font-size: 13.5px; }
+  .ed-strip .ed-exp { font-size: 11px; }
+}
+.ed-list { margin: 0 0 10px; padding-left: 20px; }
+.ed-list li { margin-bottom: 8px; max-width: 95ch; }
+.ed .note.small { margin-bottom: 0; }
+/* Under the result's heading: the choices the results were made with, and a flag while the form no longer matches them. */
+.ed-ask { margin: 0 0 10px; font-size: 0.85rem; color: var(--muted); overflow-wrap: anywhere; }
+p.ed-stale { display: block; margin: 0 0 10px; padding: 6px 10px; }

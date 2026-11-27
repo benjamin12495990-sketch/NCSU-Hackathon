@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createFamilyTrainer, familyMetrics } from '../lib/nnFamily.js'
 import AlloyGenerator from './AlloyGenerator.jsx'
+import FamilyPipeline from './sim/FamilyPipeline.jsx'
 import './neuralnet.css'
 import './family.css'
 
@@ -462,6 +463,8 @@ export default function FamilyPage({ family, onBack }) {
           )}
         </div>
       </section>
+
+      <FamilyPipeline family={family} />
 
       <footer>
         <p>Data: {fam.data.citation}; {fam.data.source}; licence: {fam.data.licence}. Files: public/model/{family}/ (family.json, nn_data.json{family === 'insulators' ? ', heldout.json' : ''}), built by scripts/build_family_files.mjs.</p>

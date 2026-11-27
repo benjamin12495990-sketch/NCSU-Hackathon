@@ -83,6 +83,7 @@ class Dataset:
     extra: dict = field(default_factory=dict)   # other fixed sets reported separately, name -> (X, y, groups)
     sources: dict = field(default_factory=dict)  # repo-relative path -> SHA-256 of the file read
     notes: list = field(default_factory=list)
+    labels: list = None   # optional, one dict per training row, for display only (gpu/export_site.py); not part of data_sha256
 
     @property
     def data_sha256(self):
@@ -126,6 +127,7 @@ def _from_nn_data(family, path, target):
     tr, te = d['train'], d['test']
     ds = Dataset(family, d['features'], np.array(tr['X'], float), np.array(tr['y'], float), np.array(tr['g']), target,
                  np.array(te['X'], float), np.array(te['y'], float), np.array(te['g']))
+    ds.labels = [{'group': str(g)} for g in tr['g']]
     _src(ds.sources, path)
     return ds
 
@@ -213,6 +215,15 @@ def load_chemistry(rebuild=False):
     rows = read_json(out / 'all_rows.json')
     ds.folds = np.array(rows['cv_fold'], dtype=np.int64)
     ds.folds_source = 'prepare.py cv_fold (GroupKFold(3) by InChIKey first block)'
+    if len(rows.get('main_train', [])) == len(ds.y) and 'id' in rows:
+        # all_rows.json 'label' is AqSolDB's reliability group (G1 to G5), not a name: the compound name comes from the CSV.
+        names = {}
+        with open(guard_path(csv_path), newline='', encoding='utf-8') as fh:
+            for r in csv.DictReader(fh):
+                names[r['ID']] = r['Name']
+        lab = rows.get('label', [None] * len(rows['id']))
+        ds.labels = [{'name': names.get(str(rows['id'][i]), str(rows['id'][i])), 'id': str(rows['id'][i]),
+                      'reliability_group': str(lab[i])} for i in rows['main_train']]
     return ds
 
 
@@ -282,6 +293,7 @@ def load_electrolytes(k=5):
     groups = np.array([relabel[r] for r in roots])
     ds = Dataset('electrolytes', [f'x_{e}' for e in elements], X, y, groups,
                  'log10 room-temperature ionic conductivity, log10(S/cm); OBELiX training partition only')
+    ds.labels = [{'composition': r['Composition'].strip(), 'id': r['ID']} for r in tr]
     for p in (pcsv, ptr):
         _src(ds.sources, p)
     ds.folds, ds.folds_source = group_kfold(groups, k), f'GroupKFold({k}) on connected components of a shared Composition string or DOI token (rule of domains/electrolytes/work/baseline.py)'
@@ -317,6 +329,7 @@ def _load_cleaning(task, target, family):
     y = np.array([float(rows[i][task]) for i in keep])
     groups = np.array([int(float(rows[i][f'group_meas_{task}'])) for i in keep])
     ds = Dataset(family, names, X, y, groups, target)
+    ds.labels = [{'smiles': rows[i]['SMILES'], 'type': rows[i]['Surfactant_Type'], 'temp_C': rows[i]['temp_C_cmc']} for i in keep]
     for p in (pcsv, pnpz):
         _src(ds.sources, p)
     ds.folds, ds.folds_source = group_kfold(groups, 5), f'GroupKFold(5) on measurement-reference groups (group_meas_{task}; rule of domains/cleaning/work/prepare_surfpro.py)'
@@ -383,6 +396,11 @@ def load_corrosion(min_count=10):
     relabel = {g: j for j, g in enumerate(dict.fromkeys(refs))}
     groups = np.array([relabel[g] for g in refs])
     ds = Dataset('corrosion', names, X, y, groups, 'log10 corrosion rate, log10(mm/yr); NIST CORR-DATA point values')
+    ds.labels = [{'material': r['material'].strip(), 'material_class': r['material_class'].strip(), 'material_family': r['material_family'].strip(),
+                  'environment': r['environment'].strip(), 'conc_vol_pct': None if np.isnan(c) else float(c), 'temp_C': None if np.isnan(t) else float(t),
+                  'hours': None if np.isnan(h) else float(10 ** h), 'reference': r['reference_number'].strip(),
+                  'conc_qualifier': r['conc_qualifier'].strip(), 'temp_qualifier': r['temp_qualifier'].strip()}
+                 for (r, _), c, t, h in zip(use, conc, temp, hours)]
     _src(ds.sources, pcsv)
     ds.folds, ds.folds_source = group_kfold(groups, 5), 'GroupKFold(5) on Reference # (rule of domains/corrosives/work/baseline_corrdata.py)'
     ds.notes.append('historical observations, not safety advice; bounds, ranges, zero rates and letter ratings are excluded; exploratory')

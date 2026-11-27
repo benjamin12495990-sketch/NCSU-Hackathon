@@ -1,0 +1,7 @@
+/* Shared styles for the pipeline pages (src/components/sim/). Colours only through the variables in src/index.css (taste.md). */
+.warn-box h2 { margin-top: 0; }
+.sim-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.sim-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.sim-table th, .sim-table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.sim-table td.num, .sim-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.sim-scroll { overflow-x: auto; }

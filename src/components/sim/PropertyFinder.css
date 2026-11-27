@@ -1,0 +1,121 @@
+/* PropertyFinder.jsx: a target in, the held-out rows predicted to meet it out, each checked against the value in the data.
+   Flat (taste.md): hairline borders, colours only through the variables in src/index.css so both themes work, the accent only on the
+   selected row and the pressed control. Data marks stay ink. */
+.pf { min-width: 0; }
+.pf h3 { margin: 24px 0 8px; font-size: 1rem; }
+.pf .note, .pf figcaption, .pf .fine { overflow-wrap: anywhere; }
+.pf code { overflow-wrap: anywhere; }
+.pf-flagline { margin: 4px 0 10px; color: var(--muted); font-size: 0.9rem; }
+.pf-flagline .flag { margin-right: 6px; }
+
+/* What the visitor asks for. Three fields, four when a log10 target can also be typed as the value behind the log. */
+.pf-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
+.pf-form4 { grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.25fr); }
+.pf-form input, .pf-form select, .pf-task select, .pf-search input { height: 46px; padding-top: 0; padding-bottom: 0; }
+.pf-hint { display: block; margin-top: 4px; font-size: 0.8rem; color: var(--muted); overflow-wrap: anywhere; }
+.pf .examples .chip { white-space: normal; text-align: left; }
+.pf .options label { align-items: flex-start; }
+.pf .options input[type='checkbox'] { margin-top: 4px; flex: 0 0 auto; }
+.pf .note.small { margin-bottom: 0; }
+.pf-task { max-width: 420px; }
+@media (max-width: 980px) { .pf-form4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .pf-form, .pf-form4 { grid-template-columns: minmax(0, 1fr); } }
+
+/* The four figures of the test, separated by hairlines (the grid gap shows the line colour). */
+/* Four across, or two by two: never three and one, which would leave empty cells showing the line colour as a grey block. */
+.pf-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin: 12px 0; background: var(--line); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+@media (max-width: 700px) { .pf-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.pf-tile { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 12px 14px; background: var(--card); min-width: 0; }
+.pf-tile .label { line-height: 1.3; }
+
+/* The picture of the test on the left; the three headline rows and the selected row on the right. Stacked on a phone. */
+.pf-split { display: grid; grid-template-columns: minmax(0, 440px) minmax(0, 1fr); gap: 22px; align-items: start; margin-top: 18px; scroll-margin-top: 68px; }
+.pf-figure { margin: 0; min-width: 0; flex: none; }
+.pf-figure figcaption { margin-top: 6px; line-height: 1.45; }
+.pf-plot { display: block; width: 100%; max-width: none; height: auto; cursor: pointer; touch-action: manipulation; }
+.pf-plot text { font-size: 10px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.pf-plot .pf-axis { font-size: 11px; fill: var(--ink); }
+.pf-frame { fill: none; stroke: var(--line); }
+.pf-gridline { stroke: var(--line); stroke-width: 1; }
+.pf-zone { fill: var(--line); fill-opacity: 0.6; }
+.pf-diag { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 1 4; }
+.pf-target { stroke: var(--ink); stroke-width: 1.2; stroke-dasharray: 6 4; }
+.pf-dot.pf-out { fill: var(--ink); fill-opacity: 0.16; }
+.pf-dot.pf-tp { fill: var(--ink); fill-opacity: 0.8; }
+.pf-dot.pf-fp { fill: var(--card); stroke: var(--ink); stroke-width: 1.1; }
+.pf-sel { fill: var(--accent); stroke: var(--card); stroke-width: 2; }
+
+/* The four parts of the plot, laid out as they sit in it. */
+.pf-quads { list-style: none; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1px; margin: 8px 0 0; padding: 0; background: var(--line); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.pf-quads li { padding: 8px 10px; background: var(--card); font-size: 0.84rem; line-height: 1.35; min-width: 0; overflow-wrap: anywhere; }
+.pf-quads .label { font-size: 0.72rem; }
+.pf-quads strong { font-variant-numeric: tabular-nums; }
+
+.pf-side { min-width: 0; }
+.pf-picks { margin: 0 0 12px; }
+.pf-picks .pick { min-width: 0; overflow-wrap: anywhere; }
+.pf-picks .pick .label { overflow-wrap: anywhere; }
+.pf-picks .pick .big small { font-size: 0.85rem; font-weight: 400; color: var(--muted); }
+.pf-detail { border: 1px solid var(--line); border-radius: 4px; padding: 12px 14px; background: var(--card); min-width: 0; }
+.pf-name { margin: 2px 0 6px; overflow-wrap: anywhere; }
+.pf-name strong { display: block; }
+.pf-verdict { margin: 0 0 8px; }
+.pf-verdict .flag { white-space: normal; }
+.pf-dl { margin: 0 0 8px; }
+.pf-dl > div { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 12px; padding: 7px 0; border-top: 1px solid var(--line); }
+.pf-dl dt { color: var(--muted); font-size: 0.85rem; }
+.pf-dl dd { margin: 0; margin-left: auto; text-align: right; font-variant-numeric: tabular-nums; }
+.pf-sub { display: block; color: var(--muted); font-size: 0.8rem; }
+.pf-sub .strong { color: var(--ink); }
+.pf-detail .fine { margin-top: 6px; line-height: 1.45; }
+
+.pf-comp { font-variant-numeric: tabular-nums; }
+.pf-comp sub { font-size: 0.72em; }
+.pf-rest { display: block; margin-top: 2px; font-size: 0.76rem; font-weight: 400; color: var(--muted); white-space: normal; overflow-wrap: anywhere; }
+
+/* Which rows the table lists, then a search over their labels. */
+.pf-toggle { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 12px; }
+.pf-search { max-width: 420px; margin-bottom: 12px; }
+.pf-table td { vertical-align: top; }
+.pf-table td.pf-labelcell { white-space: normal; min-width: 170px; max-width: 400px; overflow-wrap: anywhere; }
+.pf-table td .label { display: block; font-size: 0.72rem; }
+.pf-table td .flag { white-space: nowrap; }
+.pf-table thead th { max-width: 150px; }
+/* Only on a narrow screen, where the table scrolls sideways inside its frame. */
+.pf-swipe { display: none; }
+@media (max-width: 640px) { .pf-swipe { display: block; margin: 0 0 6px; } }
+.pf-more { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0 0; }
+.pf-more .note { margin: 0 6px 0 0; }
+/* Five definitions: four across (two by two on a tablet, stacked on a phone) and the fifth under them at full width, so no
+   definition sits alone in a row without a rule above it. The rules are the grid gap showing the line colour. */
+.pf .readme { margin-top: 16px; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border-radius: 4px; overflow: hidden; }
+.pf .readme div { background: var(--card); border: 0; min-width: 0; overflow-wrap: anywhere; }
+.pf .readme div:last-child { grid-column: 1 / -1; }
+@media (max-width: 980px) { .pf .readme { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .pf .readme { grid-template-columns: minmax(0, 1fr); } }
+
+/* Every model and setting for the same target. */
+table.compact.pf-grid td.pf-modelcell { white-space: normal; min-width: 150px; }
+table.compact.pf-grid th { max-width: 150px; }
+.pf-grid .chip { padding: 3px 10px; min-width: 58px; }
+.pf-list { margin: 14px 0 0; padding-left: 20px; }
+.pf-list li { margin-bottom: 8px; max-width: 95ch; overflow-wrap: anywhere; }
+
+@media (max-width: 820px) {
+  .pf-split { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .pf-figure { max-width: 520px; }
+}
+@media (max-width: 640px) {
+  /* Narrower first columns, so the first counts show before the table has to scroll. */
+  table.compact.pf-grid td.pf-modelcell { min-width: 112px; }
+  table.compact.pf-grid td:nth-child(2) { white-space: normal; min-width: 84px; }
+  table.compact.pf-grid th { max-width: 84px; }
+}
+@media (max-width: 480px) {
+  /* The plot is drawn in a 400-unit box: larger text keeps the ticks readable when it shrinks to a phone. */
+  .pf-plot text { font-size: 12.5px; }
+  .pf-plot .pf-axis { font-size: 13px; }
+  .pf-tile { padding: 10px 12px; }
+  .pf-table td.pf-labelcell { min-width: 160px; }
+  .pf-quads li { padding: 7px 8px; }
+}

@@ -1,0 +1,96 @@
+/* PipelineResults: one nightly task's own test. Flat (taste.md): hairline borders, colours only through the variables in index.css,
+   the accent only on the selected model and the selected point. Data marks stay ink. */
+.pr { min-width: 0; }
+.pr h3 { margin: 22px 0 8px; font-size: 1rem; }
+.pr .note { overflow-wrap: anywhere; }
+.pr-flagline { margin: 4px 0 8px; color: var(--muted); font-size: 0.9rem; }
+.pr-flagline .flag { margin-right: 6px; }
+/* "exploratory" beside a heading whose numbers the export marks exploratory: plain text, not a badge. */
+.pr-extag { margin-left: 2px; font-size: 0.8rem; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.pr-split { margin: -4px 0 12px; overflow-wrap: anywhere; }
+
+/* Four error figures separated by hairlines (the grid gap shows the line colour). */
+.pr-mae { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.pr-cell { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 12px 14px; background: var(--card); min-width: 0; }
+/* Name, figure and note share their rows across the cells, so the four figures stay on one line when one name wraps to two. */
+@supports (grid-template-rows: subgrid) {
+  .pr-cell { display: grid; grid-template-rows: subgrid; grid-row: span 3; row-gap: 2px; justify-items: start; align-content: start; }
+}
+.pr-cell .label { line-height: 1.3; }
+.pr-cell .flag { margin-top: 4px; font-size: 0.74rem; }
+
+.pr-comp { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 4px; }
+.pr-comp li { padding: 9px 12px; border-top: 1px solid var(--line); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.pr-comp li:first-child { border-top: 0; }
+.pr-pair { display: block; font-size: 0.82rem; font-weight: 600; color: var(--muted); }
+
+table.compact.pr-iv td:first-child { white-space: normal; }
+table.compact.pr-iv th { white-space: normal; }
+.pr-iv td .label { display: block; font-size: 0.75rem; }
+
+.pr-rows { min-height: 40px; }
+.pr-toggle { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 14px; }
+
+/* Plot on the left, the reading and the selected row on the right; stacked on a phone. */
+.pr-plotwrap { display: grid; grid-template-columns: minmax(0, 440px) minmax(0, 1fr); gap: 20px; align-items: start; }
+/* "Show" on a table row scrolls the plot itself under the sticky top bar (52px). */
+.pr-figure { margin: 0; min-width: 0; scroll-margin-top: 68px; }
+.pr-figure figcaption { margin-top: 4px; line-height: 1.45; }
+.pr-plot { display: block; width: 100%; height: auto; cursor: pointer; touch-action: manipulation; }
+.pr-plot text { font-size: 10px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.pr-plot .pr-axis { font-size: 11px; fill: var(--ink); }
+.pr-frame { fill: none; stroke: var(--line); }
+.pr-grid { stroke: var(--line); stroke-width: 1; }
+.pr-band { fill: var(--line); fill-opacity: 0.55; }
+.pr-edge { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 3; }
+.pr-diag { stroke: var(--ink); stroke-width: 1; stroke-dasharray: 5 4; }
+.pr-dot { fill: var(--ink); fill-opacity: 0.38; }
+.pr-dot.pr-dim { fill-opacity: 0.07; }
+.pr-dot.pr-hit { fill-opacity: 0.9; }
+.pr-sel { fill: var(--accent); stroke: var(--card); stroke-width: 2; }
+.pr-side { min-width: 0; }
+.pr-side > .note:first-child { margin-top: 0; }
+
+.pr-picked { border: 1px solid var(--line); border-radius: 4px; padding: 12px 14px; background: var(--card); }
+.pr-pickname { margin: 2px 0 6px; overflow-wrap: anywhere; }
+.pr-pickname strong { display: block; }
+.pr-dl { margin: 0 0 6px; }
+.pr-dl > div { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 12px; padding: 6px 0; border-top: 1px solid var(--line); }
+.pr-dl dt { color: var(--muted); font-size: 0.85rem; }
+.pr-dl dd { margin: 0; margin-left: auto; text-align: right; font-variant-numeric: tabular-nums; }
+.pr-dl dd .flag { margin-left: 6px; font-size: 0.72rem; }
+.pr-miss { margin-left: 6px; color: var(--muted); font-size: 0.82rem; }
+
+.pr-search { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 12px; margin-top: 20px; align-items: end; }
+.pr-table th.pr-on { color: var(--ink); }
+/* The label column's width is set on a block inside the cell: a width on the cell itself is reset by the family pages'
+   phone rule (.fam .tablewrap td { min-width: 0 }), which left the labels one word per line. */
+.pr-table td.pr-labelcell { white-space: normal; }
+.pr-labelbox { min-width: 180px; max-width: 320px; }
+/* nowrap on the note itself: the family pages let table cells wrap at phone width, which stacked it one word per line. */
+.pr-table td .label { display: block; font-size: 0.72rem; white-space: nowrap; }
+.pr-rest { display: block; margin-top: 2px; font-size: 0.76rem; color: var(--muted); white-space: normal; overflow-wrap: anywhere; }
+.pr-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.82rem; overflow-wrap: anywhere; word-break: break-all; }
+.pr-table .chip { padding: 3px 10px; }
+
+/* Where the table is wider than its box it scrolls sideways, and the Show button is its last column: keep that column at the right
+   edge while the numbers pass under it, so the button is pressed with the row's name still in view. The hairline is drawn inside the
+   cell (a border on a sticky cell of a collapsed table stays behind with the table). */
+@media (max-width: 900px) {
+  .pr-table th:last-child, .pr-table td:last-child { position: sticky; right: 0; background: var(--card); }
+  .pr-table th:last-child::before, .pr-table td:last-child::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 1px; background: var(--line); }
+  .pr-table tr.on td:last-child { background: var(--accent-soft); }
+}
+@media (max-width: 760px) {
+  .pr-plotwrap { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .pr-search { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 480px) {
+  /* The plot is drawn in a 400-unit box: larger text keeps the ticks readable when it shrinks to a phone. */
+  .pr-plot text { font-size: 12.5px; }
+  .pr-plot .pr-axis { font-size: 13px; }
+  table.compact.pr-iv th, table.compact.pr-iv td { padding: 8px 6px; }
+  .pr-cell { padding: 10px 12px; }
+  /* Narrow enough that the name, its measured value and the kept Show column fit side by side before any sideways scroll. */
+  .pr-labelbox { min-width: 140px; }
+}

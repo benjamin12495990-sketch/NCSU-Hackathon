@@ -1,0 +1,178 @@
+/* SimDashboard.jsx: every nightly task in one table. Flat (taste.md): hairline borders, colours only through the variables in
+   src/index.css so both themes work, the accent only on links, the primary button and the selected row. Data marks stay ink. */
+.dash { min-width: 0; }
+.dash h3 { margin: 22px 0 8px; font-size: 1rem; }
+.dash .note { overflow-wrap: anywhere; }
+/* A long task title with no spaces must wrap inside the "How this can be wrong" list instead of widening the page. */
+.dash.warn-box li { overflow-wrap: anywhere; }
+.dash-why { margin: 4px 0 0; padding-left: 20px; }
+.dash-why strong { font-weight: 600; }
+.dash-flagline { margin: 4px 0 10px; color: var(--muted); font-size: 0.9rem; }
+.dash-flagline .flag { margin-right: 6px; }
+
+/* What the visitor asks for: four selects, then the requirement. */
+.dash-form { display: grid; grid-template-columns: minmax(0, 1.3fr) repeat(3, minmax(0, 1fr)); gap: 12px; align-items: end; }
+.dash-form3 { grid-template-columns: minmax(0, 1.3fr) repeat(2, minmax(0, 1fr)); } /* a rehearsal has no verdict filter */
+.dash-form input, .dash-form select { height: 46px; padding-top: 0; padding-bottom: 0; }
+.dash-req { margin: 16px 0 0; padding: 6px 16px 8px; border: 1px solid var(--line); border-radius: 4px; min-width: 0; }
+.dash-req legend { padding: 0 6px; font-weight: 600; font-size: 0.9rem; }
+.dash-reqrow { display: grid; grid-template-columns: minmax(0, 250px) minmax(0, 1fr); gap: 8px 18px; align-items: start; padding: 12px 0; }
+.dash-reqrow + .dash-reqrow { border-top: 1px solid var(--line); }
+.dash-reqrow > label, .dash-reqlabel { margin: 0; padding-top: 6px; font-weight: 600; font-size: 0.9rem; }
+.dash-sharefield { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.dash-sharefield input { width: 110px; height: 40px; padding-top: 0; padding-bottom: 0; }
+.dash-presets { margin-top: 0; }
+.dash-hint { display: block; margin-top: 6px; font-size: 0.8rem; color: var(--muted); max-width: 80ch; }
+.dash-toggle { display: flex; flex-wrap: wrap; gap: 6px; }
+.dash .error { margin-top: 8px; }
+
+/* The night in three lines, each a filter. */
+.dash-tally { list-style: none; margin: 0 0 14px; padding: 0; border: 1px solid var(--line); border-radius: 4px; }
+.dash-tally li { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; justify-content: space-between; padding: 9px 12px; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
+.dash-tally li:first-child { border-top: 0; }
+.dash-tally li > span { flex: 1 1 320px; min-width: 0; }
+.dash-tally .chip { flex: 0 0 auto; }
+.dash-nums { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dash-status { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin: 0 0 10px; }
+.dash-status .note { margin: 0; }
+
+/* The table: text cells wrap inside a capped width, numbers stay on one line. */
+/* A little tighter than table.ranked so the nine columns fit a 1100px window without scrolling. */
+.dash-table td { vertical-align: top; }
+.dash-table th:not(:first-child), .dash-table td:not(:first-child) { padding-left: 5px; padding-right: 5px; }
+.dash-table thead th.group { white-space: normal; }
+.dash-table thead th { max-width: 132px; }
+.dash-after { margin: 10px 0 0; }
+.dash-table td.dash-taskcell { white-space: normal; min-width: 160px; max-width: 224px; }
+.dash-unit { display: block; margin-top: 2px; font-size: 0.76rem; line-height: 1.35; color: var(--muted); overflow-wrap: anywhere; }
+.dash-taskfoot { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; }
+.dash-table td.dash-famcell { white-space: normal; min-width: 96px; max-width: 124px; padding-right: 8px; }
+.dash-table td.dash-verdictcell { white-space: normal; min-width: 180px; max-width: 232px; font-variant-numeric: tabular-nums; }
+.dash-table td .label { display: block; font-size: 0.7rem; line-height: 1.35; font-weight: 400; }
+.dash-table td.dash-verdictcell .label { margin-top: 3px; }
+/* A wider gap after the right-aligned 90% range, so its last word and the verdict's first do not read as one phrase. */
+.dash-table th.dash-verdicthead, .dash-table td.dash-verdictcell { padding-left: 16px; }
+.dash-link { display: inline; padding: 0; border: 0; border-radius: 2px; background: none; color: var(--accent); text-align: left; text-decoration: underline; text-underline-offset: 2px; white-space: normal; }
+.dash-link:hover { color: var(--accent-hover); }
+.dash-table td .label.dash-wraplabel { white-space: normal; min-width: 84px; max-width: 110px; margin-left: auto; }
+.dash-jump { display: block; font-size: 0.85rem; }
+.dash-back { margin: 20px 0 0; }
+.dash-meter { display: block; width: 100%; min-width: 60px; height: 5px; margin: 4px 0 2px; background: var(--bg); border: 1px solid var(--line); border-radius: 2px; overflow: hidden; }
+.dash-meter i { display: block; height: 100%; background: var(--ink); opacity: 0.45; }
+
+/* The same rows as cards, shown instead of the table on a phone. */
+.dash-cards { display: none; list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 4px; }
+.dash-card { padding: 14px 12px 14px 10px; border-top: 1px solid var(--line); border-left: 3px solid transparent; overflow-wrap: anywhere; }
+.dash-card:first-child { border-top: 0; }
+.dash-card.dash-on { background: var(--accent-soft); border-left-color: var(--accent); }
+.dash-cardtitle { display: block; }
+.dash-cardfam { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin: 6px 0 10px; font-size: 0.9rem; }
+.dash-cardcap { display: block; margin-bottom: 4px; font-size: 0.76rem; font-weight: 600; color: var(--muted); }
+.dash-cardmae { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin: 0 0 8px; background: var(--line); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.dash-cardmae > div { min-width: 0; padding: 6px 8px; background: var(--card); }
+.dash-cardmae dt { font-size: 0.72rem; font-weight: 400; color: var(--muted); }
+.dash-cardmae dd { margin: 0; font-variant-numeric: tabular-nums; }
+.dash-card .dash-cardmae .label { font-size: 0.66rem; white-space: normal; overflow-wrap: anywhere; }
+.dash-cardfacts { margin: 0 0 8px; border-bottom: 1px solid var(--line); }
+.dash-cardfacts > div { padding: 6px 0; border-bottom: 1px solid var(--line); }
+.dash-cardfacts dt { font-size: 0.74rem; font-weight: 600; line-height: 1.35; color: var(--muted); }
+.dash-cardfacts dd { margin: 0; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+.dash-card .label { font-size: 0.72rem; line-height: 1.35; font-weight: 400; }
+/* Short figures run on one line on a card: value, then its small notes after a middle dot. */
+.dash-inline .label { display: inline; font-size: 0.8rem; }
+.dash-inline .label::before { content: '\00b7'; margin: 0 5px; }
+.dash-inline .dash-meter { display: inline-block; width: 72px; min-width: 0; margin: 0 0 0 8px; vertical-align: middle; }
+.dash-inline .label.dash-wraplabel { max-width: none; min-width: 0; margin: 0; }
+.dash-cardfacts > div:last-child { border-bottom: 0; }
+.dash-cardfoot { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; justify-content: space-between; font-size: 0.9rem; }
+.dash-k { margin-right: 4px; font-size: 0.74rem; font-weight: 600; color: var(--muted); }
+
+/* The page's four counts. */
+.dash-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 24px; margin: 10px 0 8px; }
+.dash-stats > div { min-width: 0; }
+.dash-date { font-variant-numeric: normal; }
+
+/* Details of the selected task. */
+.dash-detail { scroll-margin-top: 68px; }
+.dash-detailhead { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+.dash-detailhead > div:first-child { flex: 1 1 380px; min-width: 0; }
+.dash-detailhead h2 { margin: 0 0 4px; }
+.dash-detailhead .note { margin: 0 0 8px; }
+.dash-step { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.dash-step .note { margin: 0; }
+.dash-two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 4px 28px; align-items: start; }
+.dash-two > div { min-width: 0; }
+
+.dash-bars { list-style: none; margin: 0; padding: 0 12px; border: 1px solid var(--line); border-radius: 4px; }
+.dash-barrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 9px 0; border-top: 1px solid var(--line); }
+.dash-barrow:first-child { border-top: 0; }
+.dash-barlabel { grid-column: 1 / -1; font-size: 0.82rem; font-weight: 600; color: var(--muted); }
+.dash-barlabel .flag { margin-left: 8px; font-size: 0.72rem; }
+.dash-bartrack { display: block; height: 10px; background: var(--bg); border: 1px solid var(--line); border-radius: 2px; overflow: hidden; }
+.dash-bartrack i { display: block; height: 100%; background: var(--ink); opacity: 0.32; }
+.dash-judged .dash-bartrack i { opacity: 0.8; }
+.dash-barvalue { min-width: 6ch; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.dash-ci { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 4px; }
+.dash-ci li { padding: 9px 12px; border-top: 1px solid var(--line); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.dash-ci li:first-child { border-top: 0; }
+.dash-pair { display: block; font-size: 0.82rem; font-weight: 600; color: var(--muted); }
+.dash-track { position: relative; display: block; height: 18px; margin: 6px 5px 0; }
+.dash-track::before { content: ''; position: absolute; left: -5px; right: -5px; top: 50%; border-top: 1px solid var(--line); }
+.dash-zero { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px dashed var(--muted); }
+.dash-cibar { position: absolute; top: 50%; height: 4px; min-width: 1px; margin-top: -2px; background: var(--ink); border-radius: 1px; }
+.dash-cidot { position: absolute; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; background: var(--ink); border: 2px solid var(--card); border-radius: 50%; }
+.dash-cross .dash-cibar { opacity: 0.35; }
+
+table.compact.dash-iv td:first-child, table.compact.dash-iv th { white-space: normal; }
+table.compact.dash-iv th { max-width: 170px; } /* room for "Average ± over the folds (and as a factor)" */
+.dash-iv td .label { display: block; font-size: 0.75rem; }
+.dash-actions { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+.dash-actions .note { margin: 0; flex: 1 1 280px; }
+.dash-open { padding: 10px 18px; background: var(--accent); color: var(--accent-ink); font-weight: 600; text-align: left; }
+.dash-open:hover { background: var(--accent-hover); }
+
+/* Tasks the export lists without numbers. */
+.dash-badlist { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 4px; }
+.dash-badlist li { padding: 12px 14px; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
+.dash-badlist li:first-child { border-top: 0; }
+.dash-badhead { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.dash-badreason { margin: 6px 0 4px; max-width: 95ch; }
+.dash-badreason .dash-k { display: block; }
+.dash-badlist .note { margin: 0; }
+
+/* Below this width the nine-column table would need a sideways scroll, so the cards take over: two to a row while there is room. */
+@media (max-width: 1099px) {
+  .dash-cards { display: block; }
+  .dash-wide { display: none; }
+}
+@media (min-width: 701px) and (max-width: 1099px) {
+  .dash-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dash-card:nth-child(2) { border-top: 0; }
+  .dash-card:nth-child(even) { border-left: 1px solid var(--line); padding-left: 12px; }
+  .dash-card.dash-on:nth-child(even) { border-left: 3px solid var(--accent); padding-left: 10px; }
+  /* Two cards in a row share a height: the trained date and the Details button stay on the bottom edge of both. */
+  .dash-card { display: flex; flex-direction: column; }
+  .dash-cardfoot { margin-top: auto; }
+}
+@media (max-width: 900px) {
+  .dash-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dash-form3 > div:first-child { grid-column: 1 / -1; }
+  .dash-two { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 700px) {
+  .dash-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* Narrower than a 390px phone: the three misses of a card go one to a line, so "recommended" keeps its place beside the figure. */
+@media (max-width: 380px) {
+  .dash-cardmae { grid-template-columns: minmax(0, 1fr); }
+  .dash-cardmae > div { display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: baseline; justify-content: space-between; }
+  .dash-cardmae dd { text-align: right; }
+}
+@media (max-width: 560px) {
+  .dash-form { grid-template-columns: minmax(0, 1fr); }
+  .dash-reqrow { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .dash-reqrow > label, .dash-reqlabel { padding-top: 0; }
+  .dash-req { padding: 4px 12px 6px; }
+  .dash-step { width: 100%; }
+}

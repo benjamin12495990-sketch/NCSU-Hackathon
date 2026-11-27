@@ -1,0 +1,25 @@
+/* CrystalViewer.jsx: the 3D unit cell. The canvas, legend and caption reuse the concrete stage's classes from src/index.css
+   (.canvas, .legend, .dot, .fine); only the differences are here. Colours through variables (taste.md): the page's own from
+   index.css, and the viewer's below, which CrystalViewer.jsx reads for the spheres and the legend dots. */
+.cv {
+  min-width: 0;
+  /* The eight element colours: the Okabe-Ito palette, made to stay distinguishable with the common forms of colour blindness. Its
+     black is swapped for a mid grey so the eighth colour shows on the light and on the dark card. One set serves both themes (each
+     colour was checked on both); a theme that needs other values can set them on .cv. */
+  --cv-el-1: #0072b2; --cv-el-2: #e69f00; --cv-el-3: #009e73; --cv-el-4: #cc79a7;
+  --cv-el-5: #56b4e9; --cv-el-6: #d55e00; --cv-el-7: #f0e442; --cv-el-8: #8c8c8c;
+  /* The tint of the light that reaches the spheres from below, so their undersides are not flat grey. */
+  --cv-ground: #b9c0d4;
+}
+.cv-canvas { margin-top: 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--card); }
+.cv-mount { position: absolute; inset: 0; }
+.cv-msg { position: relative; margin: 0; padding: 0 18px; text-align: center; max-width: 44ch; }
+.cv-tools { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 8px; }
+.cv-tools .chip { min-height: 32px; }
+.cv-zoom { min-width: 36px; font-weight: 600; }
+.cv-legend { margin: 4px 0 6px; font-size: 0.85rem; }
+.cv-legend .dot { width: 12px; height: 12px; flex: 0 0 auto; }
+.cv-legend li { color: var(--ink); }
+.cv-legend .cv-count { color: var(--muted); }
+.cv-lattice { margin-bottom: 6px; font-variant-numeric: tabular-nums; }
+.cv .fine { line-height: 1.45; overflow-wrap: anywhere; }

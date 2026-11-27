@@ -65,13 +65,13 @@ export default function DomainMenu({ domains, activeId, onSelect, children }) {
                 <li key={d.id}>
                   <button type="button" aria-current={d.id === activeId ? 'true' : undefined} onClick={() => choose(d.id)}>
                     <span>{d.label}</span>
-                    <span className={d.live ? 'status live' : 'status'}>{d.live ? 'Live' : d.pipeline ? 'Trained offline' : 'Planned'}</span>
+                    <span className={d.live ? 'status live' : 'status'}>{d.overview ? 'Overview' : d.live ? 'Live' : d.pipeline ? 'Trained offline' : 'Planned'}</span>
                   </button>
                 </li>
               ))}
             </ul>
             <p className="drawer-note">
-              Engineer the Tools of Scientific Discovery. Built: {domains.filter((d) => d.live).map((d) => d.label).join(', ')}. The others are trained offline or planned.
+              Engineer the Tools of Scientific Discovery. Built: {domains.filter((d) => d.live && !d.overview).map((d) => d.label).join(', ')}.{domains.some((d) => !d.live) ? ' The others are planned.' : ''}
             </p>
           </nav>
         </>

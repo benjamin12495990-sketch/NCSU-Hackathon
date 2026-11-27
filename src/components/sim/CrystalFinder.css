@@ -1,0 +1,101 @@
+/* CrystalFinder.jsx. Flat (taste.md): hairline borders, colours only through the variables in src/index.css so both themes work, the
+   accent only on what is selected. The 3D view's own styles are in CrystalViewer.css. */
+.cf { min-width: 0; }
+.cf h3 { margin: 20px 0 8px; font-size: 1rem; }
+.cf .note { overflow-wrap: anywhere; }
+.cf code { overflow-wrap: anywhere; }
+
+/* The limits: one box per property, two inputs each. Four across on a wide screen, two, then one. */
+.cf-reqs { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 12px; }
+.cf-req { margin: 0; padding: 8px 12px 12px; border: 1px solid var(--line); border-radius: 4px; min-width: 0; }
+.cf-req legend { padding: 0 6px; font-weight: 600; font-size: 0.9rem; }
+.cf-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.cf-pair label { margin-bottom: 4px; font-weight: 400; font-size: 0.82rem; color: var(--muted); }
+.cf-pair input { height: 42px; padding-top: 0; padding-bottom: 0; }
+.cf-hint { display: block; margin-top: 6px; font-size: 0.8rem; line-height: 1.4; color: var(--muted); overflow-wrap: anywhere; }
+.cf-row2 { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 12px; margin-top: 14px; align-items: start; }
+.cf-row2 input, .cf-row2 select { height: 46px; padding-top: 0; padding-bottom: 0; }
+.cf .examples .chip { white-space: normal; text-align: left; }
+.cf .options label { align-items: flex-start; }
+.cf .options input[type='checkbox'] { margin-top: 4px; flex: 0 0 auto; }
+@media (max-width: 720px) { .cf-row2 { grid-template-columns: minmax(0, 1fr); } }
+
+/* The result: a headline across the top, then the 3D cell beside the selected crystal's numbers (stacked on a phone). */
+.cf-result { border: 1px solid var(--line); border-radius: 4px; background: var(--card); overflow: hidden; scroll-margin-top: 68px; min-width: 0; }
+.cf-headline { padding: 18px 22px 14px; border-bottom: 1px solid var(--line); }
+.cf-headline h2 { margin: 0 0 6px; font-size: 1.15rem; overflow-wrap: anywhere; }
+.cf-headline .note { margin: 6px 0 0; overflow-wrap: anywhere; }
+.cf-headline .flag { margin: 2px 0; white-space: normal; }
+.cf-headline .warn { margin-top: 10px; }
+.cf-headline .cf-flagline { margin: 4px 0 0; }
+.cf-views { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.cf-views .chip { white-space: normal; text-align: left; }
+.cf-split { display: grid; grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr); }
+.cf-split > * { min-width: 0; }
+.cf-split .stagehead h2 { overflow-wrap: anywhere; }
+.cf-split .stagehead .fine { overflow-wrap: anywhere; }
+.cf-readout h3 { margin: 0 0 8px; font-size: 1rem; }
+.cf-status { margin: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
+.cf-status .flag { margin-right: 6px; }
+.cf-nocell { display: grid; place-items: center; min-height: 180px; margin-top: 10px; padding: 16px; border: 1px solid var(--line); border-radius: 4px; }
+.cf-nocell .note { margin: 0; max-width: 46ch; text-align: center; }
+.cf-empty { padding: 16px 22px 18px; }
+.cf-empty .note { margin: 0; }
+@media (max-width: 860px) {
+  .cf-split { grid-template-columns: minmax(0, 1fr); }
+  .cf-split .stagewrap { border-right: 0; border-bottom: 1px solid var(--line); }
+}
+
+.cf-chem { font-variant-numeric: tabular-nums; }
+.cf-chem sub { font-size: 0.72em; }
+
+/* The selected crystal's table: properties down, the DFT-calculated value and the three predictions across. */
+table.compact.cf-detail td, table.compact.cf-detail th { vertical-align: top; }
+table.compact.cf-detail th { white-space: normal; max-width: none; }
+table.compact.cf-detail th[scope='row'] { min-width: 92px; font-size: 0.88rem; color: var(--ink); }
+.cf-detail tr:last-child th { border-bottom: 0; }
+.cf-detail .label { display: block; font-size: 0.72rem; font-weight: 400; line-height: 1.35; }
+.cf-detail td strong { display: inline; }
+.cf-none { color: var(--muted); font-size: 0.8rem; }
+table.compact.cf-detail td.cf-none { white-space: normal; }
+.cf-key { margin-top: 8px; line-height: 1.45; }
+.cf-flagline { margin: 10px 0 0; font-size: 0.88rem; color: var(--muted); overflow-wrap: anywhere; }
+.cf-flagline .flag { margin-right: 6px; }
+.cf-step { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+.cf-step .note { margin: 0; }
+
+/* The ranked list. */
+.cf-table td { vertical-align: top; }
+.cf-table thead th.group { white-space: normal; }
+.cf-table th .label { font-size: 0.72rem; font-weight: 400; }
+.cf-namebox { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; min-width: 132px; }
+table.ranked.cf-table th, table.ranked.cf-table td { padding-left: 5px; padding-right: 5px; }
+table.ranked.cf-table td:first-child, table.ranked.cf-table th:first-child { padding-left: 10px; }
+table.ranked.cf-table td:nth-child(2) { padding-right: 8px; }
+table.ranked.cf-table .chip { padding: 3px 8px; }
+table.ranked.cf-table .flag { padding: 2px 6px; }
+.cf-table td.cf-none { text-align: center; white-space: normal; min-width: 70px; }
+table.ranked.cf-table td .flag { font-weight: 600; }
+.cf-more { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0 0; }
+.cf-more .note { margin: 0 6px 0 0; }
+
+/* How far to trust the screen. */
+.cf-test { margin: 0 0 6px; max-width: 95ch; }
+.cf-notes { margin: 8px 0 0; padding-left: 20px; }
+.cf-notes li { margin-bottom: 8px; max-width: 95ch; overflow-wrap: anywhere; }
+table.compact.cf-models td.cf-wrap { white-space: normal; min-width: 150px; max-width: 300px; }
+table.compact.cf-models th { max-width: 150px; }
+.cf-models .label { display: block; font-size: 0.72rem; }
+
+/* A reminder that a wide table scrolls inside its frame. CrystalFinder.jsx (TableScroll) measures the table and shows the line only
+   while columns really are out of view, at any screen width. */
+.cf-swipe { margin: 6px 0 0; }
+@media (max-width: 560px) {
+  /* On a phone the Show button goes under the name, so two columns of numbers stay in view beside it. */
+  .cf-namebox { flex-direction: column; gap: 5px; min-width: 0; }
+}
+@media (max-width: 480px) {
+  .cf-headline { padding: 16px 16px 12px; }
+  .cf-empty { padding: 14px 16px 16px; }
+  .cf-reqs { grid-template-columns: minmax(0, 1fr); }
+}

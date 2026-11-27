@@ -1,0 +1,96 @@
+/* SurfactantFinder.jsx. Colours only through the variables in src/index.css (taste.md), so both themes work. */
+
+/* The three fields share their rows (label, control, hint), so a label that wraps to two lines moves every control down together. */
+.surf-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 12px; align-items: start; }
+.surf-form input, .surf-form select { height: 46px; padding-top: 0; padding-bottom: 0; }
+.surf-hint { display: block; margin-top: 4px; font-size: 0.8rem; color: var(--muted); }
+@supports (grid-template-rows: subgrid) {
+  .surf-form > div { display: grid; grid-template-rows: subgrid; grid-row: span 3; }
+  .surf-form > div > label { align-self: end; }
+}
+@media (max-width: 800px) {
+  .surf-form { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .surf-form > div { display: block; grid-row: auto; }
+}
+.surf .options label { align-items: flex-start; }
+.surf .options input[type='checkbox'] { margin-top: 4px; flex: 0 0 auto; }
+.surf .examples .chip { white-space: normal; text-align: left; }
+
+/* SMILES strings run to 300+ characters with no spaces: wrap them anywhere inside a capped width. */
+.surf-smiles {
+  display: block; min-width: 14ch; max-width: 28ch; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.78rem; line-height: 1.35; color: var(--ink); white-space: normal; overflow-wrap: anywhere; word-break: break-all;
+}
+.surf-pick .surf-smiles { max-width: none; margin-bottom: 6px; }
+
+/* The "predicted" marker: muted text in a hairline box, square-ish corners, no fill (taste.md: no pills, no new colours). */
+.surf-pred {
+  display: inline-block; padding: 0 5px; border: 1px solid var(--line); border-radius: 4px; color: var(--muted); font-size: 0.72rem;
+  font-weight: 600; line-height: 1.5; white-space: nowrap; vertical-align: baseline;
+}
+.surf-src { color: var(--muted); font-size: 0.8rem; }
+.surf-line { display: block; }
+
+/* The cards never ask for more width than the section has (the shared .cards rule wants 260px, more than a 320px phone gives). */
+.surf-picks { margin: 4px 0 14px; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); }
+/* family.css loads after this file and gives every h3 in a section 18px on top; the extra class wins it back for the card title. */
+.mini.surf-pick h3 { margin: 0 0 8px; }
+.surf-pick p { margin: 0 0 4px; }
+.surf-table td { vertical-align: top; }
+.surf-table td.surf-type { white-space: normal; min-width: 9ch; max-width: 14ch; }
+.surf-table thead th.group { white-space: normal; }
+/* The longest label in a value cell: let it take two lines rather than widen both prediction columns. */
+.surf-table .surf-far { white-space: normal; min-width: 11ch; }
+/* Shown only at narrower widths (below): the line that carries the row number, type and temperature once their columns are dropped,
+   and the labels that stand in for the column headers once the rows are stacked. */
+.surf-idline, .surf-narrow { display: none; }
+.surf-more { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0 0; }
+.surf-more .note { margin: 0 6px 0 0; }
+.surf-list { margin: 0 0 10px; padding-left: 20px; }
+.surf-list li { margin-bottom: 8px; max-width: 95ch; }
+.surf code, .surf-list code { overflow-wrap: anywhere; }
+/* The footnote quotes the fold rule, which holds a file path with no spaces. */
+.surf-foot { overflow-wrap: anywhere; }
+
+/* Five definitions: three then two at desktop width, so no cell is left alone on a row; one column below that. */
+@media (min-width: 1001px) {
+  .readme.surf-readme { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .readme.surf-readme div { grid-column: span 2; }
+  .readme.surf-readme div:nth-child(3) { border-right: 0; }
+  .readme.surf-readme div:nth-child(n + 4) { grid-column: span 3; border-top: 1px solid var(--line); }
+}
+@media (max-width: 1000px) {
+  .readme.surf-readme { grid-template-columns: minmax(0, 1fr); }
+  .readme.surf-readme div { border-right: 0; border-bottom: 1px solid var(--line); }
+  .readme.surf-readme div:last-child { border-bottom: 0; }
+}
+
+/* Below about 980px the nine columns do not fit, so the row number, type and temperature move into one line above the SMILES and
+   their three columns are dropped. What is left fits down to 800px (and would scroll inside .sim-scroll if a row were wider). */
+@media (max-width: 980px) {
+  .surf-table th.surf-n, .surf-table td.surf-n, .surf-table th.surf-type, .surf-table td.surf-type,
+  .surf-table th.surf-temp, .surf-table td.surf-temp { display: none; }
+  .surf-table .surf-idline { display: block; margin-bottom: 2px; white-space: normal; }
+  table.ranked.surf-table .surf-id { padding-left: 12px; }
+}
+
+/* Phone width (and wherever the form above is one column): even those six columns would be twice as wide as a phone screen, so each
+   row becomes a block instead. The SMILES runs across the top under its line of row number, type and temperature; the four values
+   sit two by two under their own labels; the margin closes the block. Nothing scrolls sideways. */
+@media (max-width: 800px) {
+  table.ranked.surf-table, table.ranked.surf-table tbody { display: block; }
+  table.ranked.surf-table thead { display: none; }
+  table.ranked.surf-table tbody tr {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px 14px; padding: 12px; border-bottom: 1px solid var(--line);
+  }
+  table.ranked.surf-table tbody tr:last-child { border-bottom: 0; }
+  table.ranked.surf-table tbody td { display: block; min-width: 0; padding: 0; border: 0; white-space: normal; text-align: left; }
+  table.ranked.surf-table tbody td.surf-n, table.ranked.surf-table tbody td.surf-type, table.ranked.surf-table tbody td.surf-temp { display: none; }
+  table.ranked.surf-table tbody td.surf-id, table.ranked.surf-table tbody td.surf-margin { grid-column: 1 / -1; padding: 0; }
+  .surf-table .surf-smiles { min-width: 0; max-width: none; }
+  .surf-table .surf-narrow { display: block; margin-bottom: 2px; }
+}
+/* Between a phone and a tablet there is room for the four values side by side. */
+@media (min-width: 561px) and (max-width: 800px) {
+  table.ranked.surf-table tbody tr { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}

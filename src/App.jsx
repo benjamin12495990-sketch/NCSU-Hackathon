@@ -16,7 +16,11 @@ import { DOMAINS } from './lib/domains.js'
 const MixStage = lazy(() => import('./components/MixStage.jsx'))
 // The trained families share one page, downloaded (with its data) only when it is opened.
 const FamilyPage = lazy(() => import('./components/FamilyPage.jsx'))
-const PAGES = { materials: FamilyPage, insulators: FamilyPage, polymers: FamilyPage }
+// The families trained in the GPU pipeline share another page (src/components/sim/), and the overview lists every nightly task.
+const SimPage = lazy(() => import('./components/sim/SimPage.jsx'))
+const SimDashboard = lazy(() => import('./components/sim/SimDashboard.jsx'))
+const PAGES = { materials: FamilyPage, insulators: FamilyPage, polymers: FamilyPage, corrosives: SimPage, cleaning: SimPage, electrolytes: SimPage,
+                crystals: SimPage, chemistry: SimPage, nightly: SimDashboard }
 
 const PRESETS = [
   { label: 'Light duty', mpa: 15 },
@@ -188,7 +192,7 @@ export default function App() {
       {domainId !== 'concrete' ? (
         FamilyView ? (
           <Suspense fallback={<section className="card"><p className="note">Loading…</p></section>}>
-            <FamilyView key={domainId} family={domainId} onBack={() => setDomainId('concrete')} />
+            <FamilyView key={domainId} family={domainId} domain={domain} domains={DOMAINS} onOpen={setDomainId} onBack={() => setDomainId('concrete')} />
           </Suspense>
         ) : <Planned key={domainId} domain={domain} onBack={() => setDomainId('concrete')} />
       ) : (
