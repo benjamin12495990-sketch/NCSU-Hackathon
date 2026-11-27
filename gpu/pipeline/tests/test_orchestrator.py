@@ -224,6 +224,30 @@ def test_job_that_finished_just_before_the_stop_is_done_not_rerun():
         assert status(o, 'late') == 'done' and len(o.state['jobs']['late']['attempts']) == 1
 
 
+
+def test_keep_awake_nests_so_the_inner_one_does_not_switch_off_the_outer():
+    """The whole program keeps Windows awake (run_pipeline.main) and so does the orchestrator inside it; leaving the inner one
+    must leave the system awake until the outer one ends (SetThreadExecutionState returns the previous state)."""
+    from gpu.pipeline.orchestrator import KeepAwake
+    C, S = KeepAwake.ES_CONTINUOUS, KeepAwake.ES_SYSTEM_REQUIRED
+    state = {'v': C}
+
+    def api(flags):
+        prev = state['v']
+        if flags & C:
+            state['v'] = flags
+        return prev
+    with KeepAwake(api):
+        assert state['v'] == C | S
+        with KeepAwake(api):
+            assert state['v'] == C | S
+        assert state['v'] == C | S, 'the inner exit switched the outer keep-awake off'
+    assert state['v'] == C
+    calls = []
+    with KeepAwake(lambda f: calls.append(f) or 0):   # the call failed (returns 0): nothing to undo on exit
+        pass
+    assert calls == [C | S]
+
 if __name__ == '__main__':
     n = 0
     for name, fn in list(globals().items()):

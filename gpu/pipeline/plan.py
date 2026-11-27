@@ -19,7 +19,7 @@ from gpu.train_tabular import BASE, FAMILY_DEFAULTS
 TAB_ORDER = ['alloys', 'polymers', 'electrolytes', 'insulators', 'concrete', 'chemistry', 'cleaning_pcmc', 'cleaning_tension', 'corrosion']
 # minutes MEASURED on an RTX 5070 Laptop GPU (the first overnight run); other machines will differ
 TAB_EST_MIN = {'alloys': 6, 'polymers': 5, 'electrolytes': 14, 'insulators': 6, 'concrete': 2, 'chemistry': 10,
-               'cleaning_pcmc': 12, 'cleaning_tension': 10, 'corrosion': 15}  # the last three are guesses (never run on the GPU yet)
+               'cleaning_pcmc': 96, 'cleaning_tension': 75, 'corrosion': 53}  # the last three measured in cycle 3 (2026-11-26 report)
 STRUCT_SEEDS = {'bulk_modulus_kv': [11, 12, 13], 'shear_modulus_gv': [11, 12, 13], 'formation_energy_peratom': [11, 12], 'optb88vdw_bandgap': [11, 12]}
 STRUCT_ORDER_EARLY = ['bulk_modulus_kv', 'shear_modulus_gv']
 STRUCT_ORDER_LATE = ['formation_energy_peratom', 'optb88vdw_bandgap']

@@ -484,13 +484,18 @@ def run(argv=None):
 
 
 def main(argv=None):
+    from gpu.pipeline.orchestrator import KeepAwake
     try:
         if argv is None:
             argv = sys.argv[1:]
         if '--dry-run' in argv:
             return run(argv)
+        # Ask Windows to stay awake from the first second, not only once the jobs start: a laptop woken by the nightly's wake timer
+        # goes back to sleep after about 2 minutes unless a program asks it not to, and loading the data and setting up the GPU
+        # can take longer than that (on 2026-11-27 the nightly froze in start-up until the task's 10-hour limit killed it).
+        print(f'{time.strftime("%Y-%m-%d %H:%M:%S")}  pipeline program started (process {os.getpid()}); asking Windows to stay awake', flush=True)
         root = argv[argv.index('--runs-root') + 1] if '--runs-root' in argv else str(RUNS / 'pipeline')
-        with RunLock(root):
+        with KeepAwake(), RunLock(root):
             return run(argv)
     except LockBusy as e:
         print(f'NOT STARTED: {e}')

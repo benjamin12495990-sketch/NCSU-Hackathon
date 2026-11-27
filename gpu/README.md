@@ -362,6 +362,10 @@ of the current model, test error and 90% interval for every task. The first nigh
 the 2026-11-26 report (the three newest table families took 53-96 minutes each, formation energy's evolved settings 36 minutes per seed).
 The nightly stops starting jobs after 8 hours; a task that did not finish is not recorded as done and is retrained the next night (or
 continue it with `.\gpu\run_overnight.ps1 -Resume -Nightly`). A night with nothing new trains nothing.
+**Sleep.** The task can wake a sleeping laptop, but a laptop woken by a timer goes back to sleep after about 2 minutes unless a
+program asks it not to. On 2026-11-27 the first scheduled night froze that way during start-up and was killed by the task's 10-hour limit
+(Task Scheduler result 3221225786). The pipeline now asks Windows to stay awake from its first second, but the safest setting is
+Settings > System > Power > "When plugged in, put my device to sleep after: Never", with the lid open and the charger in.
 A pipeline refuses to start while another is running (`RUNNING.lock`), so the nightly task never collides with a long cycle. `-Resume` always continues the main run (`LAST_PIPELINE.txt`); the nightly and the rehearsals keep their own pointers (`-Resume -Nightly`, `-Resume -Rehearsal`), so a nightly can never hide an unfinished cycle.
 **Recipes change only by a reviewed commit**: a cycle that finds a better model is evidence for editing `gpu/recipes.json`, never an automatic promotion,
 and no decision is ever made on test rows.

@@ -55,21 +55,37 @@ def atomic_write(path, text):
 
 
 class KeepAwake:
-    """Stops Windows from sleeping while the pipeline runs (it cannot stop a closed lid from sleeping the laptop)."""
+    """Stops Windows from sleeping while the pipeline runs (it cannot stop a closed lid from sleeping the laptop).
+    Safe to nest: leaving restores the state that was in force before entering, so an inner use (the orchestrator) does not
+    switch off an outer one (the whole program, gpu/run_pipeline.py main). api: SetThreadExecutionState, or a stand-in for tests."""
+    ES_CONTINUOUS, ES_SYSTEM_REQUIRED = 0x80000000, 0x00000001
+
+    def __init__(self, api=None):
+        self.api = api
+        if self.api is None and os.name == 'nt':
+            try:
+                f = ctypes.windll.kernel32.SetThreadExecutionState
+                f.restype, f.argtypes = ctypes.c_uint32, [ctypes.c_uint32]
+                self.api = f
+            except Exception:
+                self.api = None
 
     def __enter__(self):
-        self.on = False
-        if os.name == 'nt':
+        self.on, self.prev = False, 0
+        if self.api is not None:
             try:
-                ES_CONTINUOUS, ES_SYSTEM_REQUIRED = 0x80000000, 0x00000001
-                self.on = bool(ctypes.windll.kernel32.SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED))
+                self.prev = int(self.api(self.ES_CONTINUOUS | self.ES_SYSTEM_REQUIRED))  # returns the previous state, 0 on failure
+                self.on = self.prev != 0
             except Exception:
                 pass
         return self
 
     def __exit__(self, *a):
         if self.on:
-            ctypes.windll.kernel32.SetThreadExecutionState(0x80000000)
+            try:
+                self.api(self.prev if self.prev & self.ES_CONTINUOUS else self.ES_CONTINUOUS)
+            except Exception:
+                pass
 
 
 class Telemetry(threading.Thread):
