@@ -20,7 +20,9 @@ if ($Remove) {
 $repo = Split-Path -Parent $PSScriptRoot
 $log = Join-Path $repo 'gpu\runs\pipeline\nightly_console.log'
 New-Item -ItemType Directory -Force -Path (Split-Path $log) | Out-Null
-$cmd = "-NoProfile -ExecutionPolicy Bypass -Command `"& '$repo\gpu\run_overnight.ps1' -Nightly *>> '$log'`""
+# -WindowStyle Hidden: no console window appears, so there is none to close. Closing the window of a running task ends the run
+# with Task Scheduler result 3221225786 (0xC000013A, "terminated as if by Ctrl+C"), the result the 2026-11-27 and 2026-11-28 runs ended with.
+$cmd = "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -Command `"& '$repo\gpu\run_overnight.ps1' -Nightly *>> '$log'`""
 $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument $cmd -WorkingDirectory $repo
 $trigger = New-ScheduledTaskTrigger -Daily -At $Time
 $settings = New-ScheduledTaskSettingsSet -WakeToRun -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Hours 10)

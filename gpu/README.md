@@ -367,10 +367,17 @@ tree baseline), until it holds 10; that is about 2.7 GPU hours on an unchanged n
 their sweep is deterministic, so a retrain would repeat the same numbers (the 2026-11-27 night reproduced the 2026-11-26 table results exactly).
 The TBmBJ task leaves out the 53 crystals of the JARVIS-Leaderboard measured band-gap benchmark that have a TBmBJ value
 (`gpu/structure/bandgap_benchmark_holdout.json`), so its models can later be scored against measured gaps on crystals they never saw.
-**Sleep.** The task can wake a sleeping laptop, but a laptop woken by a timer goes back to sleep after about 2 minutes unless a
-program asks it not to. On 2026-11-27 the first scheduled night froze that way during start-up and was killed by the task's 10-hour limit
-(Task Scheduler result 3221225786). The pipeline now asks Windows to stay awake from its first second, but the safest setting is
-Settings > System > Power > "When plugged in, put my device to sleep after: Never", with the lid open and the charger in.
+**Sleep, and the scheduled start.** The task can wake a sleeping laptop; keep the laptop plugged in with the lid open and set
+Settings > System > Power > "When plugged in, put my device to sleep after: Never". On 2026-11-27 and 2026-11-28 the 01:17 scheduled run
+started (one line in `gpu\runs\pipeline\nightly_console.log`), made no run folder and ended with Task Scheduler result 3221225786
+(0xC000013A: the process was terminated as if by Ctrl+C or a closed console). The Windows logs held no sleep, wake, power-source change
+or sign-out event in that window, so the first explanation (the laptop going back to sleep) is not supported, and **the cause is not
+known**. Started by hand at 02:24 on 2026-11-28 (`Start-ScheduledTask -TaskName 'NCSU-Hackathon nightly training'`), the same task ran
+normally. Since then: every start-up step prints with the time; a watchdog stops a start-up that takes more than 15 minutes and writes
+where it is stuck to `gpu\runs\pipeline\startup_hang.txt`; and the task runs with a hidden window (re-register it with
+`.\gpu\schedule_nightly.ps1` once no run is going), so there is no console window to close. Do not close a PowerShell window that the task
+opens: that can end the run with exactly this result code. Do not `git pull` while a run is going: its jobs start new Python processes
+that would load the newer code.
 A pipeline refuses to start while another is running (`RUNNING.lock`), so the nightly task never collides with a long cycle. `-Resume` always continues the main run (`LAST_PIPELINE.txt`); the nightly and the rehearsals keep their own pointers (`-Resume -Nightly`, `-Resume -Rehearsal`), so a nightly can never hide an unfinished cycle.
 **Recipes change only by a reviewed commit**: a cycle that finds a better model is evidence for editing `gpu/recipes.json`, never an automatic promotion,
 and no decision is ever made on test rows.
