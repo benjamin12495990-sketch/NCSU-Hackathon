@@ -71,6 +71,48 @@ def find_pipeline(root, smoke):
     return None
 
 
+_WATCHDOG_FILE = None
+
+
+def _stage(msg):
+    """One start-up step, with the time, written at once: the console log is a file, and text still in Python's buffer is lost when the
+    program is killed. A start-up that hangs then shows the last step it reached."""
+    print(f'{time.strftime("%Y-%m-%d %H:%M:%S")}  start-up: {msg}', flush=True)
+
+
+def arm_startup_watchdog(minutes, root):
+    """If start-up (reading the data, the GPU check, making the run folder) is not finished after `minutes`, write where every thread is
+    stuck to <root>/startup_hang.txt and stop the program. faulthandler does it from a C thread, so it also works when the main thread is
+    inside a driver call that never returns. On 2026-11-27 and 2026-11-28 the scheduled nightly started, wrote one line and then sat
+    silent until the task's 10-hour limit ended it (exit code 3221225786), with no run folder and nothing else in the log."""
+    global _WATCHDOG_FILE
+    import faulthandler
+    try:
+        Path(root).mkdir(parents=True, exist_ok=True)
+        _WATCHDOG_FILE = open(Path(root) / 'startup_hang.txt', 'w')
+        _WATCHDOG_FILE.write(f'Start-up took longer than {minutes:g} minutes, so the program stopped. Started {now_iso()}, process {os.getpid()}.\n'
+                             'Below: where every thread was at that moment (the thread marked "most recent call first" lists the newest call on top).\n\n')
+        _WATCHDOG_FILE.flush()
+        faulthandler.dump_traceback_later(minutes * 60.0, repeat=False, file=_WATCHDOG_FILE, exit=True)
+    except (OSError, ValueError, RuntimeError):
+        _WATCHDOG_FILE = None
+
+
+def disarm_startup_watchdog():
+    """Start-up is over (or the program is leaving): cancel the watchdog and remove its empty file. Safe to call twice."""
+    global _WATCHDOG_FILE
+    if _WATCHDOG_FILE is None:
+        return
+    import faulthandler
+    faulthandler.cancel_dump_traceback_later()
+    f, _WATCHDOG_FILE = _WATCHDOG_FILE, None
+    try:
+        f.close()
+        os.remove(f.name)
+    except OSError:
+        pass
+
+
 def total_ram_gb():
     try:
         if os.name == 'nt':
@@ -114,7 +156,12 @@ def disk_need_gb(plan):
 def preflight(a, plan):
     """Returns (machine info, list of problems that stop the run, list of warnings)."""
     stop, warn = [], []
-    info = {'python': sys.version.split()[0], 'created': now_iso(), 'git': git_info(), 'ram_gb': total_ram_gb(), 'hardware': hardware()}
+    _stage('reading the git state')
+    git = git_info()
+    _stage('loading PyTorch and starting CUDA (the first time the GPU is touched)')
+    hw = hardware()
+    _stage(f'PyTorch loaded, CUDA available: {hw.get("cuda_available")}')
+    info = {'python': sys.version.split()[0], 'created': now_iso(), 'git': git, 'ram_gb': total_ram_gb(), 'hardware': hw}
     if a.device.startswith('cuda'):
         try:
             import torch
@@ -265,9 +312,12 @@ def run(argv=None):
     ap.add_argument('--final-epochs', type=int, default=None)
     ap.add_argument('--retry-failed', action='store_true')
     ap.add_argument('--force', action='store_true', help='nightly: retrain every task even if its data and recipe did not change')
+    ap.add_argument('--startup-minutes', type=float, default=15.0,
+                    help='stop with a report of where it is stuck if start-up (data, GPU check, run folder) takes longer than this many minutes')
     ap.add_argument('--runs-root', default=str(RUNS / 'pipeline'))
     a = ap.parse_args(argv)
     import json
+    _stage(f'arguments read (profile {a.profile}, device {a.device})')
 
     cycle = a.profile.startswith(('cycle2', 'cycle3'))
     tiefix = a.profile.startswith('tiefix')
@@ -348,9 +398,11 @@ def run(argv=None):
                 r = subprocess.run([sys.executable, '-m', 'gpu.structure.fetch_jarvis', '--download'], cwd=str(REPO), capture_output=True, text=True)
                 if r.returncode != 0 or not JARVIS_ZIP.exists():
                     print('WARNING: the JARVIS file could not be downloaded; tonight trains the table families only. ' + (r.stderr or r.stdout)[-200:])
+            _stage('reading the data and building the nightly plan')
             plan = build_nightly_plan(device=a.device, smoke=smoke_run, ram_gb=ram, cpu_threads=a.cpu_threads, force=a.force,
                                       registry_path=Path(a.runs_root) / ('registry_smoke.json' if smoke_run else 'registry.json'),
                                       families=plan_args['families'], targets=plan_args['targets'])
+            _stage(f'nightly plan built: {len(plan["jobs"])} jobs')
             if a.tag == '':
                 a.tag = 'nightly'
         else:
@@ -435,6 +487,7 @@ def run(argv=None):
     atomic_write(Path(a.runs_root) / kind, str(pipe.resolve()))
     atomic_write(Path(a.runs_root) / 'LAST_SESSION.txt', str(pipe.resolve()))
     print(f'\npipeline folder: {pipe}\nstatus file:     {pipe / "STATUS.txt"}   (refreshed every 30 s)\nstop: create a file named STOP in that folder (or press Ctrl+C)\n', flush=True)
+    disarm_startup_watchdog()   # the run folder exists and the jobs are about to start: start-up is over
 
     if plan.get('carry'):   # a nightly that grows a crystal ensemble: bring last night's runs in first (also on -Resume; it is idempotent)
         from gpu.pipeline.nightly import carry_runs
@@ -498,6 +551,7 @@ def main(argv=None):
         # can take longer than that (on 2026-11-27 the nightly froze in start-up until the task's 10-hour limit killed it).
         print(f'{time.strftime("%Y-%m-%d %H:%M:%S")}  pipeline program started (process {os.getpid()}); asking Windows to stay awake', flush=True)
         root = argv[argv.index('--runs-root') + 1] if '--runs-root' in argv else str(RUNS / 'pipeline')
+        arm_startup_watchdog(float(argv[argv.index('--startup-minutes') + 1]) if '--startup-minutes' in argv else 15.0, root)
         with KeepAwake(), RunLock(root):
             return run(argv)
     except LockBusy as e:
@@ -510,6 +564,8 @@ def main(argv=None):
         traceback.print_exc()
         print('\nthe pipeline program crashed; finished jobs are safe on disk. Continue with: python -m gpu.run_pipeline --resume <the pipeline folder>')
         return 3
+    finally:
+        disarm_startup_watchdog()   # also when start-up ends early (a refusal, a busy lock); a no-op once the run folder exists
 
 
 if __name__ == '__main__':

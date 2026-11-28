@@ -112,7 +112,13 @@ while ($code -eq 3 -and $tries -lt 3) {
 
 switch ($code) {
     0 { Write-Host 'All jobs finished. Read REPORT.md in the pipeline folder; send share.zip to whoever needs the results.' }
-    1 { Write-Host 'Finished, but some jobs failed. REPORT.md lists them; rerun with -Resume --retry-failed to try them again.' }
+    1 {
+        if (Test-Path (Join-Path $rootDir 'startup_hang.txt')) {
+            Write-Host 'The pipeline got stuck while starting up and stopped itself. Read gpu\runs\pipeline\startup_hang.txt (it shows where) and send it.'
+        } else {
+            Write-Host 'Finished, but some jobs failed. REPORT.md lists them; rerun with -Resume --retry-failed to try them again.'
+        }
+    }
     2 {
         $how = '.\gpu\run_overnight.ps1 -Resume'; if ($Nightly) { $how += ' -Nightly' } elseif ($Rehearsal) { $how += ' -Rehearsal' }
         Write-Host "Stopped early (STOP file, Ctrl+C, or the time budget). Run  $how  to continue."
